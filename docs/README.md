@@ -6,8 +6,6 @@ repository-name: e20-3yp-Smart-IOT-Indoor-Lighting-System
 title: Lightify - Smart Indoor Light Control & Automation System
 ---
 <h1 align="center">Lightify - Smart Indoor Light Control & Automation System</h1>
-# Project Title
-
 ---
 
 ## Team
@@ -47,6 +45,11 @@ This Smart Indoor Light Control & Automation System is designed to enhance energ
 ### Components & DataFlow
 <div align="center">
   <img src="/docs/images/Components&DataFlow.png" alt="Components&DataFlow" width="500">
+</div>
+
+### Components & DataFlow Explained
+<div align="center">
+  <img src="/docs/images/Components&DataFlowExplained.png" alt="Components&DataFlowExplained" width="500">
 </div>
 
 High level diagram + description
