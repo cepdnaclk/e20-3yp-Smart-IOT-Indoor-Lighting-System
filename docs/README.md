@@ -39,6 +39,16 @@ This Smart Indoor Light Control & Automation System is designed to enhance energ
 
 ## Solution Architecture
 
+### Solution Architecture
+<div align="center">
+  <img src="/docs/images/SolutionArchitecture.png" alt="SolutionArchitecture" width="500">
+</div>
+
+### Components & DataFlow
+<div align="center">
+  <img src="/docs/images/Components&DataFlow.png" alt="Components&DataFlow" width="500">
+</div>
+
 High level diagram + description
 
 ## Hardware and Software Designs
