@@ -2,22 +2,21 @@
 layout: home
 permalink: index.html
 
-# Please update this with your repository name and project title
-repository-name: eYY-3yp-project-template
-title: Project Template
+repository-name: e20-3yp-Smart-IOT-Indoor-Lighting-System
+title: Lightify - Smart Indoor Light Control & Automation System
 ---
-
-[comment]: # "This is the standard layout for the project, but you can clean this and use your own template"
-
+<h1 align="center">Lightify - Smart Indoor Light Control & Automation System</h1>
 # Project Title
 
 ---
 
 ## Team
--  eNumber, Name, [email](mailto:name@email.com)
--  eNumber, Name, [email](mailto:name@email.com)
--  eNumber, Name, [email](mailto:name@email.com)
+-  **E/20/262**: Tharindu Lakshan, [e20262@eng.pdn.ac.lk](mailto:e20262@eng.pdn.ac.lk)
+-  **E/20/266**: Pradeep Nilupul, [e20266@eng.pdn.ac.lk](mailto:e20266@eng.pdn.ac.lk)
+-  **E/20/449**: Sandaru Wijewardhana, [e20449@eng.pdn.ac.lk](mailto:e20449@eng.pdn.ac.lk)
+-  **E/20/288**: Chalaka Perera, [e20288@eng.pdn.ac.lk](mailto:e20288@eng.pdn.ac.lk)
 
+---
 <!-- Image (photo/drawing of the final hardware) should be here -->
 
 <!-- This is a sample image, to show how to add images to your page. To learn more options, please refer [this](https://projects.ce.pdn.ac.lk/docs/faq/how-to-add-an-image/) -->
@@ -35,7 +34,7 @@ title: Project Template
 
 ## Introduction
 
-Description of the real world problem and solution, impact
+This Smart Indoor Light Control & Automation System is designed to enhance energy efficiency and user convenience by integrating advanced human detection technologies, adaptive lighting control, and seamless connectivity through mobile apps and voice assistants. It operates in three main modes: Smart Energy Saver Mode, Default Mode, and Night Mode. The system uses RD-03D mm wave human presence sensor, Ambient Light sensor, Humidity Sensor, Voltage Control wireless circuit and cloud-based central hub to deliver an intelligent lighting experience.
 
 
 ## Solution Architecture
@@ -56,7 +55,8 @@ All items and costs
 
 | Item          | Quantity  | Unit Cost  | Total  |
 | ------------- |:---------:|:----------:|-------:|
-| Sample item   | 5         | 10 LKR     | 50 LKR |
+| Rd-03 Sensors | 2         | 1250 LKR     | 2500 LKR |
+| ESP32 | 4         | 900 LKR     | 3600 LKR |
 
 ## Conclusion
 
@@ -64,8 +64,9 @@ What was achieved, future developments, commercialization plans
 
 ## Links
 
-- [Project Repository](https://github.com/cepdnaclk/{{ page.repository-name }}){:target="_blank"}
-- [Project Page](https://cepdnaclk.github.io/{{ page.repository-name}}){:target="_blank"}
+Explore more about Lightify:
+- [Project Repository](https://github.com/cepdnaclk/e20-3yp-Smart-IOT-Indoor-Lighting-System)
+- [Project Page](https://cepdnaclk.github.io/e20-3yp-Smart-IOT-Indoor-Lighting-System)
 - [Department of Computer Engineering](http://www.ce.pdn.ac.lk/)
 - [University of Peradeniya](https://eng.pdn.ac.lk/)
 
