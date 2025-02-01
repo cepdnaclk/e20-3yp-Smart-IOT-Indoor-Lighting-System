@@ -4,196 +4,320 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Lightify - Smart Indoor Light Control & Automation System</title>
+    <!-- Google Fonts -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
     <style>
-      body {
-        font-family: "Roboto", sans-serif;
-        background-color: #1a1a1a; /* Black background */
-        color: #4b4b4b; /* Gray-600 text color */
-        line-height: 1.6;
+      /* Reset some defaults */
+      * {
+        box-sizing: border-box;
         margin: 0;
         padding: 0;
       }
 
+      body {
+        font-family: "Roboto", sans-serif;
+        background-color: #121212;
+        color: #e0e0e0;
+        line-height: 1.6;
+      }
+
+      a {
+        text-decoration: none;
+        color: #ffc107; /* Yellowish accent for links */
+        transition: color 0.3s ease;
+      }
+      a:hover {
+        color: #ffb300;
+      }
+
+      /* Navigation */
       header {
-        background-color: #000000; /* Black header */
-        color: white;
-        padding: 1.5rem 0; /* Reduced padding */
+        background: #1f1f1f;
+        padding: 1rem 2rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+      }
+      nav {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .nav-left {
+        display: flex;
+        align-items: center;
+      }
+      .nav-left img {
+        width: 50px;
+        margin-right: 0.75rem;
+      }
+      .logo-text {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #ffc107;
+      }
+      .nav-links {
+        list-style: none;
+        display: flex;
+      }
+      .nav-links li {
+        margin-left: 1.5rem;
+      }
+
+      /* Hero Section */
+      .hero {
+        background: url("images/hero-bg.jpg") center/cover no-repeat;
+        min-height: 60vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
         text-align: center;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        padding: 2rem;
+        position: relative;
+      }
+      .hero-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(18, 18, 18, 0.8);
+        z-index: 1;
+      }
+      .hero-content {
+        position: relative;
+        z-index: 2;
+      }
+      .hero-logo {
+        width: 120px;
+        margin-bottom: 1rem;
+      }
+      .hero h1 {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        color: #ffc107;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+      }
+      .hero p {
+        font-size: 1.2rem;
+        max-width: 800px;
       }
 
-      header h1 {
-        font-size: 2rem; /* Reduced font size */
-        margin: 0.5rem 0;
-      }
-
-      header p {
-        font-size: 1rem; /* Reduced font size */
-        margin: 0;
-      }
-
-      section {
+      /* Main Content */
+      main {
         max-width: 1200px;
         margin: 2rem auto;
         padding: 0 1rem;
       }
-
-      h2 {
-        font-size: 1.8rem;
+      section {
+        margin-bottom: 3rem;
+      }
+      section h2 {
+        font-size: 2rem;
         margin-bottom: 1rem;
-        color: #ffffff; /* White headings */
+        color: #ffffff;
+        border-bottom: 2px solid #ffc107;
+        display: inline-block;
+        padding-bottom: 0.2rem;
       }
 
-      .team,
-      .features,
-      .tech-stack,
-      .screenshots {
-        margin-bottom: 2rem;
+      /* Team Section */
+      .team ul {
+        list-style: none;
+        margin-top: 1rem;
       }
-
-      .team ul,
-      .features ul {
-        list-style-type: disc;
-        padding-left: 20px;
-      }
-
-      .team ul li,
-      .features ul li {
-        padding: 0.5rem 0;
-        color: #ffffff; /* White text for lists */
-      }
-
-      .tech-stack div {
+      .team ul li {
+        background: #1f1f1f;
+        padding: 1rem;
+        margin-bottom: 0.8rem;
+        border-radius: 8px;
         display: flex;
-        align-items: center;
-        margin-bottom: 1.5rem;
+        flex-direction: column;
+      }
+      .team ul li strong {
+        color: #ffc107;
+      }
+      .team ul li a {
+        font-size: 0.9rem;
+        margin-top: 0.2rem;
       }
 
-      .tech-stack img {
-        width: 100px;
-        margin-right: 1rem;
+      /* Architecture & Screenshots */
+      .screenshots {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 2rem;
       }
-
-      .tech-stack p {
-        font-size: 1.1rem;
-        color: #ffffff; /* White text for tech stack descriptions */
-      }
-
       .screenshots img {
         width: 100%;
-        max-width: 700px;
         border-radius: 8px;
-        margin-bottom: 1rem;
         transition: transform 0.3s ease;
       }
-
       .screenshots img:hover {
         transform: scale(1.05);
       }
-
-      .links a {
-        display: inline-block;
-        background-color: #333333; /* Gray-600 background for links */
-        color: white;
-        text-decoration: none;
-        padding: 0.6rem 1rem; /* Reduced padding for thinner look */
-        margin: 0.5rem;
-        border-radius: 30px; /* More rounded corners */
-        transition: background 0.3s ease;
-      }
-
-      .links a:hover {
-        background-color: #4b4b4b; /* Gray-600 hover effect */
-      }
-
-      footer {
+      .screenshots h3 {
+        margin: 0.5rem 0;
         text-align: center;
-        padding: 0.8rem 0; /* Reduced padding */
-        background-color: #333333; /* Gray-600 footer */
-        color: white;
+        color: #ffc107;
       }
 
+      /* Links Section */
+      .links {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 1rem;
+        margin-top: 1rem;
+      }
+      .links a {
+        background: #2c2c2c;
+        padding: 0.8rem 1.2rem;
+        border-radius: 50px;
+        font-weight: 500;
+      }
+
+      /* Footer */
+      footer {
+        background: #1f1f1f;
+        padding: 1rem;
+        text-align: center;
+      }
       footer p {
-        font-size: 0.9rem; /* Reduced font size */
-        margin: 0;
+        font-size: 0.9rem;
+        color: #a0a0a0;
+      }
+
+      /* Responsive adjustments */
+      @media (max-width: 768px) {
+        .hero h1 {
+          font-size: 2.5rem;
+        }
+        .nav-links {
+          flex-direction: column;
+          gap: 0.5rem;
+        }
       }
     </style>
   </head>
   <body>
+    <!-- Header with Logo -->
     <header>
-      <h1>Lightify</h1>
-      <p>Smart Indoor Light Control & Automation System</p>
+      <nav>
+        <div class="nav-left">
+          <img src="images/Logo_white.png" alt="Lightify Logo" />
+          <div class="logo-text">Lightify</div>
+        </div>
+        <ul class="nav-links">
+          <li><a href="#team">Team</a></li>
+          <li><a href="#architecture">Architecture</a></li>
+          <li><a href="#links">Links</a></li>
+        </ul>
+      </nav>
     </header>
 
-    <section>
-      <div class="team">
-        <h2>Team</h2>
-        <ul>
-          <li>
-            <strong>E/20/262:</strong> Tharindu Lakshan (<a
-              href="mailto:e20262@eng.pdn.ac.lk"
-              >e20262@eng.pdn.ac.lk</a
-            >)
-          </li>
-          <li>
-            <strong>E/20/266:</strong> Pradeep Nilupul (<a
-              href="mailto:e20266@eng.pdn.ac.lk"
-              >e20266@eng.pdn.ac.lk</a
-            >)
-          </li>
-          <li>
-            <strong>E/20/449:</strong> Sandaru Wijewardhana (<a
-              href="mailto:e20449@eng.pdn.ac.lk"
-              >e20449@eng.pdn.ac.lk</a
-            >)
-          </li>
-          <li>
-            <strong>E/20/288:</strong> Chalaka Perera (<a
-              href="mailto:e20288@eng.pdn.ac.lk"
-              >e20288@eng.pdn.ac.lk</a
-            >)
-          </li>
-        </ul>
-      </div>
-
-      <div class="screenshots">
-        <h2>Solution Architecture</h2>
+    <!-- Hero Section with Logo -->
+    <section class="hero">
+      <div class="hero-overlay"></div>
+      <div class="hero-content">
         <img
-          src="images/SolutionArchitecture.png"
-          alt="Solution Architecture"
+          src="images/Logo_white.png"
+          alt="Lightify Logo"
+          class="hero-logo"
         />
-        <h2>Components & DataFlow</h2>
-        <img src="images/Components&DataFlow.png" alt="Components & DataFlow" />
-        <h2>Components & DataFlow Explained</h2>
-        <img
-          src="images/Components&DataFlowExplained.png"
-          alt="Components & DataFlow Explained"
-        />
-      </div>
-
-      <div class="links">
-        <h2>Links</h2>
-        <a
-          href="https://github.com/cepdnaclk/e20-3yp-Smart-IOT-Indoor-Lighting-System"
-          target="_blank"
-          >Lightify - Project Repository</a
-        >
-        <a
-          href="https://cepdnaclk.github.io/e20-3yp-Smart-IOT-Indoor-Lighting-System"
-          target="_blank"
-          >Lightify - Project Page</a
-        >
-        <a href="http://www.ce.pdn.ac.lk/" target="_blank"
-          >Department of Computer Engineering</a
-        >
-        <a href="https://eng.pdn.ac.lk/" target="_blank"
-          >University of Peradeniya</a
-        >
+        <h1>Lightify</h1>
+        <p>
+          Smart Indoor Light Control & Automation System that transforms your
+          space into an intelligent environment.
+        </p>
       </div>
     </section>
 
+    <!-- Main Content -->
+    <main>
+      <!-- Team Section -->
+      <section id="team" class="team">
+        <h2>Our Team</h2>
+        <ul>
+          <li>
+            <strong>E/20/262:</strong> Tharindu Lakshan
+            <a href="mailto:e20262@eng.pdn.ac.lk">e20262@eng.pdn.ac.lk</a>
+          </li>
+          <li>
+            <strong>E/20/266:</strong> Pradeep Nilupul
+            <a href="mailto:e20266@eng.pdn.ac.lk">e20266@eng.pdn.ac.lk</a>
+          </li>
+          <li>
+            <strong>E/20/449:</strong> Sandaru Wijewardhana
+            <a href="mailto:e20449@eng.pdn.ac.lk">e20449@eng.pdn.ac.lk</a>
+          </li>
+          <li>
+            <strong>E/20/288:</strong> Chalaka Perera
+            <a href="mailto:e20288@eng.pdn.ac.lk">e20288@eng.pdn.ac.lk</a>
+          </li>
+        </ul>
+      </section>
+
+      <!-- Architecture & Components Section -->
+      <section id="architecture">
+        <h2>Solution Architecture & Components</h2>
+        <div class="screenshots">
+          <div>
+            <img
+              src="images/SolutionArchitecture.png"
+              alt="Solution Architecture"
+            />
+            <h3>Solution Architecture</h3>
+          </div>
+          <div>
+            <img
+              src="images/Components&DataFlow.png"
+              alt="Components & DataFlow"
+            />
+            <h3>Components & DataFlow</h3>
+          </div>
+          <div>
+            <img
+              src="images/Components&DataFlowExplained.png"
+              alt="Components & DataFlow Explained"
+            />
+            <h3>Components & DataFlow Explained</h3>
+          </div>
+        </div>
+      </section>
+
+      <!-- Links Section -->
+      <section id="links">
+        <h2>Useful Links</h2>
+        <div class="links">
+          <a
+            href="https://github.com/cepdnaclk/e20-3yp-Smart-IOT-Indoor-Lighting-System"
+            target="_blank"
+            >Project Repository</a
+          >
+          <a
+            href="https://cepdnaclk.github.io/e20-3yp-Smart-IOT-Indoor-Lighting-System"
+            target="_blank"
+            >Project Page</a
+          >
+          <a href="http://www.ce.pdn.ac.lk/" target="_blank"
+            >Department of Computer Engineering</a
+          >
+          <a href="https://eng.pdn.ac.lk/" target="_blank"
+            >University of Peradeniya</a
+          >
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
     <footer>
-      <p>&copy; 2025 Lightify Team</p>
+      <p>&copy; 2025 Lightify Team. All Rights Reserved.</p>
     </footer>
   </body>
 </html>
