@@ -290,6 +290,162 @@
           </div>
         </div>
       </section>
+  <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: "Roboto", sans-serif;
+        background-color: #121212;
+        color: #e0e0e0;
+        line-height: 1.6;
+      }
+      a {
+        text-decoration: none;
+        color: #ffc107;
+        transition: color 0.3s ease;
+      }
+      a:hover {
+        color: #ffb300;
+      }
+      header {
+        background: #1f1f1f;
+        padding: 1rem 2rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+      }
+      nav {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .nav-left {
+        display: flex;
+        align-items: center;
+      }
+      .nav-left img {
+        width: 50px;
+        margin-right: 0.75rem;
+      }
+      .logo-text {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #ffc107;
+      }
+      .nav-links {
+        list-style: none;
+        display: flex;
+      }
+      .nav-links li {
+        margin-left: 1.5rem;
+      }
+      .hero {
+        background: url("images/hero-bg.jpg") center/cover no-repeat;
+        min-height: 60vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        padding: 2rem;
+        position: relative;
+      }
+      .hero-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(18, 18, 18, 0.8);
+        z-index: 1;
+      }
+      .hero-content {
+        position: relative;
+        z-index: 2;
+      }
+      .hero-logo {
+        width: 120px;
+        margin-bottom: 1rem;
+      }
+      .hero h1 {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        color: #ffc107;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+      }
+      .hero p {
+        font-size: 1.2rem;
+        max-width: 800px;
+      }
+      main {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+      }
+      section {
+        margin-bottom: 3rem;
+      }
+      section h2 {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+        color: #ffffff;
+        border-bottom: 2px solid #ffc107;
+        display: inline-block;
+        padding-bottom: 0.2rem;
+      }
+      .team ul {
+        list-style: none;
+        margin-top: 1rem;
+      }
+      .team ul li {
+        background: #1f1f1f;
+        padding: 1rem;
+        margin-bottom: 0.8rem;
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+      }
+      .team ul li strong {
+        color: #ffc107;
+      }
+      .team ul li a {
+        font-size: 0.9rem;
+        margin-top: 0.2rem;
+      }
+      .budget {
+        background: #1f1f1f;
+        padding: 1.5rem;
+        margin-top: 2rem;
+        border-radius: 8px;
+      }
+      .budget h2 {
+        color: #ffc107;
+      }
+    </style>
+
+      <section id="budget" class="budget">
+        <h2>Budget</h2>
+        <p>Control Unit</p>
+        <ul>
+          <li>ESP32 = LKR 1200</li>
+          <li>4-channel AC dimmer circuit = LKR 1000</li>
+        </ul>
+        <p>Central Hub</p>
+        <ul>
+          <li>ESP32 and other components = LKR 3000</li>
+        </ul>
+        <p>Sensor Unit</p>
+        <ul>
+          <li>Humidity Sensor = LKR 500</li>
+          <li>RD-03D mm wave radar sensor = LKR 1250</li>
+          <li>VEML7700 Ambient light sensor = LKR 1200</li>
+        </ul>
+        <p>Total cost per unit = LKR 8150</p>
+      </section>
 
       <!-- Links Section -->
       <section id="links">
