@@ -34,6 +34,12 @@ export default function HomeScreen() {
             onPress={() => router.push("/SignUp")}
           />
         </View>
+        <View style={styles.buttonSpacing}>
+          <Button
+            title="Living Room"
+            onPress={() => router.push("/LivingRoom")}
+          />
+        </View>
       </View>
     </View>
   );
