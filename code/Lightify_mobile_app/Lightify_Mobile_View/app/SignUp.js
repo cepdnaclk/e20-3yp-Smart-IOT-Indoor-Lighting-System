@@ -34,7 +34,7 @@ const SignupScreen = () => {
     }
 
     try {
-      const response = await fetch('http://192.168.1.100:8081/api/users/register', {
+      const response = await fetch('http://localhost:8081/api/users/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
