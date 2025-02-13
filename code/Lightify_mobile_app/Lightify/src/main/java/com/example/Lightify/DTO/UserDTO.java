@@ -1,8 +1,13 @@
 package com.example.Lightify.DTO;
 
-import lombok.Data;
+import lombok.*;
 
-@Data
+@Getter
+@Setter
+@ToString
+@NoArgsConstructor
+@AllArgsConstructor
+
 public class UserDTO {
     private String username;
     private String email;
