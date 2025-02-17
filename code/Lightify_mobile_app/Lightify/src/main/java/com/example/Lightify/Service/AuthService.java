@@ -32,4 +32,8 @@ public class AuthService {
         Optional<User> user = userRepository.findByEmail(email);
         return user.isPresent() && passwordEncoder.matches(password, user.get().getPassword());
     }
+
+    public User getUserByEmail(String email) {
+        return userRepository.findByEmail(email).orElse(null);
+    }
 }
