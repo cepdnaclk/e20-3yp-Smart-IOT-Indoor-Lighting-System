@@ -1,20 +1,66 @@
-___
-# DELETE THIS INSTRUCTIONS AND ADD AN INTRODUCTION ABOUT YOUR PROJECT
-___
+# Lightify - Smart Indoor Light Control & Automation System
 
-# eYY-3yp-project-template
+Lightify is a Smart Indoor Light Control & Automation System designed to transform any indoor space into an intelligent, automated environment. Our system offers motion-based lighting activation, zone-specific lighting control, and app-based management, providing convenience, energy efficiency, and modern automation.
 
-This is a sample repository you can use for your Embedded Systems project. Once you followed these instructions, remove the text and add a brief introduction to here.
+---
 
-### Enable GitHub Pages
+## Project Overview
 
-You can put the things to be shown in GitHub pages into the _docs/_ folder. Both html and md file formats are supported. You need to go to settings and enable GitHub pages and select _main_ branch and _docs_ folder from the dropdowns, as shown in the below image.
+The project involves developing an embedded system that integrates smart lighting solutions with IoT technology. Key features include:
+- **Motion-based lighting activation** to save energy.
+- **Zone-specific lighting control** for customized lighting environments.
+- **App-based control** for ease of access and management.
 
-![image](https://user-images.githubusercontent.com/11540782/98789936-028d3600-2429-11eb-84be-aaba665fdc75.png)
+This repository contains all necessary files and documentation related to the project.
 
-### Special Configurations
+---
 
-These projects will be automatically added into [https://projects.ce.pdn.ac.lk](). If you like to show more details about your project on this site, you can fill the parameters in the file, _/docs/index.json_
+## Team Members
+- **E/20/262:** Tharindu Lakshan ([e20262@eng.pdn.ac.lk](mailto:e20262@eng.pdn.ac.lk))
+- **E/20/266:** Pradeep Nilupul ([e20266@eng.pdn.ac.lk](mailto:e20266@eng.pdn.ac.lk))
+- **E/20/449:** Sandaru Wijewardhana ([e20449@eng.pdn.ac.lk](mailto:e20449@eng.pdn.ac.lk))
+- **E/20/288:** Chalaka Perera ([e20288@eng.pdn.ac.lk](mailto:e20288@eng.pdn.ac.lk))
+
+---
+
+## Solution Architecture & Components
+
+The system comprises three main components:
+- **Control Unit:** ESP32 and AC dimmer circuit for light control.
+- **Central Hub:** Manages communication and overall control.
+- **Sensor Unit:** Includes humidity, radar, and ambient light sensors.
+
+### Architecture Diagrams
+- ![Solution Architecture](images/SolutionArchitecture.png)
+- ![Components & Data Flow](images/Components&DataFlow.png)
+- ![Components & Data Flow Explained](images/Components&DataFlowExplained.png)
+
+---
+
+## Budget
+
+- **Control Unit:**
+  - ESP32 = LKR 1200
+  - 4-channel AC dimmer circuit = LKR 1000
+- **Central Hub:**
+  - ESP32 and other components = LKR 3000
+- **Sensor Unit:**
+  - Humidity Sensor = LKR 500
+  - RD-03D mm wave radar sensor = LKR 1250
+  - VEML7700 Ambient light sensor = LKR 1200
+
+**Total cost per unit: LKR 8150**
+
+---
+
+## Useful Links
+- [Project Repository](https://github.com/cepdnaclk/e20-3yp-Smart-IOT-Indoor-Lighting-System)
+- [Project Page](https://cepdnaclk.github.io/e20-3yp-Smart-IOT-Indoor-Lighting-System)
+
+---
+
+This project is part of the Embedded Systems module at the Department of Computer Engineering, University of Peradeniya.
+
 
 ```
 {
