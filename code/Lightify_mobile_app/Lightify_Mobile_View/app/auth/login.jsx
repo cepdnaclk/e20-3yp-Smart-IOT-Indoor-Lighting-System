@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 
-const App = () => {
+const Login = () => {
   return (
     <View style={styles.container}>
       {/* Logo */}
@@ -109,4 +109,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default App;
+export default Login;
