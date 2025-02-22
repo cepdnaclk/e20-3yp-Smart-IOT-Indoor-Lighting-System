@@ -44,7 +44,9 @@ public class SecurityConfig {
                         .requestMatchers(
                                 new AntPathRequestMatcher("/api/auth/register"),
                                 new AntPathRequestMatcher("/api/auth/login"),
-                                new AntPathRequestMatcher("/api/rooms/**") // ✅ Allow all Room APIs
+                                new AntPathRequestMatcher("/api/rooms/**"),
+                                new AntPathRequestMatcher("/mqtt/**"),
+                                new AntPathRequestMatcher("/mqtt/publish/**")
                         ).permitAll()  // Allow public access to these paths
                         .anyRequest().authenticated()  // Other endpoints require authentication
                 )
