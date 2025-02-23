@@ -1,12 +1,20 @@
 //package com.example.Lightify.Service;
 //
+//import java.io.IOException;
 //import java.nio.charset.StandardCharsets;
+//import java.util.Date;
+//import java.util.List;
 //import java.util.concurrent.CompletableFuture;
 //import java.util.concurrent.ExecutionException;
 //
+//import com.example.Lightify.Entity.ReceivedMessage;
+//import com.example.Lightify.Repository.ReceivedMessageRepository;
 //import jakarta.annotation.PostConstruct;
 //import jakarta.annotation.PreDestroy;
+//import lombok.Getter;
 //import org.springframework.beans.factory.annotation.Value;
+//import org.springframework.core.io.ClassPathResource;
+//import org.springframework.core.io.Resource;
 //import org.springframework.stereotype.Service;
 //import software.amazon.awssdk.crt.CrtResource;
 //import software.amazon.awssdk.crt.http.HttpProxyOptions;
@@ -29,13 +37,13 @@
 //    private int port;
 //
 //    @Value("${aws.iot.certificate.path}")
-//    private String certificatePath;
+//    private String certificatePath; // e.g., "Cert/your-certificate.pem.crt"
 //
 //    @Value("${aws.iot.privateKey.path}")
-//    private String privateKeyPath;
+//    private String privateKeyPath;  // e.g., "Cert/your-private.pem.key"
 //
 //    @Value("${aws.iot.certificateAuthority.path:}")
-//    private String certificateAuthorityPath;
+//    private String certificateAuthorityPath; // e.g., "Cert/AmazonRootCA1.pem"
 //
 //    @Value("${aws.iot.cleanSession}")
 //    private boolean cleanSession;
@@ -51,23 +59,39 @@
 //
 //    private MqttClientConnection connection;
 //
+//    // Inject the repository to store received messages.
+//    private final ReceivedMessageRepository messageRepository;
+//
+//    public AwsIotPubSubService(ReceivedMessageRepository messageRepository) {
+//        this.messageRepository = messageRepository;
+//    }
+//
 //    @PostConstruct
-//    public void init() throws Exception {
-//        // Build the connection using mutual TLS authentication.
+//    public void init() throws IOException, ExecutionException, InterruptedException {
+//        // Convert classpath resources to file paths so that the native SDK can read them.
+//        Resource certResource = new ClassPathResource(certificatePath);
+//        Resource keyResource  = new ClassPathResource(privateKeyPath);
+//        String certAbsolutePath = certResource.getFile().getAbsolutePath();
+//        String keyAbsolutePath  = keyResource.getFile().getAbsolutePath();
+//
+//        // Build the connection using mutual TLS.
 //        AwsIotMqttConnectionBuilder builder =
-//                AwsIotMqttConnectionBuilder.newMtlsBuilderFromPath(certificatePath, privateKeyPath);
+//                AwsIotMqttConnectionBuilder.newMtlsBuilderFromPath(certAbsolutePath, keyAbsolutePath);
+//
 //        builder.withClientId(clientId)
 //                .withEndpoint(endpoint)
 //                .withPort(port)
 //                .withCleanSession(cleanSession)
 //                .withProtocolOperationTimeoutMs(protocolTimeoutMs);
 //
-//        // If a certificate authority path is provided, set it.
+//        // Optionally load a certificate authority if provided.
 //        if (certificateAuthorityPath != null && !certificateAuthorityPath.isEmpty()) {
-//            builder.withCertificateAuthorityFromPath(null, certificateAuthorityPath);
+//            Resource caResource = new ClassPathResource(certificateAuthorityPath);
+//            String caAbsolutePath = caResource.getFile().getAbsolutePath();
+//            builder.withCertificateAuthorityFromPath(null, caAbsolutePath);
 //        }
 //
-//        // If proxy settings are provided, set them.
+//        // Optionally configure proxy settings.
 //        if (proxyHost != null && !proxyHost.isEmpty() && proxyPort > 0) {
 //            HttpProxyOptions proxyOptions = new HttpProxyOptions();
 //            proxyOptions.setHost(proxyHost);
@@ -83,33 +107,52 @@
 //                    System.out.println("Connection interrupted: " + errorCode);
 //                }
 //            }
-//
 //            @Override
 //            public void onConnectionResumed(boolean sessionPresent) {
 //                System.out.println("Connection resumed: " + (sessionPresent ? "existing session" : "clean session"));
 //            }
 //        });
 //
-//        // Build and immediately close the builder.
+//        // Build the connection and close the builder.
 //        connection = builder.build();
 //        builder.close();
 //
-//        // Connect the MQTT client.
+//        // Connect to AWS IoT Core.
 //        CompletableFuture<Boolean> connectedFuture = connection.connect();
 //        boolean sessionPresent = connectedFuture.get();
 //        System.out.println("Connected to " + (!sessionPresent ? "new" : "existing") + " session!");
 //    }
 //
 //    /**
-//     * Subscribes to a given topic. The provided callback prints incoming messages.
+//     * Subscribes to the given topic. When a message is received, it is converted from a byte array
+//     * into a String, and then stored in MongoDB along with the topic and a timestamp.
+//     * It also ensures that only the 10 most recent messages for each topic are kept.
 //     */
 //    public void subscribe(String topic) throws InterruptedException, ExecutionException {
-//        CompletableFuture<Integer> subscribed = connection.subscribe(topic, QualityOfService.AT_LEAST_ONCE, (MqttMessage message) -> {
-//            // Retrieve payload from the message.
-//            byte[] payloadBytes = message.getPayload();
-//            String payload = new String(payloadBytes, StandardCharsets.UTF_8);
-//            System.out.println("MESSAGE: " + payload);
-//        });
+//        CompletableFuture<Integer> subscribed = connection.subscribe(
+//                topic,
+//                QualityOfService.AT_LEAST_ONCE,
+//                (MqttMessage message) -> {
+//                    byte[] payloadBytes = message.getPayload();
+//                    String payload = new String(payloadBytes, StandardCharsets.UTF_8);
+//                    System.out.println("MESSAGE: " + payload);
+//                    // Create a new ReceivedMessage entity.
+//                    ReceivedMessage receivedMessage = new ReceivedMessage();
+//                    receivedMessage.setTopic(topic);
+//                    receivedMessage.setPayload(payload);
+//                    receivedMessage.setTimestamp(new Date());
+//                    messageRepository.save(receivedMessage);
+//
+//                    // After saving, limit stored messages for this topic to the 10 most recent.
+//                    List<ReceivedMessage> messages = messageRepository.findByTopicOrderByTimestampAsc(topic);
+//                    if (messages.size() > 10) {
+//                        int toRemove = messages.size() - 10;
+//                        for (int i = 0; i < toRemove; i++) {
+//                            messageRepository.delete(messages.get(i));
+//                        }
+//                    }
+//                }
+//        );
 //        subscribed.get();
 //        System.out.println("Subscribed to topic: " + topic);
 //    }
@@ -119,15 +162,23 @@
 //     */
 //    public void publish(String topic, String payload) throws InterruptedException, ExecutionException {
 //        byte[] payloadBytes = payload.getBytes(StandardCharsets.UTF_8);
-//        // Publish with AT_LEAST_ONCE QoS and a retain flag of false.
 //        MqttMessage message = new MqttMessage(topic, payloadBytes, QualityOfService.AT_LEAST_ONCE, false);
 //        CompletableFuture<Integer> published = connection.publish(message);
 //        published.get();
 //        System.out.println("Published message to topic " + topic + ": " + payload);
 //    }
 //
+//    /**
+//     * Retrieves the latest received message for the given topic from the MongoDB database.
+//     */
+//    public String getLatestMessage(String topic) {
+//        return messageRepository.findTopByTopicOrderByTimestampDesc(topic)
+//                .map(ReceivedMessage::getPayload)
+//                .orElse("No message received yet for topic: " + topic);
+//    }
+//
 //    @PreDestroy
-//    public void cleanup() throws Exception {
+//    public void cleanup() throws ExecutionException, InterruptedException {
 //        if (connection != null) {
 //            CompletableFuture<Void> disconnected = connection.disconnect();
 //            disconnected.get();
@@ -137,17 +188,23 @@
 //        }
 //    }
 //}
-
+//
 
 package com.example.Lightify.Service;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Date;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
+import com.example.Lightify.Entity.ReceivedMessage;
+import com.example.Lightify.Repository.ReceivedMessageRepository;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
@@ -162,6 +219,8 @@ import software.amazon.awssdk.iot.AwsIotMqttConnectionBuilder;
 
 @Service
 public class AwsIotPubSubService {
+
+    private static final Logger logger = LogManager.getLogger(AwsIotPubSubService.class);
 
     @Value("${aws.iot.clientId}")
     private String clientId;
@@ -195,21 +254,22 @@ public class AwsIotPubSubService {
 
     private MqttClientConnection connection;
 
+    // Inject the repository to store received messages.
+    private final ReceivedMessageRepository messageRepository;
+
+    public AwsIotPubSubService(ReceivedMessageRepository messageRepository) {
+        this.messageRepository = messageRepository;
+    }
+
     @PostConstruct
     public void init() throws IOException, ExecutionException, InterruptedException {
-        /*
-         * 1) Convert classpath resources to actual file paths
-         *    so that the native SDK can read them.
-         */
+        // Convert classpath resources to file paths so that the native SDK can read them.
         Resource certResource = new ClassPathResource(certificatePath);
         Resource keyResource  = new ClassPathResource(privateKeyPath);
-
         String certAbsolutePath = certResource.getFile().getAbsolutePath();
         String keyAbsolutePath  = keyResource.getFile().getAbsolutePath();
 
-        /*
-         * 2) Build the connection using mutual TLS.
-         */
+        // Build the connection using mutual TLS.
         AwsIotMqttConnectionBuilder builder =
                 AwsIotMqttConnectionBuilder.newMtlsBuilderFromPath(certAbsolutePath, keyAbsolutePath);
 
@@ -219,14 +279,14 @@ public class AwsIotPubSubService {
                 .withCleanSession(cleanSession)
                 .withProtocolOperationTimeoutMs(protocolTimeoutMs);
 
-        // If a certificate authority path is provided, load it similarly.
+        // Optionally load a certificate authority if provided.
         if (certificateAuthorityPath != null && !certificateAuthorityPath.isEmpty()) {
             Resource caResource = new ClassPathResource(certificateAuthorityPath);
             String caAbsolutePath = caResource.getFile().getAbsolutePath();
             builder.withCertificateAuthorityFromPath(null, caAbsolutePath);
         }
 
-        // If proxy settings are provided, configure them.
+        // Optionally configure proxy settings.
         if (proxyHost != null && !proxyHost.isEmpty() && proxyPort > 0) {
             HttpProxyOptions proxyOptions = new HttpProxyOptions();
             proxyOptions.setHost(proxyHost);
@@ -234,34 +294,34 @@ public class AwsIotPubSubService {
             builder.withHttpProxyOptions(proxyOptions);
         }
 
-        // Set up connection event callbacks
+        // Set up connection event callbacks.
         builder.withConnectionEventCallbacks(new MqttClientConnectionEvents() {
             @Override
             public void onConnectionInterrupted(int errorCode) {
                 if (errorCode != 0) {
-                    System.out.println("Connection interrupted: " + errorCode);
+                    logger.error("Connection interrupted: {}", errorCode);
                 }
             }
-
             @Override
             public void onConnectionResumed(boolean sessionPresent) {
-                System.out.println("Connection resumed: "
-                        + (sessionPresent ? "existing session" : "clean session"));
+                logger.info("Connection resumed: {}", (sessionPresent ? "existing session" : "clean session"));
             }
         });
 
-        // Build and close the builder
+        // Build the connection and close the builder.
         connection = builder.build();
         builder.close();
 
-        // Connect the MQTT client
+        // Connect to AWS IoT Core.
         CompletableFuture<Boolean> connectedFuture = connection.connect();
         boolean sessionPresent = connectedFuture.get();
-        System.out.println("Connected to " + (!sessionPresent ? "new" : "existing") + " session!");
+        logger.info("Connected to {} session!", (!sessionPresent ? "new" : "existing"));
     }
 
     /**
-     * Subscribes to a given topic. The provided callback prints incoming messages.
+     * Subscribes to the given topic. When a message is received, it is converted from a byte array
+     * into a String, and then stored in MongoDB along with the topic and a timestamp.
+     * It also ensures that only the 10 most recent messages for each topic are kept.
      */
     public void subscribe(String topic) throws InterruptedException, ExecutionException {
         CompletableFuture<Integer> subscribed = connection.subscribe(
@@ -270,11 +330,28 @@ public class AwsIotPubSubService {
                 (MqttMessage message) -> {
                     byte[] payloadBytes = message.getPayload();
                     String payload = new String(payloadBytes, StandardCharsets.UTF_8);
-                    System.out.println("MESSAGE: " + payload);
+                    logger.info("Received MESSAGE on topic {}: {}", topic, payload);
+                    // Create a new ReceivedMessage entity.
+                    ReceivedMessage receivedMessage = new ReceivedMessage();
+                    receivedMessage.setTopic(topic);
+                    receivedMessage.setPayload(payload);
+                    receivedMessage.setTimestamp(new Date());
+                    messageRepository.save(receivedMessage);
+
+                    // After saving, limit stored messages for this topic to the 10 most recent.
+                    List<ReceivedMessage> messages = messageRepository.findByTopicOrderByTimestampAsc(topic);
+                    if (messages.size() > 10) {
+                        int toRemove = messages.size() - 10;
+                        for (int i = 0; i < toRemove; i++) {
+                            ReceivedMessage rm = messages.get(i);
+                            messageRepository.delete(rm);
+                            logger.info("Deleted old message with id: {}", rm.getId());
+                        }
+                    }
                 }
         );
         subscribed.get();
-        System.out.println("Subscribed to topic: " + topic);
+        logger.info("Subscribed to topic: {}", topic);
     }
 
     /**
@@ -283,10 +360,18 @@ public class AwsIotPubSubService {
     public void publish(String topic, String payload) throws InterruptedException, ExecutionException {
         byte[] payloadBytes = payload.getBytes(StandardCharsets.UTF_8);
         MqttMessage message = new MqttMessage(topic, payloadBytes, QualityOfService.AT_LEAST_ONCE, false);
-
         CompletableFuture<Integer> published = connection.publish(message);
         published.get();
-        System.out.println("Published message to topic " + topic + ": " + payload);
+        logger.info("Published message to topic {}: {}", topic, payload);
+    }
+
+    /**
+     * Retrieves the latest received message for the given topic from the MongoDB database.
+     */
+    public String getLatestMessage(String topic) {
+        return messageRepository.findTopByTopicOrderByTimestampDesc(topic)
+                .map(ReceivedMessage::getPayload)
+                .orElse("No message received yet for topic: " + topic);
     }
 
     @PreDestroy
@@ -296,7 +381,9 @@ public class AwsIotPubSubService {
             disconnected.get();
             connection.close();
             CrtResource.waitForNoResources();
-            System.out.println("Disconnected and closed connection.");
+            logger.info("Disconnected and closed connection.");
         }
     }
 }
+
+

@@ -11,6 +11,7 @@
 const char* mqttServer = "d012012821ffpbdagc8s8-ats.iot.eu-north-1.amazonaws.com";
 const int mqttPort = 8883;
 const char* mqttTopic = "topic/1";
+const char* mqttPubTopic = "topic/2";
 
 const char* root_ca_pem = R"EOF(
 -----BEGIN CERTIFICATE-----
@@ -101,6 +102,11 @@ Preferences preferences;
 String storedSSID = "";
 String storedPassword = "";
 bool resetTriggered = false;  // Ensures resetCredentials() is called only once
+
+
+static unsigned long lastPublishTime = 0;
+const unsigned long PUBLISH_INTERVAL = 10000; // 10 seconds in milliseconds
+
 
 // Forward declarations
 void startConfigPortal();
@@ -290,6 +296,33 @@ void checkResetButton() {
     lastButtonState = buttonState;
 }
 
+// Function to generate the next sequence number
+unsigned long getNextSequenceNumber() {
+    static unsigned long seqNum = 0;
+    return ++seqNum;
+}
+
+// Function to generate the JSON payload for the room state.
+// The JSON includes a room name, a list of bulb IDs, and the current sequence number.
+String generateRoomStateJson() {
+    unsigned long seq = getNextSequenceNumber();
+    String json = "{";
+    json += "\"room\":\"Living room\",";
+    json += "\"bulbs\":[1,2,4],";
+    json += "\"seqNumber\":" + String(seq);
+    json += "}";
+    return json;
+}
+
+// Function that generates the data and publishes it to the MQTT topic.
+// This function calls generateRoomStateJson() and then publishes the resulting JSON.
+void generateDataAndPublish() {
+    String payload = generateRoomStateJson();
+    client.publish(mqttPubTopic, payload.c_str());
+    Serial.println("Published periodic room state: " + payload);
+}
+
+
 void setup() {
     Serial.begin(9600);
     pinMode(BUTTON_PIN, INPUT);
@@ -311,4 +344,10 @@ void loop() {
     client.loop();
     checkWiFi();
     checkResetButton();  // Continuously monitor button state
+
+    unsigned long now = millis();
+    if (now - lastPublishTime >= PUBLISH_INTERVAL) {
+        lastPublishTime = now;
+        generateDataAndPublish(); // Generate data and publish when it's available.
+    }
 }
