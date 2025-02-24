@@ -19,7 +19,7 @@ export default function HomeScreen() {
         <View style={styles.buttonSpacing}>
           <Button
             title="Go to Login"
-            onPress={() => router.push("/Login")}
+            onPress={() => router.push("/auth/login")}
           />
         </View>
         <View style={styles.buttonSpacing}>
@@ -31,7 +31,13 @@ export default function HomeScreen() {
         <View style={styles.buttonSpacing}>
           <Button
             title="Sign Up"
-            onPress={() => router.push("/SignUp")}
+            onPress={() => router.push("/auth/signup")}
+          />
+        </View>
+        <View style={styles.buttonSpacing}>
+          <Button
+            title="Add Room"
+            onPress={() => router.push("/Add_Room")}
           />
         </View>
       </View>
