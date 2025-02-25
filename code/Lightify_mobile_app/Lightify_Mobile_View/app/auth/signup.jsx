@@ -159,7 +159,7 @@ const handleSignup = async () => {
       setEmail("");
       setPassword("");
       setConfirmPassword("");
-      navigation.navigate("Login");
+      navigation.navigate("login");
     } else {
       Alert.alert("Error", `Signup failed: ${response.statusText}`);
     }

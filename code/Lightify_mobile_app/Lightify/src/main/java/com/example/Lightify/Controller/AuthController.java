@@ -31,21 +31,40 @@ public class AuthController {
         }
     }
 
+//    @PostMapping("/login")
+//    public ResponseEntity<String> login(@RequestBody UserDTO userDTO) {
+//        logger.info("Received login request for email: {}", userDTO.getEmail());
+//        try {
+//            boolean isAuthenticated = authService.authenticateUser(userDTO.getEmail(), userDTO.getPassword());
+//            if (isAuthenticated) {
+//                logger.info("User login successful for email: {}", userDTO.getEmail());
+//                return ResponseEntity.ok("Login successful");
+//            } else {
+//                logger.warn("Invalid login attempt for email: {}", userDTO.getEmail());
+//                return ResponseEntity.status(401).body("Invalid credentials");
+//            }
+//        } catch (Exception e) {
+//            logger.error("Error during login for email {}: {}", userDTO.getEmail(), e.getMessage());
+//            return ResponseEntity.status(500).body("Login failed");
+//        }
+//    }
+
     @PostMapping("/login")
     public ResponseEntity<String> login(@RequestBody UserDTO userDTO) {
-        logger.info("Received login request for email: {}", userDTO.getEmail());
+        logger.info("Received login request for: {}", userDTO.getEmail() != null ? userDTO.getEmail() : userDTO.getUsername());
         try {
-            boolean isAuthenticated = authService.authenticateUser(userDTO.getEmail(), userDTO.getPassword());
+            boolean isAuthenticated = authService.authenticateUser(userDTO.getEmail(), userDTO.getUsername(), userDTO.getPassword());
             if (isAuthenticated) {
-                logger.info("User login successful for email: {}", userDTO.getEmail());
+                logger.info("User login successful for: {}", userDTO.getEmail() != null ? userDTO.getEmail() : userDTO.getUsername());
                 return ResponseEntity.ok("Login successful");
             } else {
-                logger.warn("Invalid login attempt for email: {}", userDTO.getEmail());
+                logger.warn("Invalid login attempt for: {}", userDTO.getEmail() != null ? userDTO.getEmail() : userDTO.getUsername());
                 return ResponseEntity.status(401).body("Invalid credentials");
             }
         } catch (Exception e) {
-            logger.error("Error during login for email {}: {}", userDTO.getEmail(), e.getMessage());
+            logger.error("Error during login for {}: {}", userDTO.getEmail() != null ? userDTO.getEmail() : userDTO.getUsername(), e.getMessage());
             return ResponseEntity.status(500).body("Login failed");
         }
     }
+
 }

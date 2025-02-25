@@ -22,6 +22,8 @@ public class RoomController {
         return ResponseEntity.ok(createdRoom);
     }
 
+    // TODO : Get mapping for all rooms
+
     @GetMapping("/{id}")
     public ResponseEntity<Room> getRoomById(@PathVariable String id) {
         Optional<Room> room = roomService.getRoomById(id);
