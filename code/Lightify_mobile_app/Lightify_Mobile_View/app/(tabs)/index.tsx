@@ -117,6 +117,13 @@ export default function HomeScreen() {
             onPress={() => router.push("/Room/AddRoom")}
           />
         </View>
+        <View style={styles.buttonSpacing}>
+          {/* Navigate to /Room/AddRoom */}
+          <Button
+            title="Add Schedule"
+            onPress={() => router.push("/Room/AddSchedule")}
+          />
+        </View>
       </View>
     </View>
   );
@@ -151,3 +158,7 @@ const styles = StyleSheet.create({
     width: "100%",
   },
 });
+
+
+
+
