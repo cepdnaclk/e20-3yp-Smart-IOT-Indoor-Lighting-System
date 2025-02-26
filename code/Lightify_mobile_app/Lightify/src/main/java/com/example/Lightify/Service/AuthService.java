@@ -28,8 +28,27 @@ public class AuthService {
         return "User registered successfully";
     }
 
-    public boolean authenticateUser(String email, String password) {
-        Optional<User> user = userRepository.findByEmail(email);
-        return user.isPresent() && passwordEncoder.matches(password, user.get().getPassword());
+//    public boolean authenticateUser(String email, String password) {
+//        Optional<User> user = userRepository.findByEmail(email);
+//        return user.isPresent() && passwordEncoder.matches(password, user.get().getPassword());
+//    }
+
+    public boolean authenticateUser(String email, String username, String password) {
+        Optional<User> userOptional;
+
+        if (email != null && !email.isEmpty()) {
+            userOptional = userRepository.findByEmail(email);
+        } else if (username != null && !username.isEmpty()) {
+            userOptional = userRepository.findByUsername(username);
+        } else {
+            return false; // If both are null, return false
+        }
+
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+            return passwordEncoder.matches(password, user.getPassword());
+        }
+
+        return false;
     }
 }
