@@ -124,6 +124,13 @@ export default function HomeScreen() {
             onPress={() => router.push("/Room/AddSchedule")}
           />
         </View>
+        <View style={styles.buttonSpacing}>
+          {/* Navigate to /Room/AddRoom */}
+          <Button
+            title="Home View"
+            onPress={() => router.push("/Room/Home_View")}
+          />
+        </View>
       </View>
     </View>
   );
