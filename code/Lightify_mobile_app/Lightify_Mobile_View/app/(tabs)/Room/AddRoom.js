@@ -247,7 +247,7 @@ import {
   StyleSheet,
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons"; // For bulb icons
-import axiosClient from "../../utils/axiosClient"; 
+import axiosClient from "../../../utils/axiosClient"; 
 
 export default function RoomCreationScreen() {
   // Start with some hard-coded rooms
