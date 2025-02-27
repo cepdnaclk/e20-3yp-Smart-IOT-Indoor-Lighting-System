@@ -11,6 +11,7 @@ import java.util.List;
 public class Room {
     @Id
     private String id;
+    private String username;
     private String room;
     private List<Schedule> schedule;
 }
