@@ -6,5 +6,5 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import java.util.Optional;
 
 public interface TopicRepository extends MongoRepository<Topic, String> {
-    Optional<Topic> findByRoomNameAndNic(String roomName, String nic);
+    Optional<Topic> findByRoomNameAndUsername(String roomName, String username);
 }

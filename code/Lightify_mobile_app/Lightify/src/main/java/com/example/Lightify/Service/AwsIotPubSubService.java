@@ -132,6 +132,7 @@ public class AwsIotPubSubService {
         List<Topic> topics = topicRepository.findAll();
         for (Topic t : topics) {
             String topicString = t.getTopicString();
+                logger.info("fetched topics: {}", topicString);
             try {
                 subscribe(topicString);
                 logger.info("Automatically subscribed to topic: {}", topicString);

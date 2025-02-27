@@ -13,10 +13,10 @@ public class Topic {
     private String id;
 
     private String roomName;
-    private String nic;
+    private String username;
     private String macAddress;
 
     public String getTopicString() {
-        return nic + "/" + macAddress;
+        return username + "/" + macAddress;
     }
 }

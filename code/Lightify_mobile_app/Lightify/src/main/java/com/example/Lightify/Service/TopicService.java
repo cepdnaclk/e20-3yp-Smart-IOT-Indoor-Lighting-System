@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 
 @Service
 public class TopicService {
@@ -25,9 +26,9 @@ public class TopicService {
     public Topic addTopic(Topic topic) {
         try {
             // Ensure uniqueness (combination of nic and roomName is unique)
-            Optional<Topic> existing = topicRepository.findByRoomNameAndNic(topic.getRoomName(), topic.getNic());
+            Optional<Topic> existing = topicRepository.findByRoomNameAndUsername(topic.getRoomName(), topic.getUsername());
             if (existing.isPresent()) {
-                String errorMsg = "Topic already exists for roomName: " + topic.getRoomName() + " and nic: " + topic.getNic();
+                String errorMsg = "Topic already exists for roomName: " + topic.getRoomName() + " and nic: " + topic.getUsername();
                 logger.error(errorMsg);
                 throw new RuntimeException(errorMsg);
             }
@@ -52,7 +53,7 @@ public class TopicService {
             Topic topic = topicRepository.findById(id)
                     .orElseThrow(() -> new RuntimeException("Topic not found with id: " + id));
             topic.setRoomName(updatedTopic.getRoomName());
-            topic.setNic(updatedTopic.getNic());
+            topic.setUsername(updatedTopic.getUsername());
             topic.setMacAddress(updatedTopic.getMacAddress());
             return topicRepository.save(topic);
         } catch (Exception e) {
@@ -79,13 +80,36 @@ public class TopicService {
         }
     }
 
-    public Topic getTopicByRoomNameAndNic(String roomName, String nic) {
+    public Topic getTopicByRoomNameAndUsername(String roomName, String username ) {
         try {
-            return topicRepository.findByRoomNameAndNic(roomName, nic)
-                    .orElseThrow(() -> new RuntimeException("Topic not found for roomName: " + roomName + " and nic: " + nic));
+            return topicRepository.findByRoomNameAndUsername (roomName, username )
+                    .orElseThrow(() -> new RuntimeException("Topic not found for roomName: " + roomName + " and username : " + username ));
         } catch (Exception e) {
-            logger.error("Failed to get topic for roomName: {} and nic: {}", roomName, nic, e);
+            logger.error("Failed to get topic for roomName: {} and username : {}", roomName, username , e);
             throw new RuntimeException("Failed to get topic: " + e.getMessage(), e);
+        }
+    }
+
+    public void publishMessage(String roomName, String message) {
+        try {
+            // Hardcoded username for now (should be extracted from authentication token)
+            String username = "topic";
+
+            // Retrieve the topic entity using roomName and username
+            Optional<Topic> topicOptional = topicRepository.findByRoomNameAndUsername(roomName, username);
+            if (topicOptional.isEmpty()) {
+                throw new RuntimeException("Topic not found for room: " + roomName);
+            }
+
+            Topic topic = topicOptional.get();
+            String topicString = topic.getTopicString();
+
+            // Publish message to AWS IoT
+            awsIotPubSubService.publish(topicString, message);
+            logger.info("Message published successfully to {}", topicString);
+        } catch (InterruptedException | ExecutionException e) {
+            logger.error("Failed to publish message to AWS IoT", e);
+            throw new RuntimeException("Failed to publish message: " + e.getMessage(), e);
         }
     }
 }
