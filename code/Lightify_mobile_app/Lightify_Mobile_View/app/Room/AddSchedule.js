@@ -255,7 +255,7 @@ const SchedulePage = () => {
     };
 
     try {
-      const response = await axiosClient.post('/api/rooms/Kitchen', payload);
+      const response = await axiosClient.put('/api/rooms/Kitchen', payload);
       Alert.alert('Success', 'Schedule saved successfully!');
     } catch (error) {
       Alert.alert('Error', 'Failed to save schedule');
