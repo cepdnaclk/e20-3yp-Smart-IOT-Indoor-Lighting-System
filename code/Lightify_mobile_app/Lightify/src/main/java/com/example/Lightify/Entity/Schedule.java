@@ -30,4 +30,12 @@ public class Schedule {
     public boolean isDueNow() {
         return getScheduledDateTime().isEqual(LocalDateTime.now());  // Checks if the schedule time is exactly now
     }
+
+    public boolean isDueWithinNextMinute() {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime scheduleTime = getScheduledDateTime();
+        // Check if the schedule is not in the past and is before now+1 minute
+        return (!scheduleTime.isBefore(now)) && scheduleTime.isBefore(now.plusMinutes(1));
+    }
+
 }
