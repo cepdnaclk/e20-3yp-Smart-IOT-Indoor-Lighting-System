@@ -29,16 +29,17 @@ public class RoomController {
         Optional<Room> room = roomService.getRoomById(id);
         return room.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
+//TODO : create a method to take all rooms ( it should bring only the room name and the id)
 
     @GetMapping("/room-number/{roomName}")
-    public ResponseEntity<Room> getRoomByNumber(@PathVariable String roomName) {
+    public ResponseEntity<Room> getRoomByName(@PathVariable String roomName) {
         Room room = roomService.getRoomByNumber(roomName);
         return room != null ? ResponseEntity.ok(room) : ResponseEntity.notFound().build();
     }
 
-    @PutMapping("/{roomName}")
-    public ResponseEntity<Room> addSchedule(@PathVariable String roomName, @RequestBody Room updatedRoom) {
-        Room updated = roomService.addScheduleToRoom(roomName, updatedRoom);
+    @PutMapping("/{roomName}/schedules")
+    public ResponseEntity<Room> addSchedule(@PathVariable String roomName, @RequestBody Schedule schedule) {
+        Room updated = roomService.addScheduleToRoom(roomName, schedule);
         return updated != null ? ResponseEntity.ok(updated) : ResponseEntity.notFound().build();
     }
 

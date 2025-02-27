@@ -85,14 +85,32 @@ public class TopicController {
             String roomName = payload.get("roomName");
 //TODO : HERE THERE SHOULD BE WAY TO FETCH THE NIC USING THE USERNAME THAT IS CONTAINED IN THE TOKEN
             // Hardcoded mapping: for username "PradeepNilupul", assume NIC is "topic".
-            String nic = "topic";
-            Topic topic = topicService.getTopicByRoomNameAndNic(roomName, nic);
+            String username  = "topic";
+            Topic topic = topicService.getTopicByRoomNameAndUsername (roomName, username );
             String topicString = topic.getTopicString();
             String latestMessage = awsIotPubSubService.getLatestMessage(topicString);
             return ResponseEntity.ok(latestMessage);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body("Failed to get latest message: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/publish")
+    public ResponseEntity<?> publishMessage(@RequestBody Map<String, String> payload) {
+        try {
+            String roomName = payload.get("roomName");
+            String message = payload.get("message");
+
+            if (roomName == null || message == null) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("roomName and message are required");
+            }
+
+            topicService.publishMessage(roomName, message);
+            return ResponseEntity.ok("Message published successfully");
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to publish message: " + e.getMessage());
         }
     }
 }
