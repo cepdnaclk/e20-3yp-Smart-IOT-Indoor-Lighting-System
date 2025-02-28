@@ -1,6 +1,9 @@
 
 
-// import React, { useState, useEffect } from "react";
+
+
+
+// import React, { useState } from "react";
 // import {
 //   View,
 //   Text,
@@ -8,42 +11,45 @@
 //   TouchableOpacity,
 //   ActivityIndicator,
 //   Alert,
-//   ScrollView,
 //   StyleSheet,
 // } from "react-native";
-// import axiosClient from "../../utils/axiosClient"; 
+// import Icon from "react-native-vector-icons/Ionicons"; // Icon for bulbs
+// import axiosClient from "../../../utils/axiosClient"; 
 
 // export default function RoomCreationScreen() {
-//   // 1) Start with some hard-coded rooms
-//   const [rooms, setRooms] = useState(["Living Room", "Bedroom", "Kitchen"]);
 //   const [roomName, setRoomName] = useState("");
 //   const [loading, setLoading] = useState(false);
 
-//   // -------------------------
-//   // 2) Fetch all rooms (GET /api/rooms)
-//   // -------------------------
-//   const fetchRooms = async () => {
-//     try {
-//       const response = await axiosClient.get("/api/rooms");
-//       // Suppose the server returns an array of strings, e.g. ["Living Room", "Bedroom", ...]
-//       setRooms(response.data);
-//     } catch (error) {
-//       console.error("Error fetching rooms:", error);
-//       // If it fails, we keep our hard-coded default rooms
-//     }
+//   // Predefined bulbs with IDs
+//   const [bulbs, setBulbs] = useState([
+//     { id: "101", isSelected: false },
+//     { id: "102", isSelected: false },
+//     { id: "103", isSelected: false },
+//     { id: "104", isSelected: false },
+//   ]);
+
+//   // Toggle bulb selection
+//   const handleToggleBulb = (index) => {
+//     setBulbs((prevBulbs) =>
+//       prevBulbs.map((bulb, i) =>
+//         i === index ? { ...bulb, isSelected: !bulb.isSelected } : bulb
+//       )
+//     );
 //   };
 
-//   // Fetch rooms once the component mounts
-//   useEffect(() => {
-//     fetchRooms();
-//   }, []);
-
-//   // -------------------------
-//   // 3) Create a new room (POST /api/rooms)
-//   // -------------------------
+//   // Create room API call
 //   const handleCreateRoom = async () => {
 //     if (!roomName.trim()) {
 //       Alert.alert("Error", "Please enter a Room Name.");
+//       return;
+//     }
+
+//     const selectedBulbIds = bulbs
+//       .filter((bulb) => bulb.isSelected)
+//       .map((bulb) => bulb.id);
+
+//     if (selectedBulbIds.length === 0) {
+//       Alert.alert("Error", "Please select at least one bulb.");
 //       return;
 //     }
 
@@ -51,13 +57,13 @@
 //     try {
 //       const response = await axiosClient.post("/api/rooms", {
 //         room: roomName.trim(),
-//         schedule: [], // or any default schedule
+//         bulbs: selectedBulbIds,
 //       });
 
 //       if (response.status === 201 || response.status === 200) {
 //         Alert.alert("Success", `Room "${roomName}" created successfully!`);
 //         setRoomName("");
-//         fetchRooms(); // Refresh from the server
+//         setBulbs(bulbs.map((bulb) => ({ ...bulb, isSelected: false }))); // Reset bulb selection
 //       } else {
 //         throw new Error("Failed to create room");
 //       }
@@ -69,173 +75,138 @@
 //     }
 //   };
 
-//   // -------------------------
-//   // 4) Update a room (PUT /api/rooms/:roomName)
-//   // -------------------------
-//   const handleUpdateRoom = async (oldName) => {
-//     // Simple example: rename the room by appending "_updated"
-//     const newName = oldName + "_updated";
-
-//     try {
-//       await axiosClient.put(`/api/rooms/${oldName}`, {
-//         room: newName,
-//         schedule: [], // or the existing schedule
-//       });
-//       Alert.alert("Success", `Room "${oldName}" updated to "${newName}"`);
-//       fetchRooms();
-//     } catch (error) {
-//       Alert.alert("Error", "Failed to update room.");
-//       console.error("Error updating room:", error);
-//     }
-//   };
-
-//   // -------------------------
-//   // 5) Delete a room (DELETE /api/rooms/:roomName)
-//   // -------------------------
-//   const handleDeleteRoom = async (name) => {
-//     try {
-//       await axiosClient.delete(`/api/rooms/${name}`);
-//       Alert.alert("Success", `Room "${name}" deleted.`);
-//       fetchRooms();
-//     } catch (error) {
-//       Alert.alert("Error", "Failed to delete room.");
-//       console.error("Error deleting room:", error);
-//     }
-//   };
-
-//   // -------------------------
-//   // 6) Render UI
-//   // -------------------------
+//   // -----------------------------------
+//   // Render UI
+//   // -----------------------------------
 //   return (
 //     <View style={styles.container}>
 //       <Text style={styles.screenTitle}>Create Room</Text>
 
-//       {/* Room name input + Create button */}
+//       {/* Room Name Input */}
 //       <TextInput
 //         style={styles.input}
 //         placeholder="Enter Room Name"
+//         placeholderTextColor="#AAAAAA"
 //         value={roomName}
 //         onChangeText={setRoomName}
 //       />
 
+//       {/* Select Bulbs */}
+//       <Text style={styles.selectBulbsText}>Select Bulbs:</Text>
+//       <View style={styles.bulbsContainer}>
+//         {bulbs.map((bulb, index) => (
+//           <TouchableOpacity
+//             key={bulb.id}
+//             style={[
+//               styles.bulbButton,
+//               bulb.isSelected ? styles.bulbSelected : styles.bulbUnselected,
+//             ]}
+//             onPress={() => handleToggleBulb(index)}
+//           >
+//             <Icon
+//               name="bulb"
+//               size={28}
+//               color={bulb.isSelected ? "#FFD700" : "#555"}
+//             />
+//             <Text style={styles.bulbText}>{bulb.id}</Text>
+//           </TouchableOpacity>
+//         ))}
+//       </View>
+
+//       {/* Create Button */}
 //       <TouchableOpacity
-//         style={[styles.createButton, loading && { backgroundColor: "#999" }]}
+//         style={[styles.createButton, loading && { backgroundColor: "#A68B00" }]}
 //         onPress={handleCreateRoom}
 //         disabled={loading}
 //       >
 //         {loading ? (
-//           <ActivityIndicator color="#fff" />
+//           <ActivityIndicator color="#000" />
 //         ) : (
-//           <Text style={styles.createButtonText}>Create</Text>
+//           <Text style={styles.createButtonText}>Create Room</Text>
 //         )}
 //       </TouchableOpacity>
-
-//       {/* List Title */}
-//       <Text style={styles.listTitle}>Existing Rooms</Text>
-
-//       {/* Scrollable "Table" */}
-//       <ScrollView style={{ width: "100%" }}>
-//         {rooms.map((room, index) => {
-//           // If your server returns an array of strings, 'room' is a string.
-//           // If it returns objects, adjust how you extract the name (e.g. room.name).
-//           const rName = typeof room === "string" ? room : room.room;
-
-//           return (
-//             <View key={index} style={styles.tableRow}>
-//               <Text style={styles.roomName}>{rName}</Text>
-
-//               {/* Update Button */}
-//               <TouchableOpacity
-//                 style={[styles.actionButton, { backgroundColor: "#4caf50" }]}
-//                 onPress={() => handleUpdateRoom(rName)}
-//               >
-//                 <Text style={styles.actionButtonText}>Update</Text>
-//               </TouchableOpacity>
-
-//               {/* Delete Button */}
-//               <TouchableOpacity
-//                 style={[styles.actionButton, { backgroundColor: "#f44336" }]}
-//                 onPress={() => handleDeleteRoom(rName)}
-//               >
-//                 <Text style={styles.actionButtonText}>Delete</Text>
-//               </TouchableOpacity>
-//             </View>
-//           );
-//         })}
-//       </ScrollView>
 //     </View>
 //   );
 // }
 
-// // -------------------------
+// // -----------------------------------
 // // Styles
-// // -------------------------
+// // -----------------------------------
 // const styles = StyleSheet.create({
 //   container: {
 //     flex: 1,
-//     backgroundColor: "#f1f1f1",
-//     paddingHorizontal: 16,
-//     paddingTop: 40,
+//     backgroundColor: "#000000", // Black background
+//     paddingHorizontal: 20,
+//     paddingTop: 50,
+//     justifyContent: "center",
 //   },
 //   screenTitle: {
-//     fontSize: 22,
+//     fontSize: 24,
 //     fontWeight: "bold",
-//     marginBottom: 16,
+//     color: "#FFD700", // Dark yellow text
+//     marginBottom: 20,
 //     textAlign: "center",
 //   },
 //   input: {
 //     height: 50,
-//     borderColor: "#ccc",
-//     borderWidth: 1,
-//     backgroundColor: "#fff",
-//     borderRadius: 8,
-//     paddingHorizontal: 12,
-//     marginBottom: 10,
-//   },
-//   createButton: {
-//     backgroundColor: "#007BFF",
-//     paddingVertical: 14,
-//     borderRadius: 8,
-//     alignItems: "center",
-//     marginBottom: 20,
-//   },
-//   createButtonText: {
-//     color: "#fff",
+//     backgroundColor: "#222222", // Dark gray input field
+//     borderRadius: 10,
+//     paddingHorizontal: 15,
+//     color: "#FFFFFF", // White text
 //     fontSize: 16,
-//     fontWeight: "600",
+//     marginBottom: 12,
+//     borderWidth: 1,
+//     borderColor: "#FFD700", // Dark yellow border
 //   },
-//   listTitle: {
+//   selectBulbsText: {
+//     color: "#FFFFFF",
 //     fontSize: 18,
 //     fontWeight: "bold",
 //     marginBottom: 10,
 //   },
-//   tableRow: {
+//   bulbsContainer: {
 //     flexDirection: "row",
+//     justifyContent: "space-around",
+//     marginBottom: 20,
+//   },
+//   bulbButton: {
 //     alignItems: "center",
-//     backgroundColor: "#fff",
-//     marginBottom: 8,
-//     padding: 10,
-//     borderRadius: 6,
+//     justifyContent: "center",
+//     padding: 15,
+//     borderRadius: 10,
+//     width: 80,
+//     height: 80,
 //   },
-//   roomName: {
-//     flex: 1,
-//     fontSize: 16,
-//     fontWeight: "500",
+//   bulbSelected: {
+//     backgroundColor: "#FFD700", // Bright yellow when selected
 //   },
-//   actionButton: {
-//     borderRadius: 6,
-//     paddingVertical: 8,
-//     paddingHorizontal: 12,
-//     marginLeft: 6,
+//   bulbUnselected: {
+//     backgroundColor: "#222222", // Dark gray when unselected
 //   },
-//   actionButtonText: {
-//     color: "#fff",
-//     fontWeight: "600",
+//   bulbText: {
+//     color: "#FFFFFF",
+//     fontSize: 14,
+//     marginTop: 5,
+//   },
+//   createButton: {
+//     backgroundColor: "#FFD700", // Dark yellow button
+//     paddingVertical: 15,
+//     borderRadius: 10,
+//     alignItems: "center",
+//     marginTop: 10,
+//     shadowColor: "#FFD700",
+//     shadowOffset: { width: 0, height: 4 },
+//     shadowOpacity: 0.4,
+//     shadowRadius: 5,
+//   },
+//   createButtonText: {
+//     color: "#000000", // Black text
+//     fontSize: 18,
+//     fontWeight: "bold",
 //   },
 // });
 
-
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -243,52 +214,45 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
-  ScrollView,
   StyleSheet,
 } from "react-native";
-import Icon from "react-native-vector-icons/Ionicons"; // For bulb icons
+import Icon from "react-native-vector-icons/Ionicons"; // Icon for bulbs
 import axiosClient from "../../../utils/axiosClient"; 
 
 export default function RoomCreationScreen() {
-  // Start with some hard-coded rooms
-  const [rooms, setRooms] = useState(["Living Room", "Bedroom", "Kitchen"]);
   const [roomName, setRoomName] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Hard-coded bulbs (IDs + intensities)
-  // In a real app, you'd fetch these from the server per room.
-  const dummyBulbs = [
-    { bulbId: "101", intensity: 50 },
-    { bulbId: "102", intensity: 70 },
-    { bulbId: "103", intensity: 0 },
-    { bulbId: "104", intensity: 100 },
-  ];
+  // Predefined bulbs with IDs
+  const [bulbs, setBulbs] = useState([
+    { id: "101", isSelected: false },
+    { id: "102", isSelected: false },
+    { id: "103", isSelected: false },
+    { id: "104", isSelected: false },
+  ]);
 
-  // -----------------------------------
-  // Fetch all rooms (GET /api/rooms)
-  // -----------------------------------
-  const fetchRooms = async () => {
-    try {
-      const response = await axiosClient.get("/api/rooms");
-      // Suppose the server returns an array of strings like ["Living Room", "Bedroom", ...]
-      setRooms(response.data);
-    } catch (error) {
-      console.error("Error fetching rooms:", error);
-      // If the server call fails, we keep our hard-coded defaults
-    }
+  // Toggle bulb selection
+  const handleToggleBulb = (index) => {
+    setBulbs((prevBulbs) =>
+      prevBulbs.map((bulb, i) =>
+        i === index ? { ...bulb, isSelected: !bulb.isSelected } : bulb
+      )
+    );
   };
 
-  // Fetch rooms once on mount
-  useEffect(() => {
-    fetchRooms();
-  }, []);
-
-  // -----------------------------------
-  // Create a new room (POST /api/rooms)
-  // -----------------------------------
+  // Create room API call
   const handleCreateRoom = async () => {
     if (!roomName.trim()) {
       Alert.alert("Error", "Please enter a Room Name.");
+      return;
+    }
+
+    const selectedBulbIds = bulbs
+      .filter((bulb) => bulb.isSelected)
+      .map((bulb) => bulb.id);
+
+    if (selectedBulbIds.length === 0) {
+      Alert.alert("Error", "Please select at least one bulb.");
       return;
     }
 
@@ -296,13 +260,13 @@ export default function RoomCreationScreen() {
     try {
       const response = await axiosClient.post("/api/rooms", {
         room: roomName.trim(),
-        schedule: [], // or any default schedule
+        bulbs: selectedBulbIds,
       });
 
       if (response.status === 201 || response.status === 200) {
         Alert.alert("Success", `Room "${roomName}" created successfully!`);
         setRoomName("");
-        fetchRooms(); // refresh from server
+        setBulbs(bulbs.map((bulb) => ({ ...bulb, isSelected: false }))); // Reset bulb selection
       } else {
         throw new Error("Failed to create room");
       }
@@ -321,61 +285,50 @@ export default function RoomCreationScreen() {
     <View style={styles.container}>
       <Text style={styles.screenTitle}>Create Room</Text>
 
-      {/* Room name input + Create button */}
+      {/* Room Name Input */}
       <TextInput
         style={styles.input}
         placeholder="Enter Room Name"
+        placeholderTextColor="#AAAAAA"
         value={roomName}
         onChangeText={setRoomName}
       />
+
+      {/* Select Bulbs */}
+      <Text style={styles.selectBulbsText}>Select Bulbs:</Text>
+      <View style={styles.bulbsContainer}>
+        {bulbs.map((bulb, index) => (
+          <TouchableOpacity
+            key={bulb.id}
+            style={[
+              styles.bulbButton,
+              bulb.isSelected ? styles.bulbSelected : styles.bulbUnselected,
+            ]}
+            onPress={() => handleToggleBulb(index)}
+          >
+            <Icon
+              name="bulb"
+              size={32}
+              color={bulb.isSelected ? "#FFFFFF" : "#555"} // White for selected, gray for unselected
+              style={bulb.isSelected ? styles.glowEffect : null} // Apply glow effect if selected
+            />
+            <Text style={styles.bulbText}>{bulb.id}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      {/* Create Button */}
       <TouchableOpacity
-        style={[styles.createButton, loading && { backgroundColor: "#999" }]}
+        style={[styles.createButton, loading && { backgroundColor: "#A68B00" }]}
         onPress={handleCreateRoom}
         disabled={loading}
       >
         {loading ? (
-          <ActivityIndicator color="#fff" />
+          <ActivityIndicator color="#000" />
         ) : (
-          <Text style={styles.createButtonText}>Create</Text>
+          <Text style={styles.createButtonText}>Create Room</Text>
         )}
       </TouchableOpacity>
-
-      {/* List Title */}
-      <Text style={styles.listTitle}>Existing Rooms</Text>
-
-      {/* Scrollable list of rooms */}
-      <ScrollView style={{ width: "100%" }}>
-        {rooms.map((room, index) => {
-          // If your server returns an array of strings, 'room' is the string.
-          // If it returns objects, adjust how you extract the name (e.g. room.room).
-          const rName = typeof room === "string" ? room : room.room;
-
-          return (
-            <View key={index} style={styles.tableRow}>
-              {/* The room name */}
-              <Text style={styles.roomName}>{rName}</Text>
-
-              {/* Bulbs row */}
-              <View style={styles.bulbsContainer}>
-                {dummyBulbs.map((bulb, idx) => (
-                  <View key={idx} style={styles.bulbWrapper}>
-                    <Icon
-                      name="bulb"
-                      size={24}
-                      // If intensity > 0 => bulb is ON (yellow), else OFF (gray)
-                      color={bulb.intensity > 0 ? "yellow" : "gray"}
-                      style={{ marginRight: 5 }}
-                    />
-                    <Text style={styles.bulbText}>
-                      {bulb.bulbId}: {bulb.intensity}%
-                    </Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-          );
-        })}
-      </ScrollView>
     </View>
   );
 }
@@ -386,64 +339,83 @@ export default function RoomCreationScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f1f1f1",
-    paddingHorizontal: 16,
-    paddingTop: 40,
+    backgroundColor: "#000000", // Black background
+    paddingHorizontal: 20,
+    paddingTop: 50,
+    justifyContent: "center",
   },
   screenTitle: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: "bold",
-    marginBottom: 16,
+    color: "#FFD700", // Dark yellow text
+    marginBottom: 20,
     textAlign: "center",
   },
   input: {
     height: 50,
-    borderColor: "#ccc",
-    borderWidth: 1,
-    backgroundColor: "#fff",
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    marginBottom: 10,
-  },
-  createButton: {
-    backgroundColor: "#007BFF",
-    paddingVertical: 14,
-    borderRadius: 8,
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  createButtonText: {
-    color: "#fff",
+    backgroundColor: "#222222", // Dark gray input field
+    borderRadius: 10,
+    paddingHorizontal: 15,
+    color: "#FFFFFF", // White text
     fontSize: 16,
-    fontWeight: "600",
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: "#FFD700", // Dark yellow border
   },
-  listTitle: {
+  selectBulbsText: {
+    color: "#FFFFFF",
     fontSize: 18,
     fontWeight: "bold",
     marginBottom: 10,
   },
-  tableRow: {
-    marginBottom: 8,
-    padding: 10,
-    backgroundColor: "#fff",
-    borderRadius: 6,
-  },
-  roomName: {
-    fontSize: 16,
-    fontWeight: "500",
-    marginBottom: 8,
-  },
   bulbsContainer: {
     flexDirection: "row",
-    flexWrap: "wrap",
+    justifyContent: "space-around",
+    marginBottom: 20,
   },
-  bulbWrapper: {
-    flexDirection: "row",
+  bulbButton: {
     alignItems: "center",
-    marginRight: 16,
-    marginBottom: 8,
+    justifyContent: "center",
+    padding: 15,
+    borderRadius: 10,
+    width: 80,
+    height: 80,
+  },
+  bulbSelected: {
+    backgroundColor: "#FFD700", // Bright yellow when selected
+    borderWidth: 2,
+    borderColor: "#FFF", // White outline for emphasis
+  },
+  bulbUnselected: {
+    backgroundColor: "#222222", // Dark gray when unselected
+    borderWidth: 1,
+    borderColor: "#FFD700", // Yellow outline
+  },
+  glowEffect: {
+    textShadowColor: "rgba(255, 255, 255, 0.8)", // White glow
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 10,
   },
   bulbText: {
+    color: "#FFFFFF",
     fontSize: 14,
+    marginTop: 5,
+  },
+  createButton: {
+    backgroundColor: "#FFD700", // Dark yellow button
+    paddingVertical: 15,
+    borderRadius: 10,
+    alignItems: "center",
+    marginTop: 10,
+    shadowColor: "#FFD700",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 5,
+  },
+  createButtonText: {
+    color: "#000000", // Black text
+    fontSize: 18,
+    fontWeight: "bold",
   },
 });
+
