@@ -10,8 +10,8 @@
 // MQTT configuration (unchanged)
 const char* mqttServer = "d012012821ffpbdagc8s8-ats.iot.eu-north-1.amazonaws.com";
 const int mqttPort = 8883;
-const char* mqttTopic = "topic/1";
-const char* mqttPubTopic = "topic/2";
+const char* mqttTopic = "topic/2";
+const char* mqttPubTopic = "topic/1";
 
 const char* root_ca_pem = R"EOF(
 -----BEGIN CERTIFICATE-----
@@ -486,10 +486,10 @@ void loop() {
     checkWiFi();
     checkResetButton();  // Continuously monitor button state
 
-    unsigned long now = millis();
-    if (now - lastPublishTime >= PUBLISH_INTERVAL) {
-        lastPublishTime = now;
-        generateDataAndPublish(); // Generate data and publish when it's available.
-    }
+    // unsigned long now = millis();
+    // if (now - lastPublishTime >= PUBLISH_INTERVAL) {
+    //     lastPublishTime = now;
+    //     generateDataAndPublish(); // Generate data and publish when it's available.
+    // }
 
 }

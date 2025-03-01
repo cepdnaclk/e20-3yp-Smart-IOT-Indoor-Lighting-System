@@ -83,6 +83,7 @@
 //
 package com.example.Lightify.Service;
 
+import com.example.Lightify.DTO.ScheduleTask;
 import com.example.Lightify.Entity.Room;
 import com.example.Lightify.Entity.Schedule;
 import com.example.Lightify.Entity.Topic;
@@ -97,13 +98,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-
-
-import org.json.JSONArray;
-import org.json.JSONObject;
-
+import java.util.*;
+import java.util.concurrent.*;
 
 
 @Service
@@ -116,11 +112,21 @@ public class RoomService {
 
     private static final Logger logger = LogManager.getLogger(RoomService.class);
 
+    // Priority queue to store tasks ordered by scheduled execution time.
+    private final PriorityQueue<ScheduleTask> scheduleQueue = new PriorityQueue<>();
+
+    // Executor that checks and executes due schedule tasks every second.
+    private final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+
+    // Executor pool for executing schedule actions.
+    private final ExecutorService scheduleExecutionPool = Executors.newCachedThreadPool();
+
     @Autowired
     public RoomService(RoomRepository roomRepository, TopicService topicService, AwsIotPubSubService awsIotPubSubService) {
         this.roomRepository = roomRepository;
         this.topicService = topicService;
         this.awsIotPubSubService = awsIotPubSubService;
+        startExecutionThread();
     }
 
     public Room createRoom(Room room) {
@@ -193,62 +199,73 @@ public class RoomService {
         return false;
     }
 
-    @Scheduled(cron = "0 * * * * ?")  // Runs every minute, adjust as needed
-    public void executeSchedules() {
-        logger.info("Starting schedule execution...");
+    @Scheduled(cron = "0 * * * * ?")
+    public void fetchAndQueueSchedules() {
+        logger.info("Fetching schedules from database...");
+        List<Room> rooms = roomRepository.findAll();
+        if (rooms.isEmpty()) {
+            logger.warn("No rooms found in the database.");
+            return;
+        }
+
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime nextMinute = now.plusMinutes(1);
 
-        try {
-            List<Room> rooms = roomRepository.findAll();
-            if (rooms.isEmpty()) {
-                logger.warn("No rooms found in the database.");
-                return;
+        for (Room room : rooms) {
+            List<Schedule> schedules = room.getSchedule();
+            if (schedules == null || schedules.isEmpty()) {
+                logger.info("No schedules for room '{}'", room.getRoom());
+                continue;
             }
-
-            for (Room room : rooms) {
-                try {
-                    List<Schedule> schedules = room.getSchedule();
-                    if (schedules == null || schedules.isEmpty()) {
-                        logger.info("No schedules found for room '{}'", room.getRoom());
-                        continue;
+            // Use an iterator to safely remove non-recurring, past schedules.
+            Iterator<Schedule> iterator = schedules.iterator();
+            while (iterator.hasNext()) {
+                Schedule schedule = iterator.next();
+                LocalDateTime scheduledTime = schedule.getScheduledDateTime();
+                if (scheduledTime == null) {
+                    logger.warn("Skipping schedule in room '{}' due to null scheduledDateTime", room.getRoom());
+                    continue;
+                }
+                // Only queue schedules that are scheduled to execute within the next minute.
+                if (!scheduledTime.isBefore(now) && scheduledTime.isBefore(nextMinute)) {
+                    ScheduleTask task = new ScheduleTask(room.getRoom(), room.getUsername(), schedule);
+                    if (!scheduleQueue.contains(task)) {
+                        scheduleQueue.add(task);
+                        logger.info("Added schedule to queue: {}", task);
                     }
-
-                    for (Schedule schedule : schedules) {
-                        try {
-                            LocalDateTime scheduleTime = schedule.getScheduledDateTime();
-                            if (scheduleTime == null) {
-                                logger.warn("Skipping schedule in room '{}' due to null scheduledDateTime", room.getRoom());
-                                continue;
-                            }
-
-                            // Check if the schedule is due within the next minute
-                            if (!scheduleTime.isBefore(now) && scheduleTime.isBefore(nextMinute)) {
-                                logger.info("Executing schedule for room '{}': {}", room.getRoom(), schedule);
-                                executeScheduleAction(room.getRoom(), room.getUsername(), schedule);
-                            }
-                        } catch (Exception e) {
-                            logger.error("Error processing schedule for room '{}': {}", room.getRoom(), e.getMessage(), e);
-                        }
-                    }
-
-                    // Remove non-recurring schedules that have passed
-                    schedules.removeIf(schedule ->
-                            !schedule.isRecurrence() && schedule.getScheduledDateTime().isBefore(LocalDateTime.now()));
-
-                    room.setSchedule(schedules);
-                    roomRepository.save(room);
-                } catch (Exception e) {
-                    logger.error("Error processing room '{}': {}", room.getRoom(), e.getMessage(), e);
+                } else if (!schedule.isRecurrence() && scheduledTime.isBefore(now)) {
+                    // Remove non-recurring schedules that have passed.
+                    iterator.remove();
                 }
             }
-        } catch (Exception e) {
-            logger.error("Error retrieving rooms: {}", e.getMessage(), e);
+            room.setSchedule(schedules);
+            roomRepository.save(room);
         }
-
-        logger.info("Schedule execution completed.");
     }
 
+
+    /**
+     * Starts a thread that continuously checks the priority queue and executes schedules when due.
+     */
+    private void startExecutionThread() {
+        executorService.scheduleAtFixedRate(() -> {
+            LocalDateTime now = LocalDateTime.now();
+            while (!scheduleQueue.isEmpty() && !scheduleQueue.peek().getScheduledTime().isAfter(now)) {
+                ScheduleTask task = scheduleQueue.poll();
+                logger.info("Executing schedule task: {}", task);
+                scheduleExecutionPool.submit(() ->
+                        {
+                            assert task != null;
+                            executeScheduleAction(task.getRoomName(), task.getUsername(), task.getSchedule());
+                        }
+                );
+            }
+        }, 0, 1, TimeUnit.SECONDS);
+    }
+
+    /**
+     * Executes the schedule action by building a JSON payload and publishing it.
+     */
     private void executeScheduleAction(String roomName, String username, Schedule schedule) {
         try {
             if (roomName == null || roomName.trim().isEmpty()) {
@@ -279,6 +296,7 @@ public class RoomService {
                     ObjectNode bulb = objectMapper.createObjectNode();
                     bulb.put("bulb_id", Integer.parseInt(bulbId));
                     bulb.put("brightness", schedule.getIntensityPercentage());
+//                    bulb.put("time", schedule.getTime().toNanoOfDay());
                     bulbsArray.add(bulb);
                 } catch (NumberFormatException e) {
                     logger.error("Invalid bulb ID '{}' in room '{}': {}", bulbId, roomName, e.getMessage());
@@ -287,7 +305,7 @@ public class RoomService {
             }
             payload.set("message", bulbsArray);
 
-            Topic topic = topicService.getTopicByRoomNameAndUsername(roomName,username);
+            Topic topic = topicService.getTopicByRoomNameAndUsername(roomName, username);
             String topicString = topic.getTopicString();
             logger.info("Executing schedule for room {} on topic {}: {}", roomName, topic, payload.toString());
 
@@ -305,57 +323,106 @@ public class RoomService {
 //        logger.info("Starting schedule execution...");
 //        LocalDateTime now = LocalDateTime.now();
 //        LocalDateTime nextMinute = now.plusMinutes(1);
-//        List<Room> rooms = roomRepository.findAll();
-//        for (Room room : rooms) {
-//            List<Schedule> schedules = room.getSchedule();
-//            for (Schedule schedule : schedules) {
-//                LocalDateTime scheduleTime = schedule.getScheduledDateTime();
-//                // Check if the schedule is due within the next minute
-//                if (!scheduleTime.isBefore(now) && scheduleTime.isBefore(nextMinute)) {
-//                    logger.info("Executing schedule for room '{}': {}", room.getRoom(), schedule);
-//                    // Pass the room's username along with the room name and schedule
-//                    executeScheduleAction(room.getRoom(), room.getUsername(), schedule);
+//
+//        try {
+//            List<Room> rooms = roomRepository.findAll();
+//            if (rooms.isEmpty()) {
+//                logger.warn("No rooms found in the database.");
+//                return;
+//            }
+//
+//            for (Room room : rooms) {
+//                try {
+//                    List<Schedule> schedules = room.getSchedule();
+//                    if (schedules == null || schedules.isEmpty()) {
+//                        logger.info("No schedules found for room '{}'", room.getRoom());
+//                        continue;
+//                    }
+//
+//                    for (Schedule schedule : schedules) {
+//                        try {
+//                            LocalDateTime scheduleTime = schedule.getScheduledDateTime();
+//                            if (scheduleTime == null) {
+//                                logger.warn("Skipping schedule in room '{}' due to null scheduledDateTime", room.getRoom());
+//                                continue;
+//                            }
+//
+//                            // Check if the schedule is due within the next minute
+//                            if (!scheduleTime.isBefore(now) && scheduleTime.isBefore(nextMinute)) {
+//                                logger.info("Executing schedule for room '{}': {}", room.getRoom(), schedule);
+//                                executeScheduleAction(room.getRoom(), room.getUsername(), schedule);
+//                            }
+//                        } catch (Exception e) {
+//                            logger.error("Error processing schedule for room '{}': {}", room.getRoom(), e.getMessage(), e);
+//                        }
+//                    }
+//
+//                    // Remove non-recurring schedules that have passed
+//                    schedules.removeIf(schedule ->
+//                            !schedule.isRecurrence() && schedule.getScheduledDateTime().isBefore(LocalDateTime.now()));
+//
+//                    room.setSchedule(schedules);
+//                    roomRepository.save(room);
+//                } catch (Exception e) {
+//                    logger.error("Error processing room '{}': {}", room.getRoom(), e.getMessage(), e);
 //                }
 //            }
-//            // Optionally remove executed non-recurring schedules
-//            schedules.removeIf(schedule ->
-//                    !schedule.isRecurrence() && schedule.getScheduledDateTime().isBefore(LocalDateTime.now())
-//            );
-//            room.setSchedule(schedules);
-//            roomRepository.save(room);
+//        } catch (Exception e) {
+//            logger.error("Error retrieving rooms: {}", e.getMessage(), e);
 //        }
+//
 //        logger.info("Schedule execution completed.");
 //    }
 //
-//    // Updated executeScheduleAction method that uses AwsIotPubSubService.publish
 //    private void executeScheduleAction(String roomName, String username, Schedule schedule) {
 //        try {
-//            // Build the JSON payload with roomName and message array containing bulb settings
+//            if (roomName == null || roomName.trim().isEmpty()) {
+//                logger.warn("Skipping schedule execution: Room name is null or empty.");
+//                return;
+//            }
+//            if (username == null || username.trim().isEmpty()) {
+//                logger.warn("Skipping schedule execution: Username is null or empty.");
+//                return;
+//            }
+//            if (schedule == null) {
+//                logger.warn("Skipping schedule execution: Schedule is null.");
+//                return;
+//            }
+//            if (schedule.getBulbId() == null || schedule.getBulbId().isEmpty()) {
+//                logger.warn("Skipping schedule execution: No bulbs found in schedule for room '{}'", roomName);
+//                return;
+//            }
+//
+//            // Build the JSON payload
 //            ObjectNode payload = objectMapper.createObjectNode();
 //            payload.put("roomName", roomName);
 //
-//            // Create a JSON array mapping each bulb to a brightness value equal to intensityPercentage
+//            // Create a JSON array mapping each bulb to a brightness value
 //            ArrayNode bulbsArray = objectMapper.createArrayNode();
 //            for (String bulbId : schedule.getBulbId()) {
-//                ObjectNode bulb = objectMapper.createObjectNode();
-//                bulb.put("bulb_id", Integer.parseInt(bulbId));
-//                bulb.put("brightness", schedule.getIntensityPercentage());
-//                bulbsArray.add(bulb);
+//                try {
+//                    ObjectNode bulb = objectMapper.createObjectNode();
+//                    bulb.put("bulb_id", Integer.parseInt(bulbId));
+//                    bulb.put("brightness", schedule.getIntensityPercentage());
+//                    bulbsArray.add(bulb);
+//                } catch (NumberFormatException e) {
+//                    logger.error("Invalid bulb ID '{}' in room '{}': {}", bulbId, roomName, e.getMessage());
+//                    continue;
+//                }
 //            }
 //            payload.set("message", bulbsArray);
 //
-//            // Construct topic as "username/roomName"
-//            String topic = username + "/" + roomName;
+//            Topic topic = topicService.getTopicByRoomNameAndUsername(roomName,username);
+//            String topicString = topic.getTopicString();
 //            logger.info("Executing schedule for room {} on topic {}: {}", roomName, topic, payload.toString());
 //
-//            // Publish the payload using AwsIotPubSubService.publish
-//            awsIotPubSubService.publish(topic, payload.toString());
+//            // Publish the payload using AwsIotPubSubService
+//            awsIotPubSubService.publish(topicString, payload.toString());
 //
-//            logger.info("Published schedule action to topic {}: {}", topic, payload.toString());
+//            logger.info("Successfully published schedule action to topic {}: {}", topic, payload.toString());
 //        } catch (Exception e) {
-//            logger.error("Failed to publish schedule action for room {}: {}", roomName, e.getMessage(), e);
+//            logger.error("Failed to publish schedule action for room '{}': {}", roomName, e.getMessage(), e);
 //        }
 //    }
-//
-//
+
 }
