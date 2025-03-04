@@ -7,6 +7,11 @@
 #include <Preferences.h>
 #include "driver/rtc_io.h"
 
+#include <ArduinoJson.h>
+
+#include <Ticker.h>
+#include <dimmable_light.h>
+
 // MQTT configuration (unchanged)
 const char* mqttServer = "d012012821ffpbdagc8s8-ats.iot.eu-north-1.amazonaws.com";
 const int mqttPort = 8883;
@@ -88,6 +93,122 @@ lGLUsQFqY8wOkoOuS8afULodyD6jhmHiLQRcEDHUogQsMfYr0PBTkXJTQ0W/4YQp
 vx8FVRXlD473SrMwnf22wK49MbyMkJ4JB4dIbam8cgd6183LThjZ7g==
 -----END RSA PRIVATE KEY-----
 )EOF";
+
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> 
+
+// Hardware definitions:
+#define ZC_PIN   34  // Zero-Crossing pin
+
+// Define output pins for each channel
+#define DIM_PIN1 16  // Channel 1
+#define DIM_PIN2 19  // Channel 2
+#define DIM_PIN3 17  // Channel 3
+#define DIM_PIN4 18  // Channel 4
+
+// Create four DimmableLight instances using the corresponding pins.
+DimmableLight l1(DIM_PIN1);
+DimmableLight l2(DIM_PIN2);
+DimmableLight l3(DIM_PIN3);
+DimmableLight l4(DIM_PIN4);
+
+// Ticker for gradual transitions:
+Ticker transitionTicker;
+const float transitionInterval = 0.02; // 50ms between steps
+
+// Global arrays to track the current and target brightness values (range: 0–255)
+int currentBrightness[4] = {0, 0, 0, 0};  // Initially off (0)
+int targetBrightness[4]  = {0, 0, 0, 0};
+
+
+// This function maps a percentage value (0–100) to a brightness value (0–255)
+// according to the custom mapping:
+//   0%  -> 0,
+//   1%  -> 40,
+//   100% -> 255,
+// with the range 40 to 255 divided evenly into 99 steps.
+int mapPercentageToBrightness(int p) {
+  if (p <= 0) return 0;
+  if (p > 100) p = 100;
+  return 40 + ((p - 1) * 215) / 99;  // 215 = 255 - 40, 99 steps from 1% to 100%
+}
+
+
+// This function accepts percentage brightness values (0–100) for each channel,
+// maps them to brightness values (using our custom mapping),
+// stores the target brightness for each channel,
+// and starts a gradual transition.
+void setIndividualBrightnesses(int p1, int p2, int p3, int p4) {
+  // Constrain percentage values to 0–100.
+  p1 = constrain(p1, 0, 100);
+  p2 = constrain(p2, 0, 100);
+  p3 = constrain(p3, 0, 100);
+  p4 = constrain(p4, 0, 100);
+  
+  // Map the percentages to brightness values.
+  targetBrightness[0] = mapPercentageToBrightness(p1);
+  targetBrightness[1] = mapPercentageToBrightness(p2);
+  targetBrightness[2] = mapPercentageToBrightness(p3);
+  targetBrightness[3] = mapPercentageToBrightness(p4);
+  
+  // Start the transition process.
+  transitionTicker.once(transitionInterval, transitionStep);
+}
+
+
+// This function performs one transition step for all channels.
+// It increments or decrements the current brightness toward the target by 1 unit.
+// If any channel is still in transition, it schedules the next step.
+void transitionStep() {
+  bool needMore = false;
+  
+  // Channel 1:
+  if (currentBrightness[0] < targetBrightness[0]) {
+    currentBrightness[0]++;
+    needMore = true;
+  } else if (currentBrightness[0] > targetBrightness[0]) {
+    currentBrightness[0]--;
+    needMore = true;
+  }
+  l1.setBrightness(currentBrightness[0]);
+  
+  // Channel 2:
+  if (currentBrightness[1] < targetBrightness[1]) {
+    currentBrightness[1]++;
+    needMore = true;
+  } else if (currentBrightness[1] > targetBrightness[1]) {
+    currentBrightness[1]--;
+    needMore = true;
+  }
+  l2.setBrightness(currentBrightness[1]);
+  
+  // Channel 3:
+  if (currentBrightness[2] < targetBrightness[2]) {
+    currentBrightness[2]++;
+    needMore = true;
+  } else if (currentBrightness[2] > targetBrightness[2]) {
+    currentBrightness[2]--;
+    needMore = true;
+  }
+  l3.setBrightness(currentBrightness[2]);
+  
+  // Channel 4:
+  if (currentBrightness[3] < targetBrightness[3]) {
+    currentBrightness[3]++;
+    needMore = true;
+  } else if (currentBrightness[3] > targetBrightness[3]) {
+    currentBrightness[3]--;
+    needMore = true;
+  }
+  l4.setBrightness(currentBrightness[3]);
+  
+  // If any channel still needs to change, schedule another transition step.
+  if (needMore) {
+    transitionTicker.once(transitionInterval, transitionStep);
+  }
+}
+
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> 
+
 
 #define CONFIG_PIN 0  // Configuration mode trigger pin
 #define BUTTON_PIN 25  // Reset button pin
@@ -248,20 +369,85 @@ void setupWiFi() {
     }
 }
 
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> 
 
-// MQTT callback (unchanged)
+// Function to parse brightness values from a JSON string
+// If a bulb is missing, its brightness remains 0.
+void parseBrightnessValues(const String &json, int &brightness1, int &brightness2, int &brightness3, int &brightness4) {
+  StaticJsonDocument<512> doc; // Adjust size as needed
+  DeserializationError error = deserializeJson(doc, json);
+  if (error) {
+    Serial.print("JSON parsing failed: ");
+    Serial.println(error.f_str());
+    return;
+  }
+  
+  // Initialize default brightness values
+  brightness1 = 0;
+  brightness2 = 0;
+  brightness3 = 0;
+  brightness4 = 0;
+  
+  // Retrieve the "message" array from the JSON
+  JsonArray bulbs = doc["message"].as<JsonArray>();
+  
+  // Iterate over each bulb object in the array
+  for (JsonObject bulb : bulbs) {
+    int id = bulb["bulb_id"] | 0;       // Default to 0 if missing
+    int bri = bulb["brightness"] | 0;    // Default to 0 if missing
+    
+    // Map the brightness to the corresponding bulb variable
+    switch (id) {
+      case 1: brightness1 = bri; break;
+      case 2: brightness2 = bri; break;
+      case 3: brightness3 = bri; break;
+      case 4: brightness4 = bri; break;
+      default: break;
+    }
+  }
+}
+
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> 
+
+// MQTT callback modified to parse JSON and map brightness values
 void mqttCallback(char* topic, byte* payload, unsigned int length) {
   Serial.println("\n🔔 MQTT Message Received!");
   Serial.print("📌 Topic: ");
   Serial.println(topic);
-  Serial.print("📩 Payload: ");
-  String message = "";
-  for (int i = 0; i < length; i++) {
+  
+  // Convert payload to a String
+  String message;
+  for (unsigned int i = 0; i < length; i++) {
     message += (char)payload[i];
   }
+  Serial.print("📩 Payload: ");
   Serial.println(message);
+  
+  // Variables to hold the brightness values for each bulb
+  int brightness1, brightness2, brightness3, brightness4;
+  
+  // Parse JSON and extract brightness values
+  parseBrightnessValues(message, brightness1, brightness2, brightness3, brightness4);
+  
+  // Map the extracted values to your function
+  setIndividualBrightnesses(brightness1, brightness2, brightness3, brightness4);
+  
   Serial.println("----------------------------------");
 }
+
+// // MQTT callback (unchanged)
+// void mqttCallback(char* topic, byte* payload, unsigned int length) {
+//   Serial.println("\n🔔 MQTT Message Received!");
+//   Serial.print("📌 Topic: ");
+//   Serial.println(topic);
+//   Serial.print("📩 Payload: ");
+//   String message = "";
+//   for (int i = 0; i < length; i++) {
+//     message += (char)payload[i];
+//   }
+//   Serial.println(message);
+//   Serial.println("----------------------------------");
+// }
 
 // Setup MQTT connection (unchanged)
 void setupMQTT() {
@@ -363,61 +549,66 @@ bool isButtonHeld() {
 void setup() {
     Serial.begin(115200);
 
-    // Use external pull-up resistor so use INPUT (no need for internal pull-up)
-    pinMode(BUTTON_PIN, INPUT);
-
-    esp_sleep_wakeup_cause_t wakeup_reason = esp_sleep_get_wakeup_cause();
+    //----- Initialize Dimmable Light System -----
+    Serial.println();
+    Serial.println("Initializing Dimmable Light System...");
+    DimmableLight::setSyncPin(ZC_PIN);
+    DimmableLight::begin();
+    Serial.print("Initialized ");
+    Serial.print(DimmableLight::getLightNumber());
+    Serial.println(" lights.");
+    l1.setBrightness(0);
+    l2.setBrightness(0);
+    l3.setBrightness(0);
+    l4.setBrightness(0);
     
+    //----- WiFi/MQTT Setup -----
+    pinMode(BUTTON_PIN, INPUT);
+    esp_sleep_wakeup_cause_t wakeup_reason = esp_sleep_get_wakeup_cause();
     if (wakeup_reason == ESP_SLEEP_WAKEUP_EXT0) {
         Serial.println("⚡ ESP32 woke up due to button press!");
-        rtc_gpio_hold_dis(GPIO_NUM_25);  // Release GPIO hold state
+        rtc_gpio_hold_dis(GPIO_NUM_25);
     } else if (wakeup_reason == ESP_SLEEP_WAKEUP_TIMER) {
         Serial.println("⏰ ESP32 woke up after timer expiration.");
     } else {
         Serial.println("🟢 ESP32 started normally.");
     }
-
+    
     loadCredentials();
-
     if (storedSSID == "" || storedPassword == "") {
         Serial.println("⚠️ No WiFi credentials found. Starting Config Portal...");
         startConfigPortal();
     }
-
-    checkResetButton();  // Check reset button at startup
+    checkResetButton();
     WiFi.mode(WIFI_STA);
-    setupWiFi();  // Attempt WiFi connection
-
+    setupWiFi();
     if (WiFi.status() == WL_CONNECTED) {
-        setupMQTT();  // Only call MQTT setup if WiFi is connected
+        setupMQTT();
     } else {
         Serial.println("Entering deep sleep for 60 seconds...");
-
-        // Force GPIO25 HIGH before sleep
-        pinMode(BUTTON_PIN, OUTPUT);      // Temporarily set as output
-        digitalWrite(BUTTON_PIN, HIGH);     // Drive it HIGH
-        delay(10);                          // Allow state to settle
-        
-        // Return the pin to input mode (external pull-up is used)
+        pinMode(BUTTON_PIN, OUTPUT);
+        digitalWrite(BUTTON_PIN, HIGH);
+        delay(10);
         pinMode(BUTTON_PIN, INPUT);
-        
-        // Configure wake-up on GPIO25 when it goes LOW (i.e. button pressed)
         esp_sleep_enable_ext0_wakeup(GPIO_NUM_25, LOW);
-        
-        // Enable timer wake-up after 60 seconds
         esp_sleep_enable_timer_wakeup(60000 * 1000);
-        
         Serial.println("💤 Going to deep sleep... Press and hold the button to wake up.");
-        delay(1000);  // Allow Serial log update before sleep
-        esp_deep_sleep_start();  // Enter deep sleep mode
+        delay(1000);
+        esp_deep_sleep_start();
     }
 }
 
-// void setup() {
-//     Serial.begin(9600);
+void loop() {
+    client.loop();
+    checkWiFi();
+    checkResetButton();
+}
 
-//     // Set up GPIO 25 as an input with a pull-up to avoid false wake-ups
-//     pinMode(BUTTON_PIN, INPUT_PULLUP);
+// void setup() {
+//     Serial.begin(115200);
+
+//     // Use external pull-up resistor so use INPUT (no need for internal pull-up)
+//     pinMode(BUTTON_PIN, INPUT);
 
 //     esp_sleep_wakeup_cause_t wakeup_reason = esp_sleep_get_wakeup_cause();
     
@@ -442,54 +633,39 @@ void setup() {
 //     setupWiFi();  // Attempt WiFi connection
 
 //     if (WiFi.status() == WL_CONNECTED) {
-//         setupMQTT();  // ✅ Only call MQTT setup if WiFi is connected
+//         setupMQTT();  // Only call MQTT setup if WiFi is connected
 //     } else {
-//         // Serial.println("Entering deep sleep for 60 seconds...");
-
-//         // // ✅ Ensure GPIO 25 is set up with an internal pull-up
-//         // pinMode(BUTTON_PIN, INPUT_PULLUP);
-
-//         // // ✅ Configure wake-up on GPIO 25 when it goes LOW
-//         // esp_sleep_enable_ext0_wakeup(GPIO_NUM_25, LOW);
-
-//         // // ✅ Enable timer wake-up after 60 seconds
-//         // esp_sleep_enable_timer_wakeup(60000 * 1000);
-
-//         // Serial.println("💤 Going to deep sleep... Press and hold the button to wake up.");
-//         // delay(1000);  // Allow Serial log update before sleep
-//         // esp_deep_sleep_start();  // Enter deep sleep mode
 //         Serial.println("Entering deep sleep for 60 seconds...");
 
 //         // Force GPIO25 HIGH before sleep
-//         pinMode(BUTTON_PIN, OUTPUT);   // Set pin as output
-//         digitalWrite(BUTTON_PIN, HIGH);  // Drive it HIGH
-//         delay(10);                       // Short delay to ensure the state is set
-
-//         // Now switch back to INPUT_PULLUP so that the internal pull-up is active for wakeup
-//         pinMode(BUTTON_PIN, INPUT_PULLUP);
-
-//         // Configure wake-up on GPIO25 when it goes LOW
+//         pinMode(BUTTON_PIN, OUTPUT);      // Temporarily set as output
+//         digitalWrite(BUTTON_PIN, HIGH);     // Drive it HIGH
+//         delay(10);                          // Allow state to settle
+        
+//         // Return the pin to input mode (external pull-up is used)
+//         pinMode(BUTTON_PIN, INPUT);
+        
+//         // Configure wake-up on GPIO25 when it goes LOW (i.e. button pressed)
 //         esp_sleep_enable_ext0_wakeup(GPIO_NUM_25, LOW);
-
+        
 //         // Enable timer wake-up after 60 seconds
 //         esp_sleep_enable_timer_wakeup(60000 * 1000);
-
+        
 //         Serial.println("💤 Going to deep sleep... Press and hold the button to wake up.");
 //         delay(1000);  // Allow Serial log update before sleep
 //         esp_deep_sleep_start();  // Enter deep sleep mode
-
 //     }
 // }
 
-void loop() {
-    client.loop();
-    checkWiFi();
-    checkResetButton();  // Continuously monitor button state
+// void loop() {
+//     client.loop();
+//     checkWiFi();
+//     checkResetButton();  // Continuously monitor button state
 
-    // unsigned long now = millis();
-    // if (now - lastPublishTime >= PUBLISH_INTERVAL) {
-    //     lastPublishTime = now;
-    //     generateDataAndPublish(); // Generate data and publish when it's available.
-    // }
+//     // unsigned long now = millis();
+//     // if (now - lastPublishTime >= PUBLISH_INTERVAL) {
+//     //     lastPublishTime = now;
+//     //     generateDataAndPublish(); // Generate data and publish when it's available.
+//     // }
 
-}
+// }
