@@ -38,8 +38,7 @@ public class RoomController {
     }
 
     @PutMapping("/{roomName}/schedules")
-    public ResponseEntity<Room> addSchedule(@PathVariable String ro
-                                            omName, @RequestBody Schedule schedule) {
+    public ResponseEntity<Room> addSchedule(@PathVariable String roomName, @RequestBody Schedule schedule) {
         Room updated = roomService.addScheduleToRoom(roomName, schedule);
         return updated != null ? ResponseEntity.ok(updated) : ResponseEntity.notFound().build();
     }
