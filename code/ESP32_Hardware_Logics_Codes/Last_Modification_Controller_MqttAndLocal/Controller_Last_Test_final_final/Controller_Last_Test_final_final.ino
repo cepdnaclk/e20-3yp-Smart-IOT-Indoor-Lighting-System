@@ -124,19 +124,72 @@ int mapPercentageToBrightness(int p) {
 }
 
 // Sets target brightness (in percentage) for each channel and starts a gradual transition.
+// void setIndividualBrightnesses(int p1, int p2, int p3, int p4) {
+//   p1 = constrain(p1, 0, 100);
+//   p2 = constrain(p2, 0, 100);
+//   p3 = constrain(p3, 0, 100);
+//   p4 = constrain(p4, 0, 100);
+  
+//   targetBrightness[0] = mapPercentageToBrightness(p1);
+//   targetBrightness[1] = mapPercentageToBrightness(p2);
+//   targetBrightness[2] = mapPercentageToBrightness(p3);
+//   targetBrightness[3] = mapPercentageToBrightness(p4);
+  
+//   transitionTicker.once(transitionInterval, transitionStep);
+// }
+
 void setIndividualBrightnesses(int p1, int p2, int p3, int p4) {
   p1 = constrain(p1, 0, 100);
   p2 = constrain(p2, 0, 100);
   p3 = constrain(p3, 0, 100);
   p4 = constrain(p4, 0, 100);
   
+  // Calculate target brightness values using your mapping function
   targetBrightness[0] = mapPercentageToBrightness(p1);
   targetBrightness[1] = mapPercentageToBrightness(p2);
   targetBrightness[2] = mapPercentageToBrightness(p3);
   targetBrightness[3] = mapPercentageToBrightness(p4);
   
-  transitionTicker.once(transitionInterval, transitionStep);
+  bool useTransition = false;
+  
+  // Channel 1: Immediate update if value is 0 or 100; else, use transition.
+  if (p1 == 0 || p1 == 100) {
+    currentBrightness[0] = targetBrightness[0];
+    l1.setBrightness(currentBrightness[0]);
+  } else {
+    useTransition = true;
+  }
+  
+  // Channel 2
+  if (p2 == 0 || p2 == 100) {
+    currentBrightness[1] = targetBrightness[1];
+    l2.setBrightness(currentBrightness[1]);
+  } else {
+    useTransition = true;
+  }
+  
+  // Channel 3
+  if (p3 == 0 || p3 == 100) {
+    currentBrightness[2] = targetBrightness[2];
+    l3.setBrightness(currentBrightness[2]);
+  } else {
+    useTransition = true;
+  }
+  
+  // Channel 4
+  if (p4 == 0 || p4 == 100) {
+    currentBrightness[3] = targetBrightness[3];
+    l4.setBrightness(currentBrightness[3]);
+  } else {
+    useTransition = true;
+  }
+  
+  // If any channel requires a gradual transition, schedule the transition step.
+  if (useTransition) {
+    transitionTicker.once(transitionInterval, transitionStep);
+  }
 }
+
 
 // Transition step: gradually change brightness toward target values.
 void transitionStep() {
@@ -624,16 +677,6 @@ void OnDataRecv(const uint8_t *mac_addr, const uint8_t *incomingData, int len) {
     Serial.println("Error sending ACK");
   }
 }
-
-
-
-
-
-
-
-
-
-
 
 
 void setup() {
