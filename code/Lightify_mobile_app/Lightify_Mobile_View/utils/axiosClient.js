@@ -61,7 +61,7 @@ import axios from "axios";
 
 
 const axiosClient = axios.create({
-  baseURL: "http://192.168.8.102:8080",
+  baseURL: "http://192.168.8.104:8080",
   timeout: 10000,
   headers: {
     "Content-Type": "application/json",
@@ -81,7 +81,7 @@ axiosClient.interceptors.request.use(
   }
 );
 
-// Response interceptor to handle errors in responses
+// Response interceptor to handle errors in apresponses
 axiosClient.interceptors.response.use(
   (response) => {
     // Simply return the response if no error occurs
