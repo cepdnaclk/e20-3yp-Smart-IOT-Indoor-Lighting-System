@@ -3040,7 +3040,7 @@ export default function ShapeSelector() {
   const [canvasHeight, setCanvasHeight] = useState(0);
 
   useEffect(() => {
-    ws.current = new WebSocket("ws://192.168.8.107:81");
+    ws.current = new WebSocket("ws://192.168.8.102:81");
 
     ws.current.onopen = () => {
       console.log("✅ WebSocket connected");
