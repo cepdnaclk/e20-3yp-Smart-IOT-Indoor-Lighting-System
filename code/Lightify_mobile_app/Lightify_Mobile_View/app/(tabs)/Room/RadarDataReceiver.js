@@ -3357,7 +3357,7 @@ const handleCalibrationSubmit = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.heading}>Shape Selector</Text>
+      <Text style={styles.heading}>Room Blueprint</Text>
       <View
         style={styles.svgContainer}
         onLayout={e => {
@@ -3472,7 +3472,7 @@ const handleCalibrationSubmit = () => {
       </View>
 
       <TouchableOpacity style={styles.addBtn} onPress={openModalForNew}>
-        <Text style={styles.addBtnText}>+ Add Shape</Text>
+        <Text style={styles.addBtnText}>Add Room Feature</Text>
       </TouchableOpacity>
 
 <ScrollView style={styles.list}>
