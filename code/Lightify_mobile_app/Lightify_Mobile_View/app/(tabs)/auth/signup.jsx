@@ -1,316 +1,59 @@
-// import React, { useState } from "react";
-// import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
+
+
+
+
+
+// import { useRouter } from "expo-router";
+// import { useState } from "react";
+// import {
+//   Alert,
+//   StyleSheet,
+//   Text,
+//   TextInput,
+//   TouchableOpacity,
+//   View,
+// } from "react-native";
 // import Icon from "react-native-vector-icons/FontAwesome";
-// import { useNavigation } from "@react-navigation/native";
+// import axiosClient from "../../../utils/axiosClient";
 
 // const SignupScreen = () => {
-//   const navigation = useNavigation();
+//   const router = useRouter();
 
 //   const [username, setUsername] = useState("");
 //   const [email, setEmail] = useState("");
 //   const [password, setPassword] = useState("");
 //   const [confirmPassword, setConfirmPassword] = useState("");
+//   const [isSubmitting, setIsSubmitting] = useState(false);
 
-//   const handleSignup = async () => {
-//     if (!username || !email || !password || !confirmPassword) {
-//       Alert.alert("Error", "All fields are required!");
-//       return;
-//     }
-//     if (password !== confirmPassword) {
-//       Alert.alert("Error", "Passwords do not match!");
-//       return;
-//     }
-//     try {
-//       const response = await fetch(
-//         //"http://192.168.1.5:8080/api/auth/register",
-//         "http://localhost:8080/api/auth/register",
-//         {
-//           method: "POST",
-//           headers: { "Content-Type": "application/json" },
-//           body: JSON.stringify({ username, email, password }),
-//         }
-//       );
-
-//       const textResponse = await response.text();
-//       console.log("Response Status:", response.status);
-//       console.log("Raw Response:", textResponse);
-
-//       if (response.ok) {
-//         Alert.alert("Success", "Signup successful!");
-//         setUsername("");
-//         setEmail("");
-//         setPassword("");
-//         setConfirmPassword("");
-//         navigation.navigate("Login");
-//       } else {
-//         Alert.alert("Error", `Signup failed: ${response.statusText}`);
-//       }
-//     } catch (error) {
-//       console.error("Network Error:", error);
-//       Alert.alert("Error", "Failed to connect to the server");
-//     }
+//   const isValidEmail = (email) => {
+//     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+//     return emailRegex.test(email);
 //   };
 
-//   return (
-//     <View className="flex-1 bg-gray-900 p-5 justify-center">
-//       <Text className="text-3xl font-bold text-white text-center mb-2">
-//         Signup
-//       </Text>
-//       <Text className="text-sm text-gray-400 text-center mb-8">
-//         Just some details to get you in.!
-//       </Text>
-
-//       <TextInput
-//         className="bg-gray-800 border border-gray-700 rounded-lg text-white p-4 mb-4"
-//         placeholder="Username"
-//         placeholderTextColor="#ccc"
-//         value={username}
-//         onChangeText={setUsername}
-//       />
-//       <TextInput
-//         className="bg-gray-800 border border-gray-700 rounded-lg text-white p-4 mb-4"
-//         placeholder="Email"
-//         placeholderTextColor="#ccc"
-//         keyboardType="email-address"
-//         value={email}
-//         onChangeText={setEmail}
-//       />
-//       <TextInput
-//         className="bg-gray-800 border border-gray-700 rounded-lg text-white p-4 mb-4"
-//         placeholder="Password"
-//         placeholderTextColor="#ccc"
-//         secureTextEntry
-//         value={password}
-//         onChangeText={setPassword}
-//       />
-//       <TextInput
-//         className="bg-gray-800 border border-gray-700 rounded-lg text-white p-4 mb-4"
-//         placeholder="Confirm Password"
-//         placeholderTextColor="#ccc"
-//         secureTextEntry
-//         value={confirmPassword}
-//         onChangeText={setConfirmPassword}
-//       />
-
-//       <TouchableOpacity
-//         className="bg-indigo-600 py-4 rounded-lg mt-2"
-//         onPress={handleSignup}
-//       >
-//         <Text className="text-white text-center font-bold text-lg">Signup</Text>
-//       </TouchableOpacity>
-
-//       <Text className="text-center text-gray-400 text-sm my-6">Or</Text>
-
-//       <View className="flex-row justify-center">
-//         <TouchableOpacity className="bg-gray-800 w-12 h-12 rounded-full justify-center items-center mx-2">
-//           <Icon name="google" size={24} color="#DB4437" />
-//         </TouchableOpacity>
-//         <TouchableOpacity className="bg-gray-800 w-12 h-12 rounded-full justify-center items-center mx-2">
-//           <Icon name="facebook" size={24} color="#4267B2" />
-//         </TouchableOpacity>
-//         <TouchableOpacity className="bg-gray-800 w-12 h-12 rounded-full justify-center items-center mx-2">
-//           <Icon name="github" size={24} color="#000" />
-//         </TouchableOpacity>
-//       </View>
-//     </View>
-//   );
-// };
-
-// export default SignupScreen;
-
-
-
-// import React, { useState } from "react";
-// import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
-// import Icon from "react-native-vector-icons/FontAwesome";
-// import { useNavigation } from "@react-navigation/native";
-// import axiosClient from "../../../utils/axiosClient";
-
-// const SignupScreen = () => {
-//   const navigation = useNavigation();
-
-//   const [username, setUsername] = useState("");
-//   const [email, setEmail] = useState("");
-//   const [password, setPassword] = useState("");
-//   const [confirmPassword, setConfirmPassword] = useState("");
-
-// const handleSignup = async () => {
-//   if (!username || !email || !password || !confirmPassword) {
-//     Alert.alert("Error", "All fields are required!");
-//     return;
-//   }
-//   if (password !== confirmPassword) {
-//     Alert.alert("Error", "Passwords do not match!");
-//     return;
-//   }
-//   try {
-//     const response = await axiosClient.post("/api/auth/register", {
-//       username,
-//       email,
-//       password,
-//     });
-
-//     console.log("Response Status:", response.status);
-//     console.log("Response Data:", response.data);
-
-//     if (response.status === 200 || response.status === 201) {
-//       Alert.alert("Success", "Signup successful!");
-//       setUsername("");
-//       setEmail("");
-//       setPassword("");
-//       setConfirmPassword("");
-//       navigation.navigate("login");
-//     } else {
-//       Alert.alert("Error", `Signup failed: ${response.statusText}`);
-//     }
-//   } catch (error) {
-//     console.error("Network Error:", error);
-//     if (error.response) {
-//       Alert.alert(
-//         "Error",
-//         `Signup failed: ${error.response.data.message || error.response.statusText}`
-//       );
-//     } else {
-//       Alert.alert("Error", "Failed to connect to the server");
-//     }
-//   }
-// };
-
-//   // const handleSignup = async () => {
-//   //   if (!username || !email || !password || !confirmPassword) {
-//   //     Alert.alert("Error", "All fields are required!");
-//   //     return;
-//   //   }
-//   //   if (password !== confirmPassword) {
-//   //     Alert.alert("Error", "Passwords do not match!");
-//   //     return;
-//   //   }
-//   //   try {
-//   //     const response = await axios.post(
-//   //       "http://localhost:8080/api/auth/register",
-//   //       { username, email, password },
-//   //       {
-//   //         headers: { "Content-Type": "application/json" },
-//   //       }
-//   //     );
-
-//   //     console.log("Response Status:", response.status);
-//   //     console.log("Response Data:", response.data);
-
-//   //     if (response.status === 200 || response.status === 201) {
-//   //       Alert.alert("Success", "Signup successful!");
-//   //       setUsername("");
-//   //       setEmail("");
-//   //       setPassword("");
-//   //       setConfirmPassword("");
-//   //       navigation.navigate("Login");
-//   //     } else {
-//   //       Alert.alert("Error", `Signup failed: ${response.statusText}`);
-//   //     }
-//   //   } catch (error) {
-//   //     console.error("Network Error:", error);
-//   //     if (error.response) {
-//   //       Alert.alert(
-//   //         "Error",
-//   //         `Signup failed: ${error.response.data.message || error.response.statusText}`
-//   //       );
-//   //     } else {
-//   //       Alert.alert("Error", "Failed to connect to the server");
-//   //     }
-//   //   }
-//   // };
-
-//   return (
-//     <View className="flex-1 bg-gray-900 p-5 justify-center">
-//       <Text className="text-3xl font-bold text-white text-center mb-2">
-//         Signup
-//       </Text>
-//       <Text className="text-sm text-gray-400 text-center mb-8">
-//         Just some details to get you in.!
-//       </Text>
-
-//       <TextInput
-//         className="bg-gray-800 border border-gray-700 rounded-lg text-white p-4 mb-4"
-//         placeholder="Username"
-//         placeholderTextColor="#ccc"
-//         value={username}
-//         onChangeText={setUsername}
-//       />
-//       <TextInput
-//         className="bg-gray-800 border border-gray-700 rounded-lg text-white p-4 mb-4"
-//         placeholder="Email"
-//         placeholderTextColor="#ccc"
-//         keyboardType="email-address"
-//         value={email}
-//         onChangeText={setEmail}
-//       />
-//       <TextInput
-//         className="bg-gray-800 border border-gray-700 rounded-lg text-white p-4 mb-4"
-//         placeholder="Password"
-//         placeholderTextColor="#ccc"
-//         secureTextEntry
-//         value={password}
-//         onChangeText={setPassword}
-//       />
-//       <TextInput
-//         className="bg-gray-800 border border-gray-700 rounded-lg text-white p-4 mb-4"
-//         placeholder="Confirm Password"
-//         placeholderTextColor="#ccc"
-//         secureTextEntry
-//         value={confirmPassword}
-//         onChangeText={setConfirmPassword}
-//       />
-
-//       <TouchableOpacity
-//         className="bg-indigo-600 py-4 rounded-lg mt-2"
-//         onPress={handleSignup}
-//       >
-//         <Text className="text-white text-center font-bold text-lg">Signup</Text>
-//       </TouchableOpacity>
-
-//       <Text className="text-center text-gray-400 text-sm my-6">Or</Text>
-
-//       <View className="flex-row justify-center">
-//         <TouchableOpacity className="bg-gray-800 w-12 h-12 rounded-full justify-center items-center mx-2">
-//           <Icon name="google" size={24} color="#DB4437" />
-//         </TouchableOpacity>
-//         <TouchableOpacity className="bg-gray-800 w-12 h-12 rounded-full justify-center items-center mx-2">
-//           <Icon name="facebook" size={24} color="#4267B2" />
-//         </TouchableOpacity>
-//         <TouchableOpacity className="bg-gray-800 w-12 h-12 rounded-full justify-center items-center mx-2">
-//           <Icon name="github" size={24} color="#000" />
-//         </TouchableOpacity>
-//       </View>
-//     </View>
-//   );
-// };
-
-// export default SignupScreen;
-
-
-// import React, { useState } from "react";
-// import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
-// import Icon from "react-native-vector-icons/FontAwesome";
-// import { useRouter } from "expo-router"; // ✅ Use Expo Router for navigation
-// import axiosClient from "../../../utils/axiosClient";
-
-// const SignupScreen = () => {
-//   const router = useRouter(); // ✅ Expo Router navigation
-
-//   const [username, setUsername] = useState("");
-//   const [email, setEmail] = useState("");
-//   const [password, setPassword] = useState("");
-//   const [confirmPassword, setConfirmPassword] = useState("");
-
 //   const handleSignup = async () => {
+//     if (isSubmitting) return;
+
 //     if (!username || !email || !password || !confirmPassword) {
 //       Alert.alert("Error", "All fields are required!");
 //       return;
 //     }
+
+//     if (!isValidEmail(email)) {
+//       Alert.alert("Error", "Please enter a valid email address!");
+//       return;
+//     }
+
+//     if (password.length < 6) {
+//       Alert.alert("Error", "Password must be at least 6 characters long!");
+//       return;
+//     }
+
 //     if (password !== confirmPassword) {
 //       Alert.alert("Error", "Passwords do not match!");
 //       return;
 //     }
+
+//     setIsSubmitting(true);
 //     try {
 //       const response = await axiosClient.post("/api/auth/register", {
 //         username,
@@ -324,43 +67,43 @@
 //         setEmail("");
 //         setPassword("");
 //         setConfirmPassword("");
-//         router.push("/auth/login"); // ✅ Navigate using Expo Router
+//         router.push("/auth/login");
 //       } else {
 //         Alert.alert("Error", `Signup failed: ${response.statusText}`);
 //       }
 //     } catch (error) {
-//       console.error("Network Error:", error);
+//       console.error("Signup Error:", error);
 //       if (error.response) {
+//         const message =
+//           error.response.data?.message || error.response.statusText || "Signup failed.";
+//         Alert.alert("Signup Failed", message);
+//       } else if (error.request) {
 //         Alert.alert(
-//           "Error",
-//           `Signup failed: ${error.response.data.message || error.response.statusText}`
+//           "Network Error",
+//           "No response from the server. Please check your connection."
 //         );
 //       } else {
-//         Alert.alert("Error", "Failed to connect to the server");
+//         Alert.alert("Error", "An unexpected error occurred.");
 //       }
+//     } finally {
+//       setIsSubmitting(false);
 //     }
 //   };
 
 //   return (
-//     <View className="flex-1 bg-black p-5 justify-center">
-//       {/* Title */}
-//       <Text className="text-3xl font-bold text-yellow-400 text-center mb-2">
-//         Sign Up
-//       </Text>
-//       <Text className="text-sm text-white text-center mb-8">
-//         Just some details to get you in!
-//       </Text>
+//     <View style={styles.container}>
+//       <Text style={styles.title}>Sign Up</Text>
+//       <Text style={styles.subtitle}>Just some details to get you in!</Text>
 
-//       {/* Input Fields */}
 //       <TextInput
-//         className="bg-gray-900 border border-yellow-400 rounded-lg text-white p-4 mb-4"
+//         style={styles.input}
 //         placeholder="Username"
 //         placeholderTextColor="#FFD700"
 //         value={username}
 //         onChangeText={setUsername}
 //       />
 //       <TextInput
-//         className="bg-gray-900 border border-yellow-400 rounded-lg text-white p-4 mb-4"
+//         style={styles.input}
 //         placeholder="Email"
 //         placeholderTextColor="#FFD700"
 //         keyboardType="email-address"
@@ -368,7 +111,7 @@
 //         onChangeText={setEmail}
 //       />
 //       <TextInput
-//         className="bg-gray-900 border border-yellow-400 rounded-lg text-white p-4 mb-4"
+//         style={styles.input}
 //         placeholder="Password"
 //         placeholderTextColor="#FFD700"
 //         secureTextEntry
@@ -376,7 +119,7 @@
 //         onChangeText={setPassword}
 //       />
 //       <TextInput
-//         className="bg-gray-900 border border-yellow-400 rounded-lg text-white p-4 mb-4"
+//         style={styles.input}
 //         placeholder="Confirm Password"
 //         placeholderTextColor="#FFD700"
 //         secureTextEntry
@@ -384,39 +127,117 @@
 //         onChangeText={setConfirmPassword}
 //       />
 
-//       {/* Signup Button */}
 //       <TouchableOpacity
-//         className="bg-yellow-400 py-4 rounded-lg mt-2"
+//         style={[styles.signupButton, isSubmitting && { opacity: 0.6 }]}
 //         onPress={handleSignup}
+//         disabled={isSubmitting}
 //       >
-//         <Text className="text-black text-center font-bold text-lg">Sign Up</Text>
+//         <Text style={styles.signupText}>
+//           {isSubmitting ? "Signing Up..." : "Sign Up"}
+//         </Text>
 //       </TouchableOpacity>
 
-//       {/* OR Divider */}
-//       <Text className="text-center text-white text-sm my-6">Or</Text>
+//       <Text style={styles.orText}>Or</Text>
 
-//       {/* Social Media Login */}
-//       <View className="flex-row justify-center">
-//         <TouchableOpacity className="bg-gray-900 w-12 h-12 rounded-full justify-center items-center mx-2">
+//       <View style={styles.socialContainer}>
+//         <TouchableOpacity
+//           style={styles.socialButton}
+//           onPress={() => Alert.alert("Google Sign-in", "Coming soon...")}
+//         >
 //           <Icon name="google" size={24} color="#FFD700" />
 //         </TouchableOpacity>
-//         <TouchableOpacity className="bg-gray-900 w-12 h-12 rounded-full justify-center items-center mx-2">
+
+//         <TouchableOpacity
+//           style={styles.socialButton}
+//           onPress={() => Alert.alert("Facebook Sign-in", "Coming soon...")}
+//         >
 //           <Icon name="facebook" size={24} color="#FFD700" />
 //         </TouchableOpacity>
-//         <TouchableOpacity className="bg-gray-900 w-12 h-12 rounded-full justify-center items-center mx-2">
+
+//         <TouchableOpacity
+//           style={styles.socialButton}
+//           onPress={() => Alert.alert("GitHub Sign-in", "Coming soon...")}
+//         >
 //           <Icon name="github" size={24} color="#FFD700" />
 //         </TouchableOpacity>
+
 //       </View>
 //     </View>
 //   );
 // };
 
+// const styles = StyleSheet.create({
+//   container: {
+//     flex: 1,
+//     backgroundColor: "#000",
+//     padding: 20,
+//     justifyContent: "center",
+//   },
+//   title: {
+//     fontSize: 28,
+//     fontWeight: "bold",
+//     color: "#FFD700",
+//     textAlign: "center",
+//     marginBottom: 10,
+//   },
+//   subtitle: {
+//     fontSize: 14,
+//     color: "#FFF",
+//     textAlign: "center",
+//     marginBottom: 30,
+//   },
+//   input: {
+//     backgroundColor: "#1F1F1F",
+//     borderColor: "#FFD700",
+//     borderWidth: 1,
+//     borderRadius: 10,
+//     padding: 15,
+//     color: "#FFF",
+//     marginBottom: 15,
+//   },
+//   signupButton: {
+//     backgroundColor: "#FFD700",
+//     paddingVertical: 15,
+//     borderRadius: 10,
+//     marginTop: 10,
+//   },
+//   signupText: {
+//     color: "#000",
+//     fontSize: 16,
+//     fontWeight: "bold",
+//     textAlign: "center",
+//   },
+//   orText: {
+//     textAlign: "center",
+//     color: "#FFF",
+//     fontSize: 14,
+//     marginVertical: 25,
+//   },
+//   socialContainer: {
+//     flexDirection: "row",
+//     justifyContent: "center",
+//   },
+//   socialButton: {
+//     backgroundColor: "#1F1F1F",
+//     width: 48,
+//     height: 48,
+//     borderRadius: 24,
+//     justifyContent: "center",
+//     alignItems: "center",
+//     marginHorizontal: 8,
+//   },
+// });
+
 // export default SignupScreen;
 
 
+
+
+
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   StyleSheet,
   Text,
@@ -435,15 +256,59 @@ const SignupScreen = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  const handleSignup = async () => {
-    if (!username || !email || !password || !confirmPassword) {
-      Alert.alert("Error", "All fields are required!");
-      return;
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+
+  const [fieldErrors, setFieldErrors] = useState({
+    username: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
+
+  useEffect(() => {
+    if (errorMessage !== "") {
+      const timeout = setTimeout(() => setErrorMessage(""), 4000);
+      return () => clearTimeout(timeout);
+    }
+  }, [errorMessage]);
+
+  useEffect(() => {
+    if (successMessage !== "") {
+      const timeout = setTimeout(() => setSuccessMessage(""), 4000);
+      return () => clearTimeout(timeout);
+    }
+  }, [successMessage]);
+
+  const isValidEmail = (email) =>
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+
+  const validateFields = () => {
+    const errors = {};
+    if (!username.trim()) errors.username = "Username is required.";
+    if (!email.trim()) {
+      errors.email = "Email is required.";
+    } else if (!isValidEmail(email)) {
+      errors.email = "Invalid email format.";
+    }
+    if (password.length < 6) {
+      errors.password = "Password must be at least 6 characters.";
     }
     if (password !== confirmPassword) {
-      Alert.alert("Error", "Passwords do not match!");
-      return;
+      errors.confirmPassword = "Passwords do not match.";
     }
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleSignup = async () => {
+    if (isSubmitting) return;
+    if (!validateFields()) return;
+
+    setIsSubmitting(true);
+    setFieldErrors({});
+
     try {
       const response = await axiosClient.post("/api/auth/register", {
         username,
@@ -452,32 +317,55 @@ const SignupScreen = () => {
       });
 
       if (response.status === 200 || response.status === 201) {
-        Alert.alert("Success", "Signup successful!");
         setUsername("");
         setEmail("");
         setPassword("");
         setConfirmPassword("");
-        router.push("/auth/login");
+        setSuccessMessage("Signup successful! Redirecting...");
+        setTimeout(() => router.push("/auth/login"), 2000);
       } else {
-        Alert.alert("Error", `Signup failed: ${response.statusText}`);
+        setErrorMessage(`Signup failed: ${response.statusText}`);
       }
     } catch (error) {
-      console.error("Network Error:", error);
+      console.error("Signup Error:", error);
       if (error.response) {
-        Alert.alert(
-          "Error",
-          `Signup failed: ${error.response.data.message || error.response.statusText}`
+        setErrorMessage(
+          error.response.data?.message ||
+            error.response.statusText ||
+            "Signup failed."
         );
+      } else if (error.request) {
+        setErrorMessage("No response from server. Check your connection.");
       } else {
-        Alert.alert("Error", "Failed to connect to the server");
+        setErrorMessage("Unexpected error occurred.");
       }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
     <View style={styles.container}>
+      {isSubmitting && (
+        <View style={styles.spinnerOverlay}>
+          <ActivityIndicator size="large" color="#FFD700" />
+        </View>
+      )}
+
       <Text style={styles.title}>Sign Up</Text>
       <Text style={styles.subtitle}>Just some details to get you in!</Text>
+
+      {errorMessage !== "" && (
+        <View style={styles.errorBox}>
+          <Text style={styles.errorText}>{errorMessage}</Text>
+        </View>
+      )}
+
+      {successMessage !== "" && (
+        <View style={styles.successBox}>
+          <Text style={styles.successText}>{successMessage}</Text>
+        </View>
+      )}
 
       <TextInput
         style={styles.input}
@@ -486,6 +374,10 @@ const SignupScreen = () => {
         value={username}
         onChangeText={setUsername}
       />
+      {fieldErrors.username && (
+        <Text style={styles.inlineError}>{fieldErrors.username}</Text>
+      )}
+
       <TextInput
         style={styles.input}
         placeholder="Email"
@@ -494,6 +386,10 @@ const SignupScreen = () => {
         value={email}
         onChangeText={setEmail}
       />
+      {fieldErrors.email && (
+        <Text style={styles.inlineError}>{fieldErrors.email}</Text>
+      )}
+
       <TextInput
         style={styles.input}
         placeholder="Password"
@@ -502,6 +398,10 @@ const SignupScreen = () => {
         value={password}
         onChangeText={setPassword}
       />
+      {fieldErrors.password && (
+        <Text style={styles.inlineError}>{fieldErrors.password}</Text>
+      )}
+
       <TextInput
         style={styles.input}
         placeholder="Confirm Password"
@@ -510,21 +410,42 @@ const SignupScreen = () => {
         value={confirmPassword}
         onChangeText={setConfirmPassword}
       />
+      {fieldErrors.confirmPassword && (
+        <Text style={styles.inlineError}>{fieldErrors.confirmPassword}</Text>
+      )}
 
-      <TouchableOpacity style={styles.signupButton} onPress={handleSignup}>
-        <Text style={styles.signupText}>Sign Up</Text>
+      <TouchableOpacity
+        style={[styles.signupButton, isSubmitting && { opacity: 0.6 }]}
+        onPress={handleSignup}
+        disabled={isSubmitting}
+      >
+        <Text style={styles.signupText}>
+          {isSubmitting ? "Signing Up..." : "Sign Up"}
+        </Text>
       </TouchableOpacity>
 
       <Text style={styles.orText}>Or</Text>
 
+      {/* ✅ Social Login Buttons with Alert */}
       <View style={styles.socialContainer}>
-        <TouchableOpacity style={styles.socialButton}>
+        <TouchableOpacity
+          style={styles.socialButton}
+          onPress={() => Alert.alert("Google Sign-in", "Coming soon...")}
+        >
           <Icon name="google" size={24} color="#FFD700" />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.socialButton}>
+
+        <TouchableOpacity
+          style={styles.socialButton}
+          onPress={() => Alert.alert("Facebook Sign-in", "Coming soon...")}
+        >
           <Icon name="facebook" size={24} color="#FFD700" />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.socialButton}>
+
+        <TouchableOpacity
+          style={styles.socialButton}
+          onPress={() => Alert.alert("GitHub Sign-in", "Coming soon...")}
+        >
           <Icon name="github" size={24} color="#FFD700" />
         </TouchableOpacity>
       </View>
@@ -538,6 +459,17 @@ const styles = StyleSheet.create({
     backgroundColor: "#000",
     padding: 20,
     justifyContent: "center",
+  },
+  spinnerOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "#000000aa",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 10,
   },
   title: {
     fontSize: 28,
@@ -559,7 +491,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 15,
     color: "#FFF",
-    marginBottom: 15,
+    marginBottom: 10,
   },
   signupButton: {
     backgroundColor: "#FFD700",
@@ -591,6 +523,36 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginHorizontal: 8,
+  },
+  errorBox: {
+    backgroundColor: "#8B8000",
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 10,
+  },
+  errorText: {
+    color: "#FF0000",
+    fontSize: 14,
+    fontWeight: "bold",
+    textAlign: "center",
+  },
+  successBox: {
+    backgroundColor: "#2e7d32",
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 10,
+  },
+  successText: {
+    color: "#ffffff",
+    fontSize: 14,
+    fontWeight: "bold",
+    textAlign: "center",
+  },
+  inlineError: {
+    color: "#FF0000",
+    fontSize: 12,
+    marginBottom: 5,
+    marginLeft: 5,
   },
 });
 
