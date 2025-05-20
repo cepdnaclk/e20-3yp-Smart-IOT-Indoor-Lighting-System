@@ -925,7 +925,7 @@ const SmartHomeDashboard = () => {
       <View style={{ paddingHorizontal: 20, marginBottom: 30 }}>
         <TouchableOpacity
           style={{ backgroundColor: "#FFD700", padding: 15, borderRadius: 10, alignItems: "center" }}
-          onPress={() => router.push("/Room/AddRoom")}
+          onPress={() => router.push("/Room/AddRoomHome")}
         >
           <Text style={{ color: "black", fontWeight: "bold", fontSize: 18 }}>+ Add Room</Text>
         </TouchableOpacity>
