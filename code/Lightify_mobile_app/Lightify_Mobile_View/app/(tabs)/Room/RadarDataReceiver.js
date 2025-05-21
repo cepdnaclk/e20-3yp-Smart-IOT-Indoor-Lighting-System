@@ -4676,12 +4676,12 @@ export default function ShapeSelector() {
   
 
   useEffect(() => {
-    ws.current = new WebSocket("ws://192.168.8.102:81");
+    ws.current = new WebSocket("ws://192.168.8.100:81");
 
     ws.current.onopen = () => {
       console.log("✅ WebSocket connected");
       // Send authentication payload
-      ws.current.send(JSON.stringify({ username: "myUser" }));
+      ws.current.send(JSON.stringify({ username: "Topic" }));
     };
 
     ws.current.onmessage = (e) => {
@@ -5144,7 +5144,7 @@ const handleCalibrationSubmit = () => {
       )}
     </View>
   ))}
-  <RuleManager />
+  <RuleManager shapes={shapes} />
 </ScrollView>
 
 
