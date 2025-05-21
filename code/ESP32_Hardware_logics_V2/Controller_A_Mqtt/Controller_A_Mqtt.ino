@@ -154,7 +154,7 @@ void handleMqtt(const String& topic, const String& payload) {
 
 // ——— Non-blocking reconnect state ———
 static unsigned long lastWifiAttempt = 0;
-const unsigned long WIFI_RETRY_INTERVAL = 10UL * 100; // 1 s
+const unsigned long WIFI_RETRY_INTERVAL = 10UL * 300; // 3 s
 
 void setup() {
   Serial.begin(115200);
