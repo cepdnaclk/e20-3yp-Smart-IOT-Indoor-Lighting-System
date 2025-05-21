@@ -185,15 +185,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
-    Alert,
-    Modal,
-    ScrollView,
-    StyleSheet,
-    Switch,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 export default function RoomModesScreen() {
@@ -208,12 +208,21 @@ export default function RoomModesScreen() {
   const [newModeName, setNewModeName] = useState('');
 
   const toggleMode = (index) => {
-    setModes((prevModes) =>
-      prevModes.map((mode, i) =>
-        i === index ? { ...mode, active: !mode.active } : mode
-      )
+  setModes((prevModes) => {
+    const isCurrentlyActive = prevModes[index].active;
+    const anyOtherActive = prevModes.some((mode, i) => i !== index && mode.active);
+
+    if (!isCurrentlyActive && anyOtherActive) {
+      Alert.alert("Error", "Only one mode can be active at a time.");
+      return prevModes; // No change
+    }
+
+    return prevModes.map((mode, i) =>
+      i === index ? { ...mode, active: !mode.active } : mode
     );
-  };
+  });
+};
+
 
   const handleAddMode = () => {
     if (!newModeName.trim()) {
@@ -239,7 +248,16 @@ export default function RoomModesScreen() {
           <TouchableOpacity
             key={index}
             style={styles.modeCard}
-            onPress={() => router.push(`Room/RadarDataReceiver?mode=${encodeURIComponent(mode.name)}`)}
+            onPress={() =>
+              router.push({
+                pathname: 'Room/RadarDataReceiver',
+                params: {
+                  roomId: roomId || 'Default_Room',
+                  mode: mode.name,
+                },
+              })
+  }
+
           >
             <Text style={styles.modeText}>{mode.name}</Text>
             <Switch
