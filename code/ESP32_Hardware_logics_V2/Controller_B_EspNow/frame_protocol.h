@@ -13,7 +13,6 @@ inline uint8_t computeChecksum(const uint8_t* data, size_t len) {
 
 // Pack `payload` into outBuf as:
 //   [FRAME_START][lenH][lenL][payload...][checksum]
-// Returns false if payload too long.
 inline bool packFrame(const String& payload, uint8_t* outBuf, size_t& outLen) {
   size_t L = payload.length();
   if (L > 0xFFFF) return false;
