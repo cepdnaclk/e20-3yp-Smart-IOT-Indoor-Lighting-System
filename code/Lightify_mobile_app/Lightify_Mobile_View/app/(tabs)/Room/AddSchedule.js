@@ -812,91 +812,340 @@
 
 
 
-import React, { useState } from 'react';
-import { 
-  View, 
-  Text, 
-  TouchableOpacity, 
-  StyleSheet, 
-  Alert, 
-  ScrollView, 
-  Platform, 
-  Modal 
-} from 'react-native';
+// import DateTimePicker from '@react-native-community/datetimepicker';
+// import Slider from '@react-native-community/slider';
+// import { useState } from 'react';
+// import {
+//   Alert,
+//   Modal,
+//   Platform,
+//   ScrollView,
+//   StyleSheet,
+//   Text,
+//   TouchableOpacity,
+//   View
+// } from 'react-native';
+// import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+// import axiosClient from "../../../utils/axiosClient";
+
+// const SchedulePage = () => {
+//   const [date, setDate] = useState(new Date());
+//   const [showDatePicker, setShowDatePicker] = useState(false);
+//   const [showTimePicker, setShowTimePicker] = useState(false);
+//   const [time, setTime] = useState(new Date());
+//   const [intensity, setIntensity] = useState(50);
+//   const [color, setColor] = useState('blue');
+//   const [recurrence, setRecurrence] = useState(false);
+//   const [bulbIds, setBulbIds] = useState([]);
+
+//   const bulbOptions = [
+//     { label: 'Bulb 1', value: '1' },
+//     { label: 'Bulb 2', value: '2' },
+//     { label: 'Bulb 3', value: '3' },
+//     { label: 'Bulb 4', value: '4' }
+//   ];
+
+//   const handleBulbSelection = (value) => {
+//     setBulbIds((prevBulbs) => {
+//       const updatedBulbs = prevBulbs.includes(value) 
+//         ? prevBulbs.filter((id) => id !== value) 
+//         : [...prevBulbs, value];
+//       return updatedBulbs;
+//     });
+//   };
+
+//   const handleDateChange = (event, selectedDate) => {
+//     if (selectedDate) {
+//       setDate(selectedDate);
+//     }
+//     setShowDatePicker(false);
+//   };
+
+//   const handleTimeChange = (event, selectedTime) => {
+//     if (selectedTime) {
+//       setTime(selectedTime);
+//     }
+//     setShowTimePicker(false);
+//   };
+
+//   const formatDate = (date) => {
+//     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+//   };
+
+//   const formatTime = (time) => {
+//     return time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+//   };
+
+//   const handleSubmit = async () => {
+//     if (bulbIds.length === 0) {
+//       Alert.alert("Error", "Please select at least one bulb.");
+//       return;
+//     }
+
+//     const formattedDate = formatDate(date);
+//     const formattedTime = formatTime(time);
+
+//     const payload = {
+//       date: formattedDate,
+//       time: formattedTime,
+//       intensityPercentage: Math.round(intensity),
+//       color,
+//       recurrence,
+//       bulbId: bulbIds.length === 1 ? bulbIds[0] : bulbIds
+//     };
+
+//     console.log("Payload Sent:", payload);
+
+//     try {
+//       const response = await axiosClient.put('/api/rooms/kitchen/schedules', payload);
+//       Alert.alert('Success', 'Schedule saved successfully!');
+//     } catch (error) {
+//       console.error("Schedule API Error:", error);
+//       Alert.alert('Error', 'Failed to save schedule');
+//     }
+//   };
+
+//   return (
+//     <ScrollView style={styles.scrollContainer}>
+//       <View style={styles.container}>
+        
+//         {/* Date Picker */}
+//         <Text style={styles.label}>Select Date</Text>
+//         <TouchableOpacity style={styles.input} onPress={() => setShowDatePicker(true)}>
+//           <Text style={{ color: "#FFD700" }}>{formatDate(date)}</Text>
+//         </TouchableOpacity>
+
+//         {showDatePicker && (
+//           Platform.OS === 'ios' ? (
+//             <DateTimePicker
+//               value={date}
+//               mode="date"
+//               display="spinner"
+//               onChange={handleDateChange}
+//             />
+//           ) : (
+//             <Modal transparent={true} animationType="slide">
+//               <View style={styles.modalBackground}>
+//                 <View style={styles.modalContainer}>
+//                   <DateTimePicker
+//                     value={date}
+//                     mode="date"
+//                     display="calendar"
+//                     onChange={handleDateChange}
+//                   />
+//                   <TouchableOpacity onPress={() => setShowDatePicker(false)} style={styles.modalButton}>
+//                     <Text style={styles.modalButtonText}>Done</Text>
+//                   </TouchableOpacity>
+//                 </View>
+//               </View>
+//             </Modal>
+//           )
+//         )}
+
+//         {/* Time Picker */}
+//         <Text style={styles.label}>Select Time</Text>
+//         <TouchableOpacity style={styles.input} onPress={() => setShowTimePicker(true)}>
+//           <Text style={{ color: "#FFD700" }}>{formatTime(time)}</Text>
+//         </TouchableOpacity>
+
+//         {showTimePicker && (
+//           Platform.OS === 'ios' ? (
+//             <DateTimePicker
+//               value={time}
+//               mode="time"
+//               display="spinner"
+//               is24Hour={true}
+//               onChange={handleTimeChange}
+//             />
+//           ) : (
+//             <Modal transparent={true} animationType="slide">
+//               <View style={styles.modalBackground}>
+//                 <View style={styles.modalContainer}>
+//                   <DateTimePicker
+//                     value={time}
+//                     mode="time"
+//                     is24Hour={true}
+//                     display="clock"
+//                     onChange={handleTimeChange}
+//                   />
+//                   <TouchableOpacity onPress={() => setShowTimePicker(false)} style={styles.modalButton}>
+//                     <Text style={styles.modalButtonText}>Done</Text>
+//                   </TouchableOpacity>
+//                 </View>
+//               </View>
+//             </Modal>
+//           )
+//         )}
+
+//         {/* Intensity Slider */}
+//         <Text style={styles.label}>Intensity: {Math.round(intensity)}%</Text>
+//         <Slider
+//           value={intensity}
+//           onValueChange={(value) => setIntensity(Math.round(value))}
+//           minimumValue={0}
+//           maximumValue={100}
+//           step={1}
+//           minimumTrackTintColor="#FFD700"
+//           thumbTintColor="#FFD700"
+//         />
+
+//         {/* Color Selection */}
+//         <Text style={styles.label}>Select Color</Text>
+//         <View style={styles.colorContainer}>
+//           {['blue', 'red', 'green'].map((c) => (
+//             <TouchableOpacity 
+//               key={c} 
+//               style={[styles.colorBox, { backgroundColor: c, borderWidth: color === c ? 3 : 0 }]} 
+//               onPress={() => setColor(c)}
+//             />
+//           ))}
+//         </View>
+//                 {/* Bulb Selection with Icons */}
+//                 <Text style={styles.label}>Select Bulbs</Text>
+//         <View style={styles.bulbContainer}>
+//           {bulbOptions.map((bulb) => (
+//             <TouchableOpacity 
+//               key={bulb.value} 
+//               style={[styles.bulbOption, bulbIds.includes(bulb.value) && styles.selectedBulb]}
+//               onPress={() => handleBulbSelection(bulb.value)}
+//             >
+//               <Icon 
+//                 name={bulbIds.includes(bulb.value) ? "lightbulb-on" : "lightbulb-outline"} 
+//                 size={30} 
+//                 color={bulbIds.includes(bulb.value) ? "#FFD700" : "#FFFFFF"} 
+//               />
+//               <Text style={{ color: bulbIds.includes(bulb.value) ? "#FFD700" : "#FFFFFF" }}>{bulb.label}</Text>
+//             </TouchableOpacity>
+//           ))}
+//         </View>
+        
+
+//         {/* Submit Button */}
+//         <TouchableOpacity style={styles.button} onPress={handleSubmit}>
+//           <Text style={styles.buttonText}>Schedule</Text>
+//         </TouchableOpacity>
+//       </View>
+//     </ScrollView>
+//   );
+// };
+
+// const styles = StyleSheet.create({
+//   scrollContainer: { flex: 1, backgroundColor: '#000000' },
+//   container: { padding: 20 },
+//   label: { fontSize: 16, color: "#FFD700", marginVertical: 10, fontWeight: "bold" },
+//   input: { borderWidth: 1, borderColor: "#FFD700", padding: 10, borderRadius: 8, marginVertical: 5, backgroundColor: "#222222" },
+//   colorContainer: { flexDirection: 'row', marginVertical: 10 },
+//   colorBox: { width: 40, height: 40, margin: 5, borderRadius: 5 },
+//   bulbContainer: { flexDirection: 'row', justifyContent: "space-around", marginVertical: 10 },
+//   button: { backgroundColor: "#FFD700", paddingVertical: 15, borderRadius: 10, alignItems: "center", marginTop: 20 },
+//   buttonText: { color: "#000000", fontSize: 16, fontWeight: "bold" }
+// });
+
+// export default SchedulePage;
+
+
+
+
+
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Slider from '@react-native-community/slider';
-import axiosClient from "../../../utils/axiosClient";
+import { useState } from 'react';
+import {
+  Alert,
+  Modal,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import axiosClient from "../../../utils/axiosClient";
 
 const SchedulePage = () => {
   const [date, setDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [time, setTime] = useState(new Date());
-  const [intensity, setIntensity] = useState(50);
-  const [color, setColor] = useState('blue');
-  const [recurrence, setRecurrence] = useState(false);
-  const [bulbIds, setBulbIds] = useState([]);
+  const [bulbStates, setBulbStates] = useState([]);
+  const [scheduleType, setScheduleType] = useState("permanent");
+  const [workingHours, setWorkingHours] = useState("");
+  const [workingMinutes, setWorkingMinutes] = useState("");
 
   const bulbOptions = [
-    { label: 'Bulb 1', value: '1' },
-    { label: 'Bulb 2', value: '2' },
-    { label: 'Bulb 3', value: '3' }
+    { label: 'Bulb 1', value: 1 },
+    { label: 'Bulb 2', value: 2 },
+    { label: 'Bulb 3', value: 3 },
+    { label: 'Bulb 4', value: 4 }
   ];
 
-  const handleBulbSelection = (value) => {
-    setBulbIds((prevBulbs) => {
-      const updatedBulbs = prevBulbs.includes(value) 
-        ? prevBulbs.filter((id) => id !== value) 
-        : [...prevBulbs, value];
-      return updatedBulbs;
-    });
+  const handleBulbSelection = (id) => {
+    const exists = bulbStates.find(b => b.bulb_id === id);
+    if (exists) {
+      setBulbStates(prev => prev.filter(b => b.bulb_id !== id));
+    } else {
+      setBulbStates(prev => [...prev, { bulb_id: id, brightness: 50 }]);
+    }
   };
 
-  const handleDateChange = (event, selectedDate) => {
-    if (selectedDate) {
-      setDate(selectedDate);
-    }
+  const updateBulbBrightness = (id, value) => {
+    setBulbStates(prev =>
+      prev.map(b =>
+        b.bulb_id === id ? { ...b, brightness: Math.round(value) } : b
+      )
+    );
+  };
+
+  const handleDateChange = (_, selectedDate) => {
+    if (selectedDate) setDate(selectedDate);
     setShowDatePicker(false);
   };
 
-  const handleTimeChange = (event, selectedTime) => {
-    if (selectedTime) {
-      setTime(selectedTime);
-    }
+  const handleTimeChange = (_, selectedTime) => {
+    if (selectedTime) setTime(selectedTime);
     setShowTimePicker(false);
   };
 
-  const formatDate = (date) => {
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-  };
+  const formatDate = (d) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
-  const formatTime = (time) => {
-    return time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  };
+  const formatTime = (t) =>
+    t.toLocaleTimeString('en-GB', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
   const handleSubmit = async () => {
-    if (bulbIds.length === 0) {
+    if (bulbStates.length === 0) {
       Alert.alert("Error", "Please select at least one bulb.");
       return;
     }
 
-    const formattedDate = formatDate(date);
-    const formattedTime = formatTime(time);
+    if (scheduleType === "non_permanent") {
+      const hours = parseInt(workingHours || "0");
+      const minutes = parseInt(workingMinutes || "0");
+      if (isNaN(hours) || isNaN(minutes)) {
+        Alert.alert("Error", "Enter valid hours and minutes.");
+        return;
+      }
+    }
+
+    const totalMinutes =
+      scheduleType === "non_permanent"
+        ? parseInt(workingHours || 0) * 60 + parseInt(workingMinutes || 0)
+        : undefined;
 
     const payload = {
-      date: formattedDate,
-      time: formattedTime,
-      intensityPercentage: Math.round(intensity),
-      color,
-      recurrence,
-      bulbId: bulbIds.length === 1 ? bulbIds[0] : bulbIds
+      bulbs: bulbStates,
+      date: formatDate(date),
+      time: formatTime(time),
+      schedule_type: scheduleType,
+      ...(scheduleType === "non_permanent" && { schedule_working_period: totalMinutes }),
     };
 
-    console.log("Payload Sent:", payload);
+    console.log("Payload Sent:", JSON.stringify(payload, null, 2));
 
     try {
-      const response = await axiosClient.put('/api/rooms/kitchen/schedules', payload);
+      await axiosClient.put('/api/rooms/kitchen/schedules', payload);
       Alert.alert('Success', 'Schedule saved successfully!');
     } catch (error) {
       console.error("Schedule API Error:", error);
@@ -907,8 +1156,7 @@ const SchedulePage = () => {
   return (
     <ScrollView style={styles.scrollContainer}>
       <View style={styles.container}>
-        
-        {/* Date Picker */}
+        {/* Date */}
         <Text style={styles.label}>Select Date</Text>
         <TouchableOpacity style={styles.input} onPress={() => setShowDatePicker(true)}>
           <Text style={{ color: "#FFD700" }}>{formatDate(date)}</Text>
@@ -916,22 +1164,12 @@ const SchedulePage = () => {
 
         {showDatePicker && (
           Platform.OS === 'ios' ? (
-            <DateTimePicker
-              value={date}
-              mode="date"
-              display="spinner"
-              onChange={handleDateChange}
-            />
+            <DateTimePicker value={date} mode="date" display="spinner" onChange={handleDateChange} />
           ) : (
-            <Modal transparent={true} animationType="slide">
+            <Modal transparent animationType="slide">
               <View style={styles.modalBackground}>
                 <View style={styles.modalContainer}>
-                  <DateTimePicker
-                    value={date}
-                    mode="date"
-                    display="calendar"
-                    onChange={handleDateChange}
-                  />
+                  <DateTimePicker value={date} mode="date" display="calendar" onChange={handleDateChange} />
                   <TouchableOpacity onPress={() => setShowDatePicker(false)} style={styles.modalButton}>
                     <Text style={styles.modalButtonText}>Done</Text>
                   </TouchableOpacity>
@@ -941,7 +1179,7 @@ const SchedulePage = () => {
           )
         )}
 
-        {/* Time Picker */}
+        {/* Time */}
         <Text style={styles.label}>Select Time</Text>
         <TouchableOpacity style={styles.input} onPress={() => setShowTimePicker(true)}>
           <Text style={{ color: "#FFD700" }}>{formatTime(time)}</Text>
@@ -949,24 +1187,12 @@ const SchedulePage = () => {
 
         {showTimePicker && (
           Platform.OS === 'ios' ? (
-            <DateTimePicker
-              value={time}
-              mode="time"
-              display="spinner"
-              is24Hour={true}
-              onChange={handleTimeChange}
-            />
+            <DateTimePicker value={time} mode="time" display="spinner" is24Hour onChange={handleTimeChange} />
           ) : (
-            <Modal transparent={true} animationType="slide">
+            <Modal transparent animationType="slide">
               <View style={styles.modalBackground}>
                 <View style={styles.modalContainer}>
-                  <DateTimePicker
-                    value={time}
-                    mode="time"
-                    is24Hour={true}
-                    display="clock"
-                    onChange={handleTimeChange}
-                  />
+                  <DateTimePicker value={time} mode="time" is24Hour display="clock" onChange={handleTimeChange} />
                   <TouchableOpacity onPress={() => setShowTimePicker(false)} style={styles.modalButton}>
                     <Text style={styles.modalButtonText}>Done</Text>
                   </TouchableOpacity>
@@ -976,50 +1202,84 @@ const SchedulePage = () => {
           )
         )}
 
-        {/* Intensity Slider */}
-        <Text style={styles.label}>Intensity: {Math.round(intensity)}%</Text>
-        <Slider
-          value={intensity}
-          onValueChange={(value) => setIntensity(Math.round(value))}
-          minimumValue={0}
-          maximumValue={100}
-          step={1}
-          minimumTrackTintColor="#FFD700"
-          thumbTintColor="#FFD700"
-        />
-
-        {/* Color Selection */}
-        <Text style={styles.label}>Select Color</Text>
-        <View style={styles.colorContainer}>
-          {['blue', 'red', 'green'].map((c) => (
-            <TouchableOpacity 
-              key={c} 
-              style={[styles.colorBox, { backgroundColor: c, borderWidth: color === c ? 3 : 0 }]} 
-              onPress={() => setColor(c)}
-            />
-          ))}
-        </View>
-                {/* Bulb Selection with Icons */}
-                <Text style={styles.label}>Select Bulbs</Text>
-        <View style={styles.bulbContainer}>
-          {bulbOptions.map((bulb) => (
-            <TouchableOpacity 
-              key={bulb.value} 
-              style={[styles.bulbOption, bulbIds.includes(bulb.value) && styles.selectedBulb]}
-              onPress={() => handleBulbSelection(bulb.value)}
+        {/* Schedule Type */}
+        <Text style={styles.label}>Schedule Type</Text>
+        <View style={styles.typeContainer}>
+          {["permanent", "non_permanent"].map((type) => (
+            <TouchableOpacity
+              key={type}
+              style={[
+                styles.typeOption,
+                scheduleType === type && { borderColor: "#FFD700", backgroundColor: "#333" }
+              ]}
+              onPress={() => setScheduleType(type)}
             >
-              <Icon 
-                name={bulbIds.includes(bulb.value) ? "lightbulb-on" : "lightbulb-outline"} 
-                size={30} 
-                color={bulbIds.includes(bulb.value) ? "#FFD700" : "#FFFFFF"} 
-              />
-              <Text style={{ color: bulbIds.includes(bulb.value) ? "#FFD700" : "#FFFFFF" }}>{bulb.label}</Text>
+              <Text style={{ color: "#FFF", fontWeight: "bold" }}>{type.replace("_", " ").toUpperCase()}</Text>
             </TouchableOpacity>
           ))}
         </View>
-        
 
-        {/* Submit Button */}
+        {/* Working Period */}
+        {scheduleType === "non_permanent" && (
+          <>
+            <Text style={styles.label}>Working Period</Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+              <TextInput
+                style={[styles.input, { flex: 1, marginRight: 5, color: "#FFD700" }]}
+                placeholder="Hours"
+                keyboardType="numeric"
+                value={workingHours}
+                onChangeText={setWorkingHours}
+              />
+              <TextInput
+                style={[styles.input, { flex: 1, marginLeft: 5, color: "#FFD700" }]}
+                placeholder="Minutes"
+                keyboardType="numeric"
+                value={workingMinutes}
+                onChangeText={setWorkingMinutes}
+              />
+            </View>
+          </>
+        )}
+
+        {/* Bulbs with Individual Intensity */}
+        <Text style={styles.label}>Select Bulbs</Text>
+        <View style={styles.bulbContainer}>
+          {bulbOptions.map((bulb) => {
+            const selected = bulbStates.find(b => b.bulb_id === bulb.value);
+            return (
+              <View key={bulb.value} style={{ marginVertical: 10, width: "100%" }}>
+                <TouchableOpacity
+                  style={[styles.bulbOption, selected && styles.selectedBulb]}
+                  onPress={() => handleBulbSelection(bulb.value)}
+                >
+                  <Icon
+                    name={selected ? "lightbulb-on" : "lightbulb-outline"}
+                    size={30}
+                    color={selected ? "#FFD700" : "#FFFFFF"}
+                  />
+                  <Text style={{ color: selected ? "#FFD700" : "#FFFFFF" }}>{bulb.label}</Text>
+                </TouchableOpacity>
+                {selected && (
+                  <View style={{ marginTop: 8 }}>
+                    <Text style={{ color: "#FFD700" }}>Brightness: {selected.brightness}%</Text>
+                    <Slider
+                      value={selected.brightness}
+                      onValueChange={(val) => updateBulbBrightness(bulb.value, val)}
+                      minimumValue={0}
+                      maximumValue={100}
+                      step={1}
+                      minimumTrackTintColor="#FFD700"
+                      thumbTintColor="#FFD700"
+                    />
+                  </View>
+                )}
+              </View>
+            );
+          })}
+        </View>
+
+        {/* Submit */}
         <TouchableOpacity style={styles.button} onPress={handleSubmit}>
           <Text style={styles.buttonText}>Schedule</Text>
         </TouchableOpacity>
@@ -1032,12 +1292,37 @@ const styles = StyleSheet.create({
   scrollContainer: { flex: 1, backgroundColor: '#000000' },
   container: { padding: 20 },
   label: { fontSize: 16, color: "#FFD700", marginVertical: 10, fontWeight: "bold" },
-  input: { borderWidth: 1, borderColor: "#FFD700", padding: 10, borderRadius: 8, marginVertical: 5, backgroundColor: "#222222" },
-  colorContainer: { flexDirection: 'row', marginVertical: 10 },
-  colorBox: { width: 40, height: 40, margin: 5, borderRadius: 5 },
-  bulbContainer: { flexDirection: 'row', justifyContent: "space-around", marginVertical: 10 },
-  button: { backgroundColor: "#FFD700", paddingVertical: 15, borderRadius: 10, alignItems: "center", marginTop: 20 },
-  buttonText: { color: "#000000", fontSize: 16, fontWeight: "bold" }
+  input: {
+    borderWidth: 1,
+    borderColor: "#FFD700",
+    padding: 10,
+    borderRadius: 8,
+    marginVertical: 5,
+    backgroundColor: "#222222"
+  },
+  typeContainer: { flexDirection: 'row', justifyContent: 'space-around', marginVertical: 10 },
+  typeOption: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderWidth: 2,
+    borderColor: "#666",
+    borderRadius: 8
+  },
+  bulbContainer: { marginVertical: 10 },
+  bulbOption: { alignItems: "center", marginBottom: 4 },
+  selectedBulb: { transform: [{ scale: 1.05 }] },
+  button: {
+    backgroundColor: "#FFD700",
+    paddingVertical: 15,
+    borderRadius: 10,
+    alignItems: "center",
+    marginTop: 20
+  },
+  buttonText: { color: "#000000", fontSize: 16, fontWeight: "bold" },
+  modalBackground: { flex: 1, justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.5)' },
+  modalContainer: { backgroundColor: '#fff', padding: 20, margin: 30, borderRadius: 10 },
+  modalButton: { marginTop: 10, alignItems: "center" },
+  modalButtonText: { fontWeight: "bold", color: "#000" }
 });
 
 export default SchedulePage;

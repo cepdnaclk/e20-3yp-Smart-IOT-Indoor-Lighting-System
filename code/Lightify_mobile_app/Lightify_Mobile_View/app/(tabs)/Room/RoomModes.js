@@ -1,20 +1,22 @@
+
 // import { Ionicons } from '@expo/vector-icons';
-// import { useLocalSearchParams } from 'expo-router';
+// import { useLocalSearchParams, useRouter } from 'expo-router';
 // import { useState } from 'react';
 // import {
-//     Alert,
-//     Modal,
-//     ScrollView,
-//     StyleSheet,
-//     Switch,
-//     Text,
-//     TextInput,
-//     TouchableOpacity,
-//     View,
+//   Alert,
+//   Modal,
+//   ScrollView,
+//   StyleSheet,
+//   Switch,
+//   Text,
+//   TextInput,
+//   TouchableOpacity,
+//   View,
 // } from 'react-native';
 
 // export default function RoomModesScreen() {
 //   const { roomId } = useLocalSearchParams();
+//   const router = useRouter();
 //   const [modes, setModes] = useState([
 //     { name: 'Normal Mode', active: true },
 //     { name: 'Night Mode', active: false },
@@ -24,12 +26,21 @@
 //   const [newModeName, setNewModeName] = useState('');
 
 //   const toggleMode = (index) => {
-//     setModes((prevModes) =>
-//       prevModes.map((mode, i) =>
-//         i === index ? { ...mode, active: !mode.active } : mode
-//       )
+//   setModes((prevModes) => {
+//     const isCurrentlyActive = prevModes[index].active;
+//     const anyOtherActive = prevModes.some((mode, i) => i !== index && mode.active);
+
+//     if (!isCurrentlyActive && anyOtherActive) {
+//       Alert.alert("Error", "Only one mode can be active at a time.");
+//       return prevModes; // No change
+//     }
+
+//     return prevModes.map((mode, i) =>
+//       i === index ? { ...mode, active: !mode.active } : mode
 //     );
-//   };
+//   });
+// };
+
 
 //   const handleAddMode = () => {
 //     if (!newModeName.trim()) {
@@ -52,7 +63,20 @@
 
 //       <ScrollView contentContainerStyle={styles.modeList}>
 //         {modes.map((mode, index) => (
-//           <View key={index} style={styles.modeCard}>
+//           <TouchableOpacity
+//             key={index}
+//             style={styles.modeCard}
+//             onPress={() =>
+//               router.push({
+//                 pathname: 'Room/RadarDataReceiver',
+//                 params: {
+//                   roomId: roomId || 'Default_Room',
+//                   mode: mode.name,
+//                 },
+//               })
+//   }
+
+//           >
 //             <Text style={styles.modeText}>{mode.name}</Text>
 //             <Switch
 //               value={mode.active}
@@ -60,7 +84,7 @@
 //               trackColor={{ false: '#444', true: '#FFD70055' }}
 //               thumbColor={mode.active ? '#FFD700' : '#888'}
 //             />
-//           </View>
+//           </TouchableOpacity>
 //         ))}
 //       </ScrollView>
 
@@ -183,7 +207,7 @@
 
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Alert,
   Modal,
@@ -195,43 +219,109 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import axiosClient from '../../../utils/axiosClient';
 
 export default function RoomModesScreen() {
   const { roomId } = useLocalSearchParams();
   const router = useRouter();
-  const [modes, setModes] = useState([
-    { name: 'Normal Mode', active: true },
-    { name: 'Night Mode', active: false },
-  ]);
-
+  const [modes, setModes] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [newModeName, setNewModeName] = useState('');
 
-  const toggleMode = (index) => {
-  setModes((prevModes) => {
-    const isCurrentlyActive = prevModes[index].active;
-    const anyOtherActive = prevModes.some((mode, i) => i !== index && mode.active);
+  // 🔄 Fetch modes from backend
+  // useEffect(() => {
+  //   const fetchModes = async () => {
+  //     try {
+  //       const res = await axiosClient.get(`/api/modes?roomId=${roomId}`);
+  //       if (Array.isArray(res.data.modes)) {
+  //         setModes(res.data.modes);
+  //       }
+  //     } catch (err) {
+  //       console.error('❌ Failed to fetch modes:', err);
+  //     }
+  //   };
+
+  //   if (roomId) {
+  //     fetchModes();
+  //   }
+  // }, [roomId]);
+
+
+  useEffect(() => {
+  const fetchModes = async () => {
+    try {
+      const res = await axiosClient.get(`/api/modes?roomId=${roomId}`);
+      if (Array.isArray(res.data.modes)) {
+        setModes(res.data.modes);
+      } else {
+        throw new Error("Invalid data");
+      }
+    } catch (err) {
+      console.warn('⚠️ Backend not ready, using fallback modes');
+      // Hardcoded fallback modes
+      setModes([
+        { _id: 'm1', name: 'Normal Mode', active: true },
+        { _id: 'm2', name: 'Night Mode', active: false },
+        { _id: 'm3', name: 'Energy Saver', active: false },
+      ]);
+    }
+  };
+
+  if (roomId) {
+    fetchModes();
+  }
+}, [roomId]);
+
+
+  // 🔁 Update active state for modes (only one active at a time)
+  const toggleMode = async (index) => {
+    const isCurrentlyActive = modes[index].active;
+    const anyOtherActive = modes.some((mode, i) => i !== index && mode.active);
 
     if (!isCurrentlyActive && anyOtherActive) {
       Alert.alert("Error", "Only one mode can be active at a time.");
-      return prevModes; // No change
+      return;
     }
 
-    return prevModes.map((mode, i) =>
+    const updatedModes = modes.map((mode, i) =>
       i === index ? { ...mode, active: !mode.active } : mode
     );
-  });
-};
 
+    setModes(updatedModes);
 
-  const handleAddMode = () => {
+    try {
+      await axiosClient.patch(`/api/modes/${modes[index]._id}`, {
+        active: !isCurrentlyActive,
+      });
+    } catch (err) {
+      console.error("Failed to update mode:", err);
+    }
+  };
+
+  // ➕ Add new mode to backend
+  const handleAddMode = async () => {
     if (!newModeName.trim()) {
       Alert.alert('Error', 'Please enter a mode name');
       return;
     }
-    setModes([...modes, { name: newModeName.trim(), active: false }]);
-    setNewModeName('');
-    setModalVisible(false);
+
+    const newMode = {
+      roomId,
+      name: newModeName.trim(),
+      active: false,
+    };
+
+    try {
+      const res = await axiosClient.post('/api/modes', newMode);
+      if (res.status === 201 || res.data) {
+        setModes(prev => [...prev, res.data || newMode]);
+        setNewModeName('');
+        setModalVisible(false);
+      }
+    } catch (err) {
+      console.error("❌ Error adding mode:", err);
+      Alert.alert("Error", "Failed to add mode");
+    }
   };
 
   return (
@@ -256,8 +346,7 @@ export default function RoomModesScreen() {
                   mode: mode.name,
                 },
               })
-  }
-
+            }
           >
             <Text style={styles.modeText}>{mode.name}</Text>
             <Switch
