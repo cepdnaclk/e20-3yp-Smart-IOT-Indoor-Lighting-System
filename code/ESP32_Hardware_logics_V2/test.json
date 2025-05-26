@@ -29,7 +29,41 @@
   }
 }
 
+
+
+
 //TODO: SEND TO ESP -> Chalaka controller A decision logic json 
+
+{
+  "command": "automation_evaluated_set",
+  "payload": {
+    {
+      "room_name":null,
+      "message": [
+        {
+          "bulb_id": 1,     
+          "brightness": 74
+        },
+        {
+          "bulb_id": 2,
+          "brightness": 74
+        },
+        {
+          "bulb_id": 3,
+          "brightness": 74
+        },
+        {
+          "bulb_id": 4,
+          "brightness": 74
+        }
+      ]
+    }
+  }
+}
+
+{"c":"a","p":{"m":[{"b":1,"l":74},{"b":2,"l":74},{"b":3,"l":74},{"b":4,"l":74}]}}
+
+
 {
   "command": "schedule_set",
   "payload": {
