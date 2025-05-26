@@ -1,0 +1,283 @@
+//TODO: S <- Tharindu front end schedule add json (room_name will come as a path variable)  (BACKEND CHANGE SCHEDULES)
+{ 
+  "bulbs": [
+    {
+          "bulb_id": 1,
+          "brightness": 74
+        },
+        {
+          "bulb_id": 2,
+          "brightness": 74
+        },
+        {
+          "bulb_id": 3,
+          "brightness": 74
+        }
+    ],
+  "date": "2025-05-22",
+  "time": "21:15:00",
+  "schedule_type": "non_permanent", //(or "permanent")
+  "schedule_working_period": 30  // in minutes
+}
+
+
+//TODO: SEND FROM ESP <- Tharindu websocket IP 
+{
+  "command": "websocket_ip",
+  "payload": {
+
+  }
+}
+
+//TODO: SEND TO ESP -> Chalaka controller A decision logic json 
+{
+  "command": "schedule_set",
+  "payload": {
+    {
+      "room_name": "kitchen",
+      "message": [
+        {
+          "bulb_id": 1,
+          "brightness": 74
+        },
+        {
+          "bulb_id": 2,
+          "brightness": 74
+        },
+        {
+          "bulb_id": 3,
+          "brightness": 74
+        }
+      ],
+      "automation": [
+        {
+          "schedule_type": "non_permanent",
+            "schedule_working_period": 30
+        }
+      ]
+    }
+  }
+}
+
+{
+  "command": "schedule_set",
+  "payload": {
+    {
+      "room_name": "kitchen",
+      "message": [
+        {
+          "bulb_id": 1,
+          "brightness": 74
+        },
+        {
+          "bulb_id": 2,
+          "brightness": 74
+        },
+        {
+          "bulb_id": 3,
+          "brightness": 74
+        }
+      ],
+      "automation": [
+        {
+          "schedule_type": "permanent",
+          "schedule_working_period": null
+        }
+      ]
+    }
+  }
+}
+
+{
+  "command": "direct_light_set",
+  "payload": {
+    {
+      "room_name": "kitchen",
+      "message": [
+        {
+          "bulb_id": 1,
+          "brightness": 74
+        },
+        {
+          "bulb_id": 2,
+          "brightness": 74
+        },
+        {
+          "bulb_id": 3,
+          "brightness": 74
+        }
+      ],
+      "automation": [
+        {
+          "schedule_type": "permanent",
+          "schedule_working_period": null
+        }
+      ]
+    }
+  }
+}
+
+//TODO: SEND TO ESP -> Sensor automation update (set diffrent mode rule set json)
+{
+  "command": "update_automation_mode",
+  "payload": {
+    "Mode_Name": "Normal_Mode",
+    "Areas": [
+      {
+        "type": "point",
+        "name": "LightZone1",
+        "equation": "(x - 1500)^2 + (y - 2000)^2 = 9000000",
+        "x": [1500],
+        "y": [2000]
+      },
+      {
+        "type": "Door",
+        "name": "Door1",
+        "equation": "y = 1.5x + 300.0",
+        "x": [1200, 1800],
+        "y": [1800, 2400]
+      },
+      {
+        "type": "Bed/Table",
+        "name": "Bed1",
+        "equation": "Rectangle with corners (1000,2000), (1200,2000), (1200,2200), (1000,2200)",
+        "x": [1000, 1200, 1200, 1000],
+        "y": [2000, 2000, 2200, 2200]
+      }
+    ],
+    "Rules": [
+      {
+        "Rule_Name": "SleepZoneRule",
+        "Area": {
+          "type": "Bed/Table",
+          "name": "Bed1",
+          "equation": "Rectangle with corners (1000,2000), (1200,2000), (1200,2200), (1000,2200)",
+          "x": [1000, 1200, 1200, 1000],
+          "y": [2000, 2000, 2200, 2200]
+        },
+        "Selected_Bulbs": {
+          "ON": [
+            { "bulb": "b1", "intensity": 80 },
+            { "bulb": "b2", "intensity": 60 }
+          ],
+          "OFF": [
+            { "bulb": "b3", "intensity": 0 },
+            { "bulb": "b4", "intensity": 0 }
+          ]
+        },
+        "Start_Time": "22:00",
+        "End_Time": "06:00",
+        "Priority": "High"
+      },
+      {
+        "Rule_Name": "BedMorningRule",
+        "Area": {
+          "type": "Bed/Table",
+          "name": "Bed1",
+          "equation": "Rectangle with corners (1000,2000), (1200,2000), (1200,2200), (1000,2200)",
+          "x": [1000, 1200, 1200, 1000],
+          "y": [2000, 2000, 2200, 2200]
+        },
+        "Selected_Bulbs": {
+          "ON": [{ "bulb": "b3", "intensity": 70 }],
+          "OFF": [
+            { "bulb": "b1", "intensity": 0 },
+            { "bulb": "b2", "intensity": 0 },
+            { "bulb": "b4", "intensity": 0 }
+          ]
+        },
+        "Start_Time": "06:00",
+        "End_Time": "10:00",
+        "Priority": "Medium"
+      },
+      {
+        "Rule_Name": "DoorMonitorMorning",
+        "Area": {
+          "type": "Door",
+          "name": "Door1",
+          "equation": "y = 1.5x + 300.0",
+          "x": [1200, 1800],
+          "y": [1800, 2400]
+        },
+        "Selected_Bulbs": {
+          "ON": [{ "bulb": "b4", "intensity": 50 }],
+          "OFF": [
+            { "bulb": "b1", "intensity": 0 },
+            { "bulb": "b2", "intensity": 0 },
+            { "bulb": "b3", "intensity": 0 }
+          ]
+        },
+        "Start_Time": "08:00",
+        "End_Time": "12:00",
+        "Priority": "Low"
+      },
+      {
+        "Rule_Name": "DoorEveningAlert",
+        "Area": {
+          "type": "Door",
+          "name": "Door1",
+          "equation": "y = 1.5x + 300.0",
+          "x": [1200, 1800],
+          "y": [1800, 2400]
+        },
+        "Selected_Bulbs": {
+          "ON": [
+            { "bulb": "b1", "intensity": 90 },
+            { "bulb": "b4", "intensity": 90 }
+          ],
+          "OFF": [
+            { "bulb": "b2", "intensity": 0 },
+            { "bulb": "b3", "intensity": 0 }
+          ]
+        },
+        "Start_Time": "17:00",
+        "End_Time": "21:00",
+        "Priority": "High"
+      },
+      {
+        "Rule_Name": "LightZoneDaytime",
+        "Area": {
+          "type": "point",
+          "name": "LightZone1",
+          "equation": "(x - 1500)^2 + (y - 2000)^2 = 9000000",
+          "x": [1500],
+          "y": [2000]
+        },
+        "Selected_Bulbs": {
+          "ON": [
+            { "bulb": "b2", "intensity": 70 },
+            { "bulb": "b3", "intensity": 70 }
+          ],
+          "OFF": [
+            { "bulb": "b1", "intensity": 0 },
+            { "bulb": "b4", "intensity": 0 }
+          ]
+        },
+        "Start_Time": "09:00",
+        "End_Time": "14:00",
+        "Priority": "Low"
+      },
+      {
+        "Rule_Name": "LightZoneEvening",
+        "Area": {
+          "type": "point",
+          "name": "LightZone1",
+          "equation": "(x - 1500)^2 + (y - 2000)^2 = 9000000",
+          "x": [1500],
+          "y": [2000]
+        },
+        "Selected_Bulbs": {
+          "ON": [{ "bulb": "b1", "intensity": 100 }],
+          "OFF": [
+            { "bulb": "b2", "intensity": 0 },
+            { "bulb": "b3", "intensity": 0 },
+            { "bulb": "b4", "intensity": 0 }
+          ]
+        },
+        "Start_Time": "14:00",
+        "End_Time": "20:00",
+        "Priority": "Medium"
+      }
+    ]
+  }
+}
