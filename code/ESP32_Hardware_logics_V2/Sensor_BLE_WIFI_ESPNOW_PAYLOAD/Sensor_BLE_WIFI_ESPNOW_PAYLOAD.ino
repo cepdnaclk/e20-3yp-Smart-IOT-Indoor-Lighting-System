@@ -8,6 +8,7 @@
 #include <ArduinoJson.h>
 #include <math.h>
 
+
 // ——— BLE UUIDs must match controller ———
 #define SERVICE_UUID       "12345678-1234-1234-1234-1234567890AB"
 #define UUID_MAC_CHAR      "12345678-1234-1234-1234-1234567890AC"
@@ -139,6 +140,36 @@ void queuePop() {
   }
 }
 
+// ——— ESP-NOW receive callback ———
+void onEspNowReceive(const uint8_t* mac, const uint8_t* data, int len) {
+  char macStr[18];
+  snprintf(macStr, sizeof(macStr),
+           "%02X:%02X:%02X:%02X:%02X:%02X",
+           mac[0], mac[1], mac[2],
+           mac[3], mac[4], mac[5]);
+  Serial.printf("📥 ESP-NOW message received from %s:\n", macStr);
+
+  // Increased size to 10240 for large JSON
+  StaticJsonDocument<10240> doc;
+  DeserializationError err = deserializeJson(doc, data, len);
+
+  if (!err) {
+    Serial.println("✅ Parsed JSON:");
+    serializeJsonPretty(doc, Serial);
+    Serial.println();
+  } else {
+    Serial.print("⚠️ JSON parse error: ");
+    Serial.println(err.c_str());
+
+    Serial.print("🔸 Raw data: ");
+    for (int i = 0; i < len; i++) {
+      Serial.print((char)data[i]);
+    }
+    Serial.println();
+  }
+}
+
+
 
 // ——— ESP-NOW send callback ———
 void onEspNowSent(const uint8_t* mac_addr, esp_now_send_status_t status) {
@@ -148,10 +179,10 @@ void onEspNowSent(const uint8_t* mac_addr, esp_now_send_status_t status) {
      mac_addr[0],mac_addr[1],mac_addr[2],
      mac_addr[3],mac_addr[4],mac_addr[5]
   );
-  Serial.printf("seq=%u send to %s %s\n",
-                lastSeqSent,
-                buf,
-                (status == ESP_NOW_SEND_SUCCESS ? "✓" : "✗"));
+  // Serial.printf("seq=%u send to %s %s\n",
+  //               lastSeqSent,
+  //               buf,
+  //               (status == ESP_NOW_SEND_SUCCESS ? "✓" : "✗"));
 
   // on success, pop that message off the queue
   if (status == ESP_NOW_SEND_SUCCESS) {
@@ -249,6 +280,7 @@ void setup() {
 
   if (esp_now_init() == ESP_OK) {
     esp_now_register_send_cb(onEspNowSent);
+    esp_now_register_recv_cb(onEspNowReceive);
     esp_now_peer_info_t peer = {};
     memcpy(peer.peer_addr, peerMac, 6);
     peer.channel = initCh;

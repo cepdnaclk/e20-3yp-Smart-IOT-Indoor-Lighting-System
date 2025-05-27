@@ -38,13 +38,13 @@ struct ChunkBuffer {
 
 static std::map<uint32_t,ChunkBuffer> recvBuffers;
 
-static const char * forwardableCommands[] = {
+static const char * serialForwardableCommandsToSensor[] = {
   "update_automation_mode",
   // add future commands here, e.g.:   // "reboot_sensor", // "set_sensor_params",
 };
 
-static bool shouldForward(const char *cmd) {
-  for (auto c : forwardableCommands) {
+static bool serialDataShouldForwardViaESPNow(const char *cmd) {
+  for (auto c : serialForwardableCommandsToSensor) {
     if (strcmp(c, cmd) == 0) return true;
   }
   return false;
@@ -224,34 +224,6 @@ void setup(){
     handleProvisioning(initialJson);
   }
 
-  // // —— 3) Catch all JSON from A ——  
-  // SerialComm::onJsonReceived([](const String& j){
-  //   // Serial.printf("[Debug] Received framed JSON from A: %s\n", j.c_str());
-
-  //   // first-boot provisioning?
-  //   if (!gotInitial && ConfigManager::getSSID().isEmpty()){
-  //     initialJson = j;
-  //     gotInitial  = true;
-  //     // Serial.println("[Debug] Captured initial provisioning JSON");
-  //     return;
-  //   }
-  //   // runtime provisioning?
-  //   handleProvisioning(j);
-  //   // also buffer it for print/forward:
-  //   cmdQ.push(j);
-  //   // Serial.printf("[Debug] Pushed runtime JSON to cmdQ; head=%u tail=%u\n",
-  //   //               cmdQ.getHead(), cmdQ.getTail());
-  // });
-
-  // // —— 4) If no saved creds, wait right now ——  
-  // if (ConfigManager::getSSID().isEmpty()){
-  //   Serial.println("[Setup] Waiting for provisioning JSON…");
-  //   while(!gotInitial){
-  //     SerialComm::loop();
-  //   }
-  //   handleProvisioning(initialJson);
-  // }
-
   // —— 5) Full startup now that config is in RAM ——  
   Serial.printf(
     "[Startup] SSID=%s  USER=%s  SENSOR_MAC=%s\n",
@@ -283,32 +255,50 @@ void setup(){
     uint8_t mac[6];
     ConfigManager::getSensorMacBytes(mac);
     ESPNowManager::setPeer(mac);
-    ESPNowManager::onReceive([](const String& s){
-      // Serial.printf("[Debug] onReceive ESP-NOW JSON: %s\n", s.c_str());
-      // Serial.println("⟵ ESP-NOW: " + s);
 
-      // optional JSON field parsing
-      DynamicJsonDocument doc(1024);
-      if (!deserializeJson(doc, s)) {
-        int seq  = doc["seq"];
-        int16_t x = doc["x"];
-        int16_t y = doc["y"];
-        // Serial.printf("    seq=%d  x=%d  y=%d\n", seq, x, y);
+    ESPNowManager::onReceive([](const String& s){
+      // parse the incoming ESP-NOW JSON
+      StaticJsonDocument<1024> doc;
+      DeserializationError err = deserializeJson(doc, s);
+      if (err) {
+        Serial.printf("[ESP-NOW] bad JSON, skipping: %s\n", err.c_str());
+        return;
       }
 
-      // buffer for paced send to A
-      // Serial.printf("[Debug] Queuing ESP-NOW msg to outQ seq=%u\n", nextOutSeq);
-      outQ.push({ nextOutSeq++, s });
+      // check for automation_evaluated_set
+      const char *cmd = doc["command"] | "";
+      if (strcmp(cmd, "automation_evaluated_set") == 0) {
+        // build the reduced JSON:
+        // {"c":"a","p":{"m":[{"b":1,"l":74},…]}}
+        StaticJsonDocument<512> out;
+        out["c"] = "a";
+        JsonObject p = out.createNestedObject("p");
+        JsonArray m = p.createNestedArray("m");
 
-      // normal WS broadcast
-      WebSocketManager::broadcast(s);
+        for (JsonObject bulb : doc["payload"]["message"].as<JsonArray>()) {
+          JsonObject e = m.createNestedObject();
+          e["b"] = bulb["bulb_id"].as<int>();
+          e["l"] = bulb["brightness"].as<int>();
+        }
+
+        String reduced;
+        serializeJson(out, reduced);
+        // enqueue for serial‐UART immediately
+        outQ.push({ nextOutSeq++, reduced });
+        Serial.printf("[ESP-NOW] queued reduced JSON for serial: %s\n", reduced.c_str());
+      }
+      else {
+        // everything else just goes to the websocket
+        WebSocketManager::broadcast(s);
+      }
     });
+
     ESPNowManager::begin();
     // Serial.println("[Debug] ESPNowManager initialized");
     // BLE GATT provisioning
-  //   BLEProvision::begin("ControllerB");
-  // BLEProvision::update();
-  // Serial.println("[Debug] BLEProvision after ESPNowManager initialized");
+    //   BLEProvision::begin("ControllerB");
+    // BLEProvision::update();
+    // Serial.println("[Debug] BLEProvision after ESPNowManager initialized");
 
   }
   
@@ -325,28 +315,48 @@ void loop(){
   SerialComm::loop();
 
   // —— 2) Pacing: send one ESP-NOW msg every 2000 ms to Controller A ——  
-  uint32_t now = millis();
-  if (now - lastOutSend >= 2000 
-     && !outQ.empty() 
-     && comm.availableForWrite()>0) 
-  {
+  // uint32_t now = millis();
+  // if (now - lastOutSend >= 2000 
+  //    && !outQ.empty() 
+  //    && comm.availableForWrite()>0) 
+  // {
+  //   auto *m = outQ.front();
+  //   String frame = String("{\"seq\":") + m->seq +
+  //                  ",\"payload\":" + m->json + "}";
+  //   // Serial.printf("[Debug] Framing to A: %s\n", frame.c_str());
+
+  //   uint8_t buf[300]; size_t len;
+  //   if (packFrame(frame, buf, len)) {
+  //     comm.write(buf, len);
+  //     // Serial.printf("[Debug] Sent to A seq=%u len=%u\n", m->seq, len);
+  //     outQ.pop();
+  //     lastOutSend = now;
+  //     // Serial.printf("[Debug] outQ pop; head=%u tail=%u\n",
+  //     //               outQ.getHead(), outQ.getTail());
+  //   } else {
+  //     Serial.println("[Error] ESP-NOW frame too big");
+  //   }
+  // }
+
+  // —— 2) Send any queued serial messages immediately ——  
+  while (!outQ.empty() && comm.availableForWrite() > 0) {
     auto *m = outQ.front();
+  
+    // build the framed JSON
     String frame = String("{\"seq\":") + m->seq +
                    ",\"payload\":" + m->json + "}";
-    // Serial.printf("[Debug] Framing to A: %s\n", frame.c_str());
-
-    uint8_t buf[300]; size_t len;
+    size_t len;
+    uint8_t buf[300];
     if (packFrame(frame, buf, len)) {
       comm.write(buf, len);
-      Serial.printf("[Debug] Sent to A seq=%u len=%u\n", m->seq, len);
-      outQ.pop();
-      lastOutSend = now;
-      // Serial.printf("[Debug] outQ pop; head=%u tail=%u\n",
-      //               outQ.getHead(), outQ.getTail());
+      Serial.printf("[SerialComm] Sent urgent frame seq=%u len=%u\n", m->seq, len);
     } else {
-      Serial.println("[Error] ESP-NOW frame too big");
+      Serial.println("[SerialComm] ERROR: frame too big!");
     }
+  
+    outQ.pop();
   }
+
 
   // —— 3) Process any Serial JSON cmds: forward selected ones to sensor ——  
   while (!cmdQ.empty()) {
@@ -360,7 +370,7 @@ void loop(){
         Serial.println(err.c_str());
       } else if (doc.containsKey("command")) {
         const char *cmd = doc["command"];
-        if (shouldForward(cmd)) {
+        if (serialDataShouldForwardViaESPNow(cmd)) {
           Serial.printf("[ESP-NOW] Forwarding command \"%s\"\n", cmd);
           if (!ESPNowManager::send(*p)) {
             Serial.println(F("[Error] ESP-NOW send failed"));
