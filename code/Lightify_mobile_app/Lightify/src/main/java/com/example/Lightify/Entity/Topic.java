@@ -11,7 +11,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class Topic {
     @Id
     private String id;
-
     private String roomName;
     private String username;
     private String macAddress;
