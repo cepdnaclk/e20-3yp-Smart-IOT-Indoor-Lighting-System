@@ -17,30 +17,35 @@ public class TopicService {
 
     private final TopicRepository topicRepository;
     private final AwsIotPubSubService awsIotPubSubService;
+    private final DeviceService deviceService;
 
-    public TopicService(TopicRepository topicRepository, AwsIotPubSubService awsIotPubSubService) {
+    public TopicService(TopicRepository topicRepository, AwsIotPubSubService awsIotPubSubService, DeviceService deviceService) {
         this.topicRepository = topicRepository;
         this.awsIotPubSubService = awsIotPubSubService;
+        this.deviceService = deviceService;
     }
 
     public Topic addTopic(Topic topic) {
         try {
-            // Ensure uniqueness (combination of nic and roomName is unique)
-            Optional<Topic> existing = topicRepository.findByRoomNameAndUsername(topic.getRoomName(), topic.getUsername());
+            // Ensure uniqueness (combination of username and roomName is unique)
+            Optional<Topic> existing = topicRepository.findByRoomNameAndUsername(
+                    topic.getRoomName(), topic.getUsername());
             if (existing.isPresent()) {
-                String errorMsg = "Topic already exists for roomName: " + topic.getRoomName() + " and nic: " + topic.getUsername();
+                String errorMsg = "Topic already exists for roomName: " + topic.getRoomName()
+                        + " and username: " + topic.getUsername();
                 logger.error(errorMsg);
                 throw new RuntimeException(errorMsg);
             }
             Topic savedTopic = topicRepository.save(topic);
-            // Subscribe to the topic automatically using its topic string.
             try {
                 awsIotPubSubService.subscribe(savedTopic.getTopicString());
             } catch (Exception e) {
-                String subError = "Error subscribing to topic: " + savedTopic.getTopicString();
-                logger.error(subError, e);
-                throw new RuntimeException(subError, e);
+                logger.error("Error subscribing to topic: {}", savedTopic.getTopicString(), e);
+                throw new RuntimeException("Error subscribing to topic", e);
             }
+            // Remove device from "devices" collection once it has been added to a topic
+            deviceService.deleteDeviceByUsernameAndMacAddress(
+                    topic.getUsername(), topic.getMacAddress());
             return savedTopic;
         } catch (Exception e) {
             logger.error("Failed to add topic", e);
