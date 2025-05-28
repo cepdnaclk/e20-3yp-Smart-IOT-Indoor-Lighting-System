@@ -1,0 +1,518 @@
+// TODO: When Create a room: Backend to Frontend
+
+}
+  "username": "Tharindu",
+  "roomName": "Ddhsjjsjs",
+  "bulbs": [
+    {
+      "id": "6836126233321641223",
+      "name": "Bulb1"
+    }
+  ],
+  "addedDevices": [
+    {
+      "id": "6836126f2861a23ac1a16412",
+      "deviceName": "Device 4",
+      "macAddress": "22:33:44:55:66:77"
+    }
+  ],
+  "Areas": [],
+  "Automation_Modes": []
+}
+
+
+
+}
+  "username": "Tharindu",
+  "roomName": "Ddhsjjsjs",
+  "bulbs": [
+    {
+      "username": "Tharindu",
+      "name": "Bulb1"
+    }
+  ],
+  "addedDevices": [
+    {
+      "id": "6836126f2861a23ac1a16412",
+      "deviceName": "Device 4",
+      "macAddress": "22:33:44:55:66:77"
+    }
+  ],
+  "Areas": [],
+  "Automation_Modes": []
+}
+
+
+// TODO: Bulb
+{
+   "username": "Tharindu",
+   "name": "Bulb1"
+}
+
+// TODO: Area
+{
+  "username": "Tharindu",
+    "roomName": "kitchen",
+    "Areas": [
+    {
+        "type": "point",
+        "name": "LightZone1",
+        "equation": "(x - 1500)^2 + (y - 2000)^2 = 9000000",
+        "x": [1500],
+        "y": [2000]
+      },
+      {
+        "type": "Door",
+        "name": "Door1",
+        "equation": "y = 1.5x + 300.0",
+        "x": [1200, 1800],
+        "y": [1800, 2400]
+      },
+      {
+        "type": "Bed/Table",
+        "name": "Bed1",
+        "equation": "Rectangle with corners (1000,2000), (1200,2000), (1200,2200), (1000,2200)",
+        "x": [1000, 1200, 1200, 1000],
+        "y": [2000, 2000, 2200, 2200]
+      },
+      {
+
+      "type": "Door",
+      "name": "Door 1",
+      "equation": "y = -1.000x +0.0",
+      "x": [0,500],
+      "y": [0,-500]
+    }
+    ]
+}
+
+// TODO : Modes and Rules
+{
+    "username": "Tharindu",
+    "roomName": "kitchen",
+    "Automation_Modes": [
+        {
+          "Mode_Name": "Night Mode",
+          "Rules": [
+            {
+              "Rule_Name": "Light 1_1747855896417",
+              "Area": {
+                "type": "point",
+                "name": "Light 1",
+                "equation": "(x - 0)^2 + (y - 0)^2 = 4000000",
+                "x": [
+                  0
+                ],
+                "y": [
+                  0
+                ]
+              },
+              "Selected_Bulbs": {
+                "ON": [
+                  {
+                    "bulb": "b1",
+                    "intensity": 61
+                  },
+                  {
+                    "bulb": "b3",
+                    "intensity": 79
+                  }
+                ],
+                "OFF": [
+                  {
+                    "bulb": "b2",
+                    "intensity": 0
+                  },
+                  {
+                    "bulb": "b4",
+                    "intensity": 0
+                  }
+                ]
+              },
+              "Start_Time": "01:00",
+              "End_Time": "02:00",
+              "Priority": "Low"
+            },
+            {
+              "Rule_Name": "Door 1_1747855970623",
+              "Area": {
+                "type": "Door",
+                "name": "Door 1",
+                "equation": "y = -1.000x +0.0",
+                "x": [
+                  0,
+                  500
+                ],
+                "y": [
+                  0,
+                  -500
+                ]
+              },
+              "Selected_Bulbs": {
+                "ON": [
+                  {
+                    "bulb": "b1",
+                    "intensity": 85
+                  },
+                  {
+                    "bulb": "b3",
+                    "intensity": 69
+                  }
+                ],
+                "OFF": [
+                  {
+                    "bulb": "b2",
+                    "intensity": 0
+                  },
+                  {
+                    "bulb": "b4",
+                    "intensity": 0
+                  }
+                ]
+              },
+              "Start_Time": "01:01",
+              "End_Time": "03:01",
+              "Priority": "Medium"
+            }
+          ]
+        }
+  ]
+}
+
+// TODO : When Rules are added and then press finish calibrate button
+
+
+{
+  "username": "Tharindu",
+  "Room_Name": "Bathroom",
+  "bulbs": [
+    {"id": "6836126233321641223",
+    "name": "Bulb1"},
+    {"id": "6836126233321641224",
+    "name": "Bulb2"},
+    {"id": "6836126233321641225",
+    "name": "Bulb3"},
+    {"id": "6836126233321641226",
+    "name": "Bulb4"}
+  ],
+  "Areas": [
+    {
+      "type": "point",
+      "name": "Light 1",
+      "equation": "(x - 0)^2 + (y - 0)^2 = 4000000",
+      "x": [
+        0
+      ],
+      "y": [
+        0
+      ]
+    },
+    {
+      "type": "Door",
+      "name": "Door 1",
+      "equation": "y = -1.000x +0.0",
+      "x": [
+        0,
+        500
+      ],
+      "y": [
+        0,
+        -500
+      ]
+    }
+  ],
+  "Automation_Modes": [
+    {
+      "Mode_Name": "Night Mode",
+      "Rules": [
+        {
+          "Rule_Name": "Light 1_1747855896417",
+          "Area": {
+            "type": "point",
+            "name": "Light 1",
+            "equation": "(x - 0)^2 + (y - 0)^2 = 4000000",
+            "x": [
+              0
+            ],
+            "y": [
+              0
+            ]
+          },
+          "Selected_Bulbs": {
+            "ON": [
+              {
+                "bulb": "b1",
+                "intensity": 61
+              },
+              {
+                "bulb": "b3",
+                "intensity": 79
+              }
+            ],
+            "OFF": [
+              {
+                "bulb": "b2",
+                "intensity": 0
+              },
+              {
+                "bulb": "b4",
+                "intensity": 0
+              }
+            ]
+          },
+          "Start_Time": "01:00",
+          "End_Time": "02:00",
+          "Priority": "Low"
+        },
+        {
+          "Rule_Name": "Door 1_1747855970623",
+          "Area": {
+            "type": "Door",
+            "name": "Door 1",
+            "equation": "y = -1.000x +0.0",
+            "x": [
+              0,
+              500
+            ],
+            "y": [
+              0,
+              -500
+            ]
+          },
+          "Selected_Bulbs": {
+            "ON": [
+              {
+                "bulb": "b1",
+                "intensity": 85
+              },
+              {
+                "bulb": "b3",
+                "intensity": 69
+              }
+            ],
+            "OFF": [
+              {
+                "bulb": "b2",
+                "intensity": 0
+              },
+              {
+                "bulb": "b4",
+                "intensity": 0
+              }
+            ]
+          },
+          "Start_Time": "01:01",
+          "End_Time": "03:01",
+          "Priority": "Medium"
+        }
+      ]
+    }
+  ]
+}
+
+
+
+
+
+
+-------------------------------------------------------------------------------------------
+
+
+When Rules are added and then press finish calibrate button
+
+
+  "Room_Name": "Bathroom",
+  "bulbs": [
+    "b1",
+    "b2",
+    "b3",
+    "b4"
+  ],
+    "username": "Tharindu",
+    "roomName": "kitchen",
+    "Areas": [
+    {
+        "type": "point",
+        "name": "LightZone1",
+        "equation": "(x - 1500)^2 + (y - 2000)^2 = 9000000",
+        "x": [1500],
+        "y": [2000]
+      },
+      {
+        "type": "Door",
+        "name": "Door1",
+        "equation": "y = 1.5x + 300.0",
+        "x": [1200, 1800],
+        "y": [1800, 2400]
+      },
+      {
+        "type": "Bed/Table",
+        "name": "Bed1",
+        "equation": "Rectangle with corners (1000,2000), (1200,2000), (1200,2200), (1000,2200)",
+        "x": [1000, 1200, 1200, 1000],
+        "y": [2000, 2000, 2200, 2200]
+      },
+      {
+
+      "type": "Door",
+      "name": "Door 1",
+      "equation": "y = -1.000x +0.0",
+      "x": [0,500],
+      "y": [0,-500]
+    }
+  ],
+  "Automation_Modes": [
+    {
+      "Mode_Name": "Night Mode",
+      "Rules": [
+        {
+          "Rule_Name": "Light 1_1747855896417",
+          "Area": {
+            "type": "point",
+            "name": "Light 1",
+            "equation": "(x - 0)^2 + (y - 0)^2 = 4000000",
+            "x": [
+              0
+            ],
+            "y": [
+              0
+            ]
+          },
+          "Selected_Bulbs": {
+            "ON": [
+              {
+                "bulb": "b1",
+                "intensity": 61
+              },
+              {
+                "bulb": "b3",
+                "intensity": 79
+              }
+            ],
+            "OFF": [
+              {
+                "bulb": "b2",
+                "intensity": 0
+              },
+              {
+                "bulb": "b4",
+                "intensity": 0
+              }
+            ]
+          },
+          "Start_Time": "01:00",
+          "End_Time": "02:00",
+          "Priority": "Low"
+        },
+        {
+          "Rule_Name": "Door 1_1747855970623",
+          "Area": {
+            "type": "Door",
+            "name": "Door 1",
+            "equation": "y = -1.000x +0.0",
+            "x": [
+              0,
+              500
+            ],
+            "y": [
+              0,
+              -500
+            ]
+          },
+          "Selected_Bulbs": {
+            "ON": [
+              {
+                "bulb": "b1",
+                "intensity": 85
+              },
+              {
+                "bulb": "b3",
+                "intensity": 69
+              }
+            ],
+            "OFF": [
+              {
+                "bulb": "b2",
+                "intensity": 0
+              },
+              {
+                "bulb": "b4",
+                "intensity": 0
+              }
+            ]
+          },
+          "Start_Time": "01:01",
+          "End_Time": "03:01",
+          "Priority": "Medium"
+        }
+      ]
+    }
+  ]
+}
+
+
+---------------------------------------------------------------------------------
+
+Jason expected to show the available rooms
+
+
+{
+  "rooms": [
+    {
+      "_id": "room123",
+      "room": "Living Room",
+      "devices": [
+        {
+          "deviceId": "dev001"
+        }
+      ]
+    },
+    {
+      "_id": "room456",
+      "room": "Kitchen",
+      "devices": []
+    }
+  ]
+}
+
+-----------------------------------------------------------------------------------
+
+When fetching user modes
+
+{
+  "modes": [
+    { "_id": "m1", "name": "Normal Mode", "active": true },
+    { "_id": "m2", "name": "Night Mode", "active": false }
+  ]
+}
+
+
+-----------------------------------------------------------------------------------
+
+Post request to create a new user mode
+
+
+{
+  "roomId": "room123",
+  "name": "Study Mode",
+  "active": false
+}
+
+
+-----------------------------------------------------------------------------------
+
+Get the saved shapes from backend(through web socket)
+
+
+{
+  "shapes": [
+    {
+      "name": "Light1",
+      "type": "point",
+      "equation": "(x - 1500)^2 + (y - 2000)^2 = 9000000",
+      "x": [1500],
+      "y": [2000]
+    },
+    ...
+  ]
+}
