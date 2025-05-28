@@ -14,5 +14,6 @@ public class Device {
     @Id
     private String id;
     private String username;
+    private String deviceName;
     private String macAddress;
 }
