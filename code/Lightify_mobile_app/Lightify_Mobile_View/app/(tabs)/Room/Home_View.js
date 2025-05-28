@@ -1084,6 +1084,8 @@ const SmartHomeDashboard = () => {
   const [showColorOptions, setShowColorOptions] = useState(false);
   const [showAddDeviceModal, setShowAddDeviceModal] = useState(false);
   const [deviceInput, setDeviceInput] = useState("");
+  const [deviceNameInput, setDeviceNameInput] = useState("");
+
 
 
   useEffect(() => {
@@ -1167,14 +1169,27 @@ const SmartHomeDashboard = () => {
     return;
   }
 
-  const formatted = cleaned.match(/.{1,2}/g).join(":"); // Format XX:XX:XX:XX:XX:XX
+  if (deviceNameInput.trim() === "") {
+    alert("Please enter a device name.");
+    return;
+  }
+
+  const formatted = cleaned.match(/.{1,2}/g).join(":");
 
   try {
-    const payload = { deviceId: formatted };
-    await axiosClient.post("/api/devices/add", payload); // Replace with your actual backend endpoint
+    const payload = {
+      username: "Tharindu",
+      macAddress: formatted,
+      deviceName: deviceNameInput.trim()
+    };
+
+    console.log("Sending payload:", payload);
+
+    await axiosClient.post("/api/devices", payload);
     alert("Device added successfully!");
     setShowAddDeviceModal(false);
     setDeviceInput("");
+    setDeviceNameInput(""); // clear device name
   } catch (error) {
     console.error("Error adding device:", error);
     alert("Failed to add device.");
@@ -1452,6 +1467,13 @@ const SmartHomeDashboard = () => {
               style={{ borderColor: "#ccc", borderWidth: 1, borderRadius: 8, padding: 10, marginBottom: 15 }}
               autoCapitalize="characters"
             />
+            <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}>Enter Device Name</Text>
+              <TextInput
+                placeholder="e.g., Living Room Bulb"
+                value={deviceNameInput}
+                onChangeText={setDeviceNameInput}
+                style={{ borderColor: "#ccc", borderWidth: 1, borderRadius: 8, padding: 10, marginBottom: 15 }}
+              />
             <TouchableOpacity
               style={{ backgroundColor: "#FFD700", padding: 12, borderRadius: 8, alignItems: "center" }}
               onPress={handleAddDevice}
