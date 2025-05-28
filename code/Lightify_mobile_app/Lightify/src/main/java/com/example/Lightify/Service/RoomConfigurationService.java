@@ -1,20 +1,16 @@
 package com.example.Lightify.Service;
 
 import com.example.Lightify.DTO.RoomConfigurationRequest;
-import com.example.Lightify.Entity.Area;
-import com.example.Lightify.Entity.AutomationMode;
-import com.example.Lightify.Entity.Bulb;
-import com.example.Lightify.Entity.AreaDetail;
-import com.example.Lightify.Entity.ModeDetail;
-import com.example.Lightify.Entity.RuleDetail;   // <- import the RuleDetail class
+import com.example.Lightify.Entity.*;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.concurrent.ExecutionException;
 
 @Service
 public class RoomConfigurationService {
@@ -23,13 +19,18 @@ public class RoomConfigurationService {
     private final BulbService bulbService;
     private final AreaService areaService;
     private final AutomationModeService modeService;
+    private final TopicService topicService;
+    private final AwsIotPubSubService awsIotPubSubService;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public RoomConfigurationService(BulbService bulbService,
                                     AreaService areaService,
-                                    AutomationModeService modeService) {
+                                    AutomationModeService modeService, TopicService topicService, AwsIotPubSubService awsIotPubSubService) {
         this.bulbService = bulbService;
         this.areaService = areaService;
         this.modeService = modeService;
+        this.topicService = topicService;
+        this.awsIotPubSubService = awsIotPubSubService;
     }
 
     /**
@@ -48,8 +49,8 @@ public class RoomConfigurationService {
                     bulbService.addBulb(b);
                 } catch (RuntimeException e) {
                     if (e.getMessage() != null && e.getMessage().contains("already exists")) {
-                        logger.warn("[configureRoom] Bulb skipped (exists): user='{}', name='{}'",
-                                b.getUsername(), b.getName());
+                        logger.warn("[configureRoom] Bulb skipped (exists): user='{}', bulbId='{}', , name='{}'",
+                                b.getUsername(), b.getBulbId(), b.getName());
                     } else {
                         throw e;
                     }
@@ -141,123 +142,41 @@ public class RoomConfigurationService {
                 username, roomName);
         return result;
     }
+
+    public void publishAutomationUpdate(String username, String roomName) throws ExecutionException, InterruptedException {
+        // 1) Look up the MQTT topic string
+        Topic topic = topicService.getTopicByRoomNameAndUsername(roomName, username);
+        String topicString = topic.getTopicString();
+
+        // 2) Fetch the full automation-mode object
+        AutomationMode am = modeService.getAutomationMode(username, roomName)
+                .orElseThrow(() -> new RuntimeException("No automation mode found"));
+
+        // 3) Build the exact JSON payload
+        Map<String,Object> root = new LinkedHashMap<>();
+        root.put("command", "update_automation_mode");
+
+        // Pick one mode or iterate all; here we publish them all under the same key:
+        List<Map<String,Object>> modesList = new ArrayList<>();
+        for (ModeDetail m : am.getAutomation_Modes()) {
+            Map<String,Object> modeMap = new LinkedHashMap<>();
+            modeMap.put("Mode_Name", m.getModeName());
+            modeMap.put("Areas",    areaService.getArea(username, roomName).orElse(new Area()).getAreas());
+            modeMap.put("Rules",    m.getRules());
+            modesList.add(modeMap);
+        }
+        // Wrap into payload
+        root.put("payload", modesList.size()==1 ? modesList.get(0) : Collections.singletonMap("Modes", modesList));
+
+        String json;
+        try {
+            json = objectMapper.writeValueAsString(root);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to serialize MQTT payload", e);
+        }
+
+        // 4) Publish
+        awsIotPubSubService.publish(topicString, json);
+        logger.info("[publishAutomationUpdate] Published to {}: {}", topicString, json);
+    }
 }
-
-
-//package com.example.Lightify.Service;
-//
-//import com.example.Lightify.DTO.RoomConfigurationRequest;
-//import com.example.Lightify.Entity.Area;
-//import com.example.Lightify.Entity.AutomationMode;
-//import com.example.Lightify.Entity.Bulb;
-//import com.example.Lightify.Entity.AreaDetail;
-//import com.example.Lightify.Entity.ModeDetail;
-//import org.slf4j.Logger;
-//import org.slf4j.LoggerFactory;
-//import org.springframework.stereotype.Service;
-//import org.springframework.transaction.annotation.Transactional;
-//
-//import java.util.Collections;
-//import java.util.List;
-//import java.util.Optional;
-//
-//
-//@Service
-//public class RoomConfigurationService {
-//    private static final Logger logger = LoggerFactory.getLogger(RoomConfigurationService.class);
-//
-//    private final BulbService bulbService;
-//    private final AreaService areaService;
-//    private final AutomationModeService modeService;
-//
-//    public RoomConfigurationService(BulbService bulbService,
-//                                    AreaService areaService,
-//                                    AutomationModeService modeService) {
-//        this.bulbService = bulbService;
-//        this.areaService = areaService;
-//        this.modeService = modeService;
-//    }
-//
-//    /**
-//     * Receives a complete room configuration JSON, then adds or updates
-//     * bulbs, areas, and automation modes. All operations occur in a
-//     * single transaction; on failure, changes are rolled back.
-//     */
-//    @Transactional
-//    public void configureRoom(RoomConfigurationRequest request) {
-//        logger.info("Starting configuration for user='{}', room='{}'",
-//                request.getUsername(), request.getRoomName());
-//        try {
-//            // 1) Bulbs (ignore duplicates, continue on existing bulbs)
-//            for (Bulb b : request.getBulbs()) {
-//                try {
-//                    bulbService.addBulb(b);
-//                } catch (RuntimeException e) {
-//                    String msg = e.getMessage();
-//                    if (msg != null && msg.contains("already exists")) {
-//                        logger.warn("Bulb skipped (exists): user='{}', name='{}'",
-//                                b.getUsername(), b.getName());
-//                        // continue without failing
-//                    } else {
-//                        // critical failure -> propagate to trigger rollback
-//                        throw e;
-//                    }
-//                }
-//            }
-//
-//            // 2) Areas
-//            Area area = new Area(
-//                    request.getUsername(),
-//                    request.getRoomName(),
-//                    request.getAreas()
-//            );
-//            areaService.addOrUpdateArea(area);
-//
-//            // 3) Automation Modes
-//            AutomationMode mode = new AutomationMode(
-//                    null,
-//                    request.getUsername(),
-//                    request.getRoomName(),
-//                    request.getAutomation_Modes()
-//            );
-//            modeService.addOrUpdateAutomationMode(mode);
-//
-//            logger.info("Successfully configured room='{}' for user='{}'",
-//                    request.getRoomName(), request.getUsername());
-//        } catch (Exception e) {
-//            logger.error("Configuration failed for user='{}', room='{}': {}",
-//                    request.getUsername(), request.getRoomName(), e.getMessage(), e);
-//            throw new RuntimeException("Configuration failed: " + e.getMessage(), e);
-//        }
-//    }
-//
-//    /**
-//     * Fetches the full saved configuration for the given user and room.
-//     */
-//    public RoomConfigurationRequest getRoomConfiguration(String username, String roomName) {
-//        logger.info("Fetching configuration for user='{}', room='{}'", username, roomName);
-//
-//        // 1) Bulbs
-//        List<Bulb> bulbs = bulbService.getBulbsByUsername(username);
-//
-//        // 2) Areas
-//        Optional<Area> areaOpt = areaService.getArea(username, roomName);
-//        List<AreaDetail> areasList = areaOpt.map(Area::getAreas)
-//                .orElse(Collections.emptyList());
-//
-//        // 3) Automation Modes
-//        Optional<AutomationMode> modeOpt = modeService.getAutomationMode(username, roomName);
-//        List<ModeDetail> modesList = modeOpt.map(AutomationMode::getAutomation_Modes)
-//                .orElse(Collections.emptyList());
-//
-//        // Build DTO
-//        RoomConfigurationRequest result = new RoomConfigurationRequest();
-//        result.setUsername(username);
-//        result.setRoomName(roomName);
-//        result.setBulbs(bulbs);
-//        result.setAreas(areasList);
-//        result.setAutomation_Modes(modesList);
-//        return result;
-//    }
-//
-//}

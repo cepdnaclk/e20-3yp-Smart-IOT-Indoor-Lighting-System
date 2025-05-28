@@ -5,6 +5,7 @@ import com.example.Lightify.Repository.AreaRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -60,4 +61,23 @@ public class AreaService {
             throw new RuntimeException("Failed to delete area: " + e.getMessage(), e);
         }
     }
+
+    // AreaService.java
+    @Transactional
+    public void updateAreaRoomName(String username, String oldRoomName, String newRoomName) {
+        logger.info("[updateAreaRoomName] user='{}' '{}'→'{}'", username, oldRoomName, newRoomName);
+        try {
+            areaRepository.findByUsernameAndRoomName(username, oldRoomName)
+                    .ifPresent(a -> {
+                        a.setRoomName(newRoomName);
+                        areaRepository.save(a);
+                        logger.debug("[updateAreaRoomName] Area id='{}' updated", a.getId());
+                    });
+        } catch (Exception e) {
+            logger.error("[updateAreaRoomName] FAILED user='{}' '{}'→'{}': {}",
+                    username, oldRoomName, newRoomName, e.getMessage(), e);
+            throw new RuntimeException("Failed to update area roomName: " + e.getMessage(), e);
+        }
+    }
+
 }

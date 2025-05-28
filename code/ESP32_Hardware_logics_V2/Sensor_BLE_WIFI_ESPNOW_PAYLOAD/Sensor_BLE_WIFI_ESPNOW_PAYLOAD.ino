@@ -179,10 +179,10 @@ void onEspNowSent(const uint8_t* mac_addr, esp_now_send_status_t status) {
      mac_addr[0],mac_addr[1],mac_addr[2],
      mac_addr[3],mac_addr[4],mac_addr[5]
   );
-  // Serial.printf("seq=%u send to %s %s\n",
-  //               lastSeqSent,
-  //               buf,
-  //               (status == ESP_NOW_SEND_SUCCESS ? "✓" : "✗"));
+  Serial.printf("seq=%u send to %s %s\n",
+                lastSeqSent,
+                buf,
+                (status == ESP_NOW_SEND_SUCCESS ? "✓" : "✗"));
 
   // on success, pop that message off the queue
   if (status == ESP_NOW_SEND_SUCCESS) {

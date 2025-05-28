@@ -7,6 +7,6 @@ import java.util.Optional;
 
 public interface BulbRepository extends MongoRepository<Bulb, String> {
     List<Bulb> findByUsername(String username);
-    Optional<Bulb> findByUsernameAndName(String username, String name);
-    void deleteByUsernameAndName(String username, String name);
+    Optional<Bulb> findByUsernameAndBulbId(String username, String bulbId);
+    void deleteByUsernameAndBulbId(String username, String bulbId);
 }

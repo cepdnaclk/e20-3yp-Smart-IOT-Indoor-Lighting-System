@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Service
@@ -20,8 +21,8 @@ public class BulbService {
 
     public Bulb addBulb(Bulb bulb) {
         try {
-            Optional<Bulb> existing = bulbRepository.findByUsernameAndName(
-                    bulb.getUsername(), bulb.getName());
+            Optional<Bulb> existing = bulbRepository.findByUsernameAndBulbId(
+                    bulb.getUsername(), bulb.getBulbId());
             if (existing.isPresent()) {
                 String errorMsg = "Bulb already exists for user: " + bulb.getUsername()
                         + " with name: " + bulb.getName();
@@ -44,6 +45,31 @@ public class BulbService {
         }
     }
 
+    /**
+     * Retrieve a specific bulb by username and bulbId
+     */
+    public Bulb getBulbByUsernameAndBulbId(String username, String bulbId) {
+        return bulbRepository.findByUsernameAndBulbId(username, bulbId)
+                .orElseThrow(() -> new NoSuchElementException(
+                        String.format("No bulb found for user: %s with bulbId: %s", username, bulbId)));
+    }
+
+
+    /**
+     * Update the name of a bulb identified by username and bulbId
+     */
+    public Bulb updateBulbName(String username, String bulbId, String newName) {
+        try {
+            Bulb bulb = getBulbByUsernameAndBulbId(username, bulbId);
+            bulb.setName(newName);
+            return bulbRepository.save(bulb);
+        } catch (Exception e) {
+            logger.error("Failed to update bulb name for user: {} bulbId: {}", username, bulbId, e);
+            throw new RuntimeException("Failed to update bulb: " + e.getMessage(), e);
+        }
+    }
+
+
     public void deleteBulbById(String id) {
         try {
             bulbRepository.deleteById(id);
@@ -53,11 +79,14 @@ public class BulbService {
         }
     }
 
-    public void deleteBulbByUsernameAndName(String username, String name) {
+    /**
+     * Delete a bulb by username and bulbId
+     */
+    public void deleteBulbByUsernameAndBulbId(String username, String bulbId) {
         try {
-            bulbRepository.deleteByUsernameAndName(username, name);
+            bulbRepository.deleteByUsernameAndBulbId(username, bulbId);
         } catch (Exception e) {
-            logger.error("Failed to delete bulb for user: {} name: {}", username, name, e);
+            logger.error("Failed to delete bulb for user: {} bulbId: {}", username, bulbId, e);
             throw new RuntimeException("Failed to delete bulb: " + e.getMessage(), e);
         }
     }
