@@ -16,10 +16,27 @@ public class RoomController {
     @Autowired
     private RoomService roomService;
 
+    /** Create **/
     @PostMapping
-    public ResponseEntity<Room> createRoom(@RequestBody Room room) {
-        Room createdRoom = roomService.createRoom(room);
-        return ResponseEntity.ok(createdRoom);
+    public ResponseEntity<?> createRoom(
+            @RequestParam String username,
+            @RequestParam String roomName) {
+        try {
+            Room created = roomService.createRoom(username, roomName);
+            return ResponseEntity.ok(created);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/room/{roomName}")
+    public ResponseEntity<?> getRoom(
+            @RequestParam String username,
+            @RequestParam String roomName) {
+        Optional<Room> room = roomService.getRoom(username, roomName);
+        return room
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     // TODO : Get mapping for all rooms
@@ -31,40 +48,60 @@ public class RoomController {
     }
 //TODO : create a method to take all rooms ( it should bring only the room name and the id)
 
-    @GetMapping("/room-number/{roomName}")
-    public ResponseEntity<Room> getRoomByName(@PathVariable String roomName) {
-        Room room = roomService.getRoomByNumber(roomName);
-        return room != null ? ResponseEntity.ok(room) : ResponseEntity.notFound().build();
-    }
 
+    /** Add Schedule **/
     @PutMapping("/{roomName}/schedules")
-    public ResponseEntity<Room> addSchedule(@PathVariable String roomName, @RequestBody Schedule schedule) {
-        Room updated = roomService.addScheduleToRoom(roomName, schedule);
-        return updated != null ? ResponseEntity.ok(updated) : ResponseEntity.notFound().build();
+    public ResponseEntity<?> addSchedule(
+            @RequestParam String username,
+            @PathVariable String roomName,
+            @RequestBody Schedule schedule) {
+        try {
+            Room updated = roomService.addScheduleToRoom(username, roomName, schedule);
+            return ResponseEntity.ok(updated);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
+    /** Update Schedule **/
     @PutMapping("/{roomName}/schedules/{index}")
-    public ResponseEntity<Room> updateSchedule(@PathVariable String roomName, @PathVariable int index, @RequestBody Schedule updatedSchedule) {
-        Room updated = roomService.updateSchedule(roomName, updatedSchedule, index);
-        return updated != null ? ResponseEntity.ok(updated) : ResponseEntity.notFound().build();
+    public ResponseEntity<?> updateSchedule(
+            @RequestParam String username,
+            @PathVariable String roomName,
+            @PathVariable int index,
+            @RequestBody Schedule schedule) {
+        try {
+            Room updated = roomService.updateSchedule(username, roomName, schedule, index);
+            return ResponseEntity.ok(updated);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
+    /** Delete Schedule **/
     @DeleteMapping("/{roomName}/schedules/{index}")
-    public ResponseEntity<Room> deleteSchedule(@PathVariable String roomName, @PathVariable int index) {
-        Room updated = roomService.deleteSchedule(roomName, index);
-        return updated != null ? ResponseEntity.ok(updated) : ResponseEntity.notFound().build();
+    public ResponseEntity<?> deleteSchedule(
+            @RequestParam String username,
+            @PathVariable String roomName,
+            @PathVariable int index) {
+        try {
+            Room updated = roomService.deleteSchedule(username, roomName, index);
+            return ResponseEntity.ok(updated);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
-    @PutMapping("/{roomName}/update-room")
-    public ResponseEntity<Room> updateRoomName(@PathVariable String roomName, @RequestParam String newroomName) {
-        Room updatedRoom = roomService.updateRoomName(roomName, newroomName);
-        return updatedRoom != null ? ResponseEntity.ok(updatedRoom) : ResponseEntity.notFound().build();
-    }
-
+    /** Delete Room **/
     @DeleteMapping("/{roomName}")
-    public ResponseEntity<String> deleteRoom(@PathVariable String roomName) {
-        boolean deleted = roomService.deleteRoom(roomName);
-        return deleted ? ResponseEntity.ok("Room deleted successfully") : ResponseEntity.notFound().build();
+    public ResponseEntity<?> deleteRoom(
+            @RequestParam String username,
+            @PathVariable String roomName) {
+        try {
+            roomService.deleteRoom(username, roomName);
+            return ResponseEntity.ok("Room deleted");
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 }
-

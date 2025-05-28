@@ -315,3 +315,31 @@
     ]
   }
 }
+
+
+// TODO : When Creating room frontEnd -> backend
+
+{
+  "roomName": "Bathroom",
+  "username": "Tharindu",
+  "bulbs": [
+    {
+      "username": "Tharindu",
+      "bulbId": "b1",
+      "name": "Ffgggg"
+    },
+    {
+      "username": "Tharindu",
+      "bulbId": "b2",
+      "name": "Ggghh"
+    }
+  ],
+  "Added_Devices": [
+    {
+      "deviceName": "Device 4",
+      "macAddress": "94:54:C5:B7:E3:2C"
+    }
+  ],
+  "Areas": [],
+  "Automation_Modes": []
+}

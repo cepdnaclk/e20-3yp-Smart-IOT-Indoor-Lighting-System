@@ -56,4 +56,16 @@ public class RoomConfigurationController {
                     .body("Failed to fetch configuration: " + e.getMessage());
         }
     }
+
+    @PostMapping("/publishMqtt")
+    public ResponseEntity<String> publishNow(@RequestParam String username,
+                                             @RequestParam String roomName) {
+        try {
+            configService.publishAutomationUpdate(username, roomName);
+            return ResponseEntity.ok("Published successfully");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Publish failed: " + e.getMessage());
+        }
+    }
 }

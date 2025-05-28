@@ -5,6 +5,7 @@ import com.example.Lightify.Repository.TopicRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -117,4 +118,39 @@ public class TopicService {
             throw new RuntimeException("Failed to publish message: " + e.getMessage(), e);
         }
     }
+
+    // TopicService.java
+    @Transactional
+    public void updateTopicRoomName(String username, String oldRoomName, String newRoomName) {
+        logger.info("[updateTopicRoomName] user='{}' '{}'→'{}'", username, oldRoomName, newRoomName);
+        try {
+            Topic t = topicRepository.findByRoomNameAndUsername(oldRoomName, username)
+                    .orElseThrow(() -> new RuntimeException(
+                            "Topic not found for " + username + "/" + oldRoomName));
+            t.setRoomName(newRoomName);
+            topicRepository.save(t);
+            logger.debug("[updateTopicRoomName] Topic id='{}' updated", t.getId());
+        } catch (Exception e) {
+            logger.error("[updateTopicRoomName] FAILED user='{}' '{}'→'{}': {}",
+                    username, oldRoomName, newRoomName, e.getMessage(), e);
+            throw new RuntimeException("Failed to update topic roomName: " + e.getMessage(), e);
+        }
+    }
+
+
+    public void deleteByUsernameAndRoomName(String username, String roomName) {
+        logger.info("[deleteByUsernameAndRoomName] user='{}', room='{}'", username, roomName);
+        try {
+            topicRepository.findByRoomNameAndUsername(roomName, username)
+                    .ifPresent(t -> {
+                        topicRepository.deleteById(t.getId());
+                        logger.debug("[deleteByUsernameAndRoomName] Deleted topic id='{}'", t.getId());
+                    });
+        } catch (Exception e) {
+            logger.error("[deleteByUsernameAndRoomName] FAILED user='{}', room='{}': {}",
+                    username, roomName, e.getMessage(), e);
+            throw new RuntimeException("Failed to delete topic by user+room: " + e.getMessage(), e);
+        }
+    }
+
 }

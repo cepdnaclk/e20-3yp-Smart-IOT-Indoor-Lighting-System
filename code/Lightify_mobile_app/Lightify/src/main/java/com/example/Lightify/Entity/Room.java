@@ -12,6 +12,6 @@ public class Room {
     @Id
     private String id;
     private String username;
-    private String room;
+    private String roomName;
     private List<Schedule> schedule;
 }

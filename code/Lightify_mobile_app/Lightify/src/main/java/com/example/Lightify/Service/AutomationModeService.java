@@ -5,6 +5,7 @@ import com.example.Lightify.Repository.AutomationModeRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -51,4 +52,23 @@ public class AutomationModeService {
             throw new RuntimeException("Failed to delete automation modes: " + e.getMessage(), e);
         }
     }
+
+    // AutomationModeService.java
+    @Transactional
+    public void updateAutomationModeRoomName(String username, String oldRoomName, String newRoomName) {
+        logger.info("[updateAutomationModeRoomName] user='{}' '{}'→'{}'", username, oldRoomName, newRoomName);
+        try {
+            repository.findByUsernameAndRoomName(username, oldRoomName)
+                    .ifPresent(m -> {
+                        m.setRoomName(newRoomName);
+                        repository.save(m);
+                        logger.debug("[updateAutomationModeRoomName] Mode id='{}' updated", m.getId());
+                    });
+        } catch (Exception e) {
+            logger.error("[updateAutomationModeRoomName] FAILED user='{}' '{}'→'{}': {}",
+                    username, oldRoomName, newRoomName, e.getMessage(), e);
+            throw new RuntimeException("Failed to update automation mode roomName: " + e.getMessage(), e);
+        }
+    }
+
 }
