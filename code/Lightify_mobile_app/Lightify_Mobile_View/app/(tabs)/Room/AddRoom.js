@@ -1720,7 +1720,7 @@ export default function RoomCreationScreen() {
     }
 
     const payload = {
-      Room_Name: roomName.trim(),
+      roomName: roomName.trim(),
       username: USERNAME,
       bulbs: bulbs
         .filter((bulb) => selectedBulbs.includes(bulb.bulbId))
@@ -1729,7 +1729,7 @@ export default function RoomCreationScreen() {
           username: USERNAME,
           name: bulb.name || bulb.bulbId,
         })),
-      "Added Devices": addedDevices.map((d) => ({
+      "addedDevices": addedDevices.map((d) => ({
         deviceId: d.deviceId,
         deviceName: d.deviceName,
         macAddress: d.macAddress,
@@ -1742,7 +1742,7 @@ export default function RoomCreationScreen() {
 
     setLoading(true);
     try {
-      await axiosClient.post("/api/rooms/configure", payload);
+      await axiosClient.post("/api/rooms/devices", payload);
 
       const existingJson = await AsyncStorage.getItem("localRooms");
       const existing = existingJson ? JSON.parse(existingJson) : [];
