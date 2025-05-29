@@ -2,6 +2,7 @@ package com.example.Lightify.Controller;
 import com.example.Lightify.DTO.AddDevicesRequest;
 import com.example.Lightify.DTO.DeleteRoomRequest;
 import com.example.Lightify.DTO.RenameRoomRequest;
+import com.example.Lightify.DTO.RoomInfoDTO;
 import com.example.Lightify.Entity.RoomSetting;
 import com.example.Lightify.Service.RoomSettingService;
 import org.slf4j.Logger;
@@ -38,6 +39,36 @@ public class RoomSettingController {
             }
             logger.error("Unexpected error in addDevicesToRoom", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(msg);
+        }
+    }
+
+    @GetMapping("/list")
+    public ResponseEntity<?> listRooms(@RequestParam String username) {
+        logger.info("[listRooms] for user='{}'", username);
+        try {
+            List<RoomInfoDTO> rooms = roomSettingService.getRoomsForUser(username);
+            return ResponseEntity.ok(rooms);
+
+        } catch (IllegalArgumentException e) {
+            // missing or blank username
+            logger.warn("[listRooms] bad request: {}", e.getMessage());
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(e.getMessage());
+
+        } catch (RuntimeException e) {
+            // user not found
+            if ("User not found".equals(e.getMessage())) {
+                logger.warn("[listRooms] user not found='{}'", username);
+                return ResponseEntity
+                        .status(HttpStatus.NOT_FOUND)
+                        .body(e.getMessage());
+            }
+            // any other error
+            logger.error("[listRooms] unexpected error for user='{}': {}", username, e.getMessage(), e);
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to fetch rooms: " + e.getMessage());
         }
     }
 

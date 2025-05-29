@@ -1,10 +1,12 @@
 package com.example.Lightify.Service;
 
 
+import com.example.Lightify.DTO.RoomInfoDTO;
 import com.example.Lightify.Entity.DeviceAssignment;
 import com.example.Lightify.Entity.RoomSetting;
 import com.example.Lightify.Entity.Topic;
 import com.example.Lightify.Repository.RoomSettingRepository;
+import com.example.Lightify.Repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -13,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
 
 @Service
 public class RoomSettingService {
@@ -24,16 +27,40 @@ public class RoomSettingService {
     private final AutomationModeService automationModeService;
     private final AreaService areaService;
     private final RoomService roomService;
+    private final UserRepository userRepository;
+
 
     public RoomSettingService(RoomSettingRepository roomSettingRepository,
                               TopicService topicService,
-                              DeviceService deviceService, AutomationModeService automationModeService, AreaService areaService, RoomService roomService) {
+                              DeviceService deviceService, AutomationModeService automationModeService, AreaService areaService, RoomService roomService, UserRepository userRepository) {
         this.roomSettingRepository = roomSettingRepository;
         this.topicService          = topicService;
         this.deviceService         = deviceService;
         this.automationModeService = automationModeService;
         this.areaService = areaService;
         this.roomService = roomService;
+        this.userRepository = userRepository;
+    }
+
+    /**
+     * Fetch all rooms (id + name) for a given user.
+     * @throws IllegalArgumentException if username is null/blank
+     * @throws RuntimeException if user does not exist
+     */
+    public List<RoomInfoDTO> getRoomsForUser(String username) {
+        if (username == null || username.isBlank()) {
+            logger.warn("[getRoomsForUser] Missing username");
+            throw new IllegalArgumentException("username must be provided");
+        }
+        if (!userRepository.existsByUsername(username)) {
+            logger.warn("[getRoomsForUser] No such user='{}'", username);
+            throw new RuntimeException("User not found");
+        }
+
+        return roomSettingRepository.findByUsername(username)
+                .stream()
+                .map(rs -> new RoomInfoDTO(rs.getId(), rs.getRoomName()))
+                .collect(Collectors.toList());
     }
 
     /**
@@ -52,7 +79,7 @@ public class RoomSettingService {
         // 1) ensure it does *not* already exist
         if (roomSettingRepository.findByUsernameAndRoomName(username, roomName).isPresent()) {
             String msg = "Room already exists with name '" + roomName + "' for user '" + username + "'";
-            logger.warn("[addDevicesToRoom] " + msg);
+            logger.warn("[addDevicesToRoom] {}", msg);
             throw new RuntimeException(msg);
         }
 
