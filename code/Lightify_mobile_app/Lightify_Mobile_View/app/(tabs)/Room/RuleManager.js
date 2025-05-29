@@ -397,7 +397,7 @@ export default function RuleManager({ shapes = [], bulbsList = ["b1", "b2", "b3"
     console.log("Sending Payload to Backend:", JSON.stringify(payload, null, 2)); // ✅ Log to terminal
 
     try {
-      await axios.post("https://your-api-endpoint/api/saveRules", payload);
+      await axios.post("/api/rooms/configure", payload);
       Alert.alert("Success", "Rules submitted successfully");
     } catch (err) {
       console.error(err);
