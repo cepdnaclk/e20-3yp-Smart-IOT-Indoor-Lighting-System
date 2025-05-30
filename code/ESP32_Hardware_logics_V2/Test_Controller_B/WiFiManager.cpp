@@ -1,6 +1,7 @@
 #include "WiFiManager.h"
 #include <WiFi.h>
 #include "ConfigManager.h"
+#include "SerialComm.h"
 
 namespace WiFiManager {
   void begin() {
@@ -9,7 +10,8 @@ namespace WiFiManager {
                ConfigManager::getPassword().c_str());
     Serial.print("🔌 Connecting to Wi-Fi");
     while (WiFi.status() != WL_CONNECTED) {
-      delay(500);
+      SerialComm::loop();
+      delay(100);
       Serial.print('.');
     }
     Serial.println("\n✅ Wi-Fi up: " + WiFi.localIP().toString());
