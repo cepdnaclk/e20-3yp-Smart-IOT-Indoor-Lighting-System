@@ -8,14 +8,38 @@ static uint8_t sensorBytes[6];
 namespace ConfigManager {
 
   void initFromJson(const String& json) {
-    DynamicJsonDocument doc(512);
-    deserializeJson(doc, json);
-    JsonVariant p = doc["payload"];
-    ssid      = p["ssid"].as<const char*>();
-    passw     = p["password"].as<const char*>();
-    user      = p["user"].as<const char*>();
-    sensorMac = p["mac"].as<const char*>();
+   DynamicJsonDocument doc(1024);
+    auto err = deserializeJson(doc, json);
+    if (err) {
+      Serial.printf("[Config] JSON parse failed: %s\n", err.c_str());
+      return;
+    }
 
+    // select either payload object or the root object
+    JsonObject obj;
+    if (doc.containsKey("payload") && doc["payload"].is<JsonObject>()) {
+      obj = doc["payload"].as<JsonObject>();
+      // Serial.println("[Config] using payload object");
+    } else {
+      obj = doc.as<JsonObject>();
+      // Serial.println("[Config] using root object");
+    }
+
+    // only overwrite if key exists
+    if (obj.containsKey("ssid")) {
+      ssid = obj["ssid"].as<const char*>();
+    }
+    if (obj.containsKey("password")) {
+      passw = obj["password"].as<const char*>();
+    }
+    if (obj.containsKey("user")) {
+      user = obj["user"].as<const char*>();
+    }
+    if (obj.containsKey("mac")) {
+      sensorMac = obj["mac"].as<const char*>();
+    }
+
+    // persist to NVM
     Preferences pref;
     pref.begin("cfg", false);
     pref.putString("ssid", ssid);
@@ -23,6 +47,10 @@ namespace ConfigManager {
     pref.putString("user", user);
     pref.putString("mac",  sensorMac);
     pref.end();
+
+    // debug
+    Serial.printf("[Config] Saved SSID=%s, USER=%s, MAC=%s\n",
+                  ssid.c_str(), user.c_str(), sensorMac.c_str());
   }
 
   void begin() {

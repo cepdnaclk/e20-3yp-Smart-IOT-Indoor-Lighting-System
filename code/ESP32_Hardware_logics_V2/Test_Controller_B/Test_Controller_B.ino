@@ -52,58 +52,165 @@ static bool serialDataShouldForwardViaESPNow(const char *cmd) {
 
 // returns true if this JSON has the provisioning shape
 static bool isProvisionJson(const String& j){
-  DynamicJsonDocument d(512);
+  DynamicJsonDocument d(2048);
   if (deserializeJson(d, j)) return false;
-  JsonVariant p = d["payload"];
-  if (!p.is<JsonObject>()) return false;
-  JsonObject obj = p.as<JsonObject>();
+
+  JsonObject obj;
+  if (d.containsKey("payload") && d["payload"].is<JsonObject>()) {
+    obj = d["payload"].as<JsonObject>();
+  } else {
+    obj = d.as<JsonObject>();
+  }
+
   return obj.containsKey("ssid")
       && obj.containsKey("password")
       && obj.containsKey("user")
       && obj.containsKey("mac");
 }
 
-// apply provisioning JSON at any time
-static void handleProvisioning(const String& j){
-  if (!isProvisionJson(j)) return;
+// at top of your .ino (or shared header)
+static bool provisioningInProgress  = false;
+static String lastProvisionJson     = "";
 
+// apply provisioning JSON at any time
+static void handleProvisioning(const String& j) {
+  // --- ENTRY TRACE ---
+  Serial.println("[DBG] ▶ handleProvisioning() called");
+
+  // 1) Bail if we’re already running
+  if (provisioningInProgress) {
+    Serial.println("[DBG]   provisioningInProgress == true → early return");
+    return;
+  }
+  Serial.println("[DBG]   Not busy, continuing");
+
+  // 2) Parse JSON
+  DynamicJsonDocument d(2048);
+  DeserializationError err = deserializeJson(d, j);
+  if (err) {
+    // Serial.printf("[DBG]   JSON parse error: %s\n", err.c_str());
+    return;
+  }
+  // Serial.println("[DBG]   JSON parsed OK");
+
+  // 3) Pick payload vs root
+  JsonObject obj;
+  if (d.containsKey("payload") && d["payload"].is<JsonObject>()) {
+    obj = d["payload"].as<JsonObject>();
+    // Serial.println("[DBG]   Using d[\"payload\"] object");
+  } else {
+    obj = d.as<JsonObject>();
+    Serial.println("[DBG]   Using root object");
+  }
+
+  // 4) Validate keys
+  if (!( obj.containsKey("ssid")
+      && obj.containsKey("password")
+      && obj.containsKey("user")
+      && obj.containsKey("mac") ))
+  {
+    // Serial.println("[DBG]   Missing one of ssid/password/user/mac → return");
+    return;
+  }
+  Serial.println("[DBG]   All required keys present");
+
+  // 5) Skip duplicate JSON
+  if (j == lastProvisionJson) {
+    Serial.println("[DBG]   Duplicate payload, skipping");
+    return;
+  }
+
+  // 6) Mark busy & remember this payload
+  provisioningInProgress = true;
+  lastProvisionJson     = j;
+  // Serial.println("[DBG]   Marked provisioningInProgress & saved lastProvisionJson");
+
+  // --- APPLY CONFIG ---
   Serial.println("[Provision] Applying new config");
-  // Serial.printf("[Debug] raw JSON: %s\n", j.c_str());
+  Serial.printf("[Debug] raw JSON: %s\n", j.c_str());
 
   ConfigManager::initFromJson(j);
   ConfigManager::begin();
-  // Serial.println("[Debug] ConfigManager loaded from JSON");
+  Serial.println("[Debug] ConfigManager loaded from JSON");
 
-
-
+  // --- WIFI RECONNECT ---
   Serial.println("[Provision] Reconnecting Wi-Fi…");
   WiFiManager::begin();
-  // Serial.printf("[Debug] Connected to Wi-Fi, IP=%s\n", WiFiManager::getIP().c_str());
+  // Serial.println("[DBG]   Returned from WiFiManager::begin()");
 
+  // --- ESP-NOW RE-INIT ---
   {
     uint8_t mac[6];
     ConfigManager::getSensorMacBytes(mac);
     ESPNowManager::setPeer(mac);
-    ESPNowManager::begin();        // esp_wifi_set_channel(...)
+    ESPNowManager::begin();
+    // Serial.println("[DBG]   ESPNowManager re-initialized");
   }
   Serial.println("[Debug] ESP-NOW peer set & initialized");
 
+  // --- BLE UPDATE ---
   BLEProvision::update();
   Serial.println("[Debug] BLEProvision updated with new creds");
 
-  // send new IP back to Controller A
+  // --- SEND ROOM IP BACK ---
   {
     DynamicJsonDocument md(128);
     md["roomIP"] = WiFiManager::getIP().toString();
     String ipj; serializeJson(md, ipj);
-    // Serial.printf("[Debug] Sending roomIP JSON: %s\n", ipj.c_str());
     SerialComm::sendJson(ipj);
+    // Serial.println("[DBG]   Sent roomIP JSON back to controller");
   }
 
-  // update WS credential
+  // --- WEBSOCKET RESTART ---
   WebSocketManager::begin(ConfigManager::getUserName());
-  // Serial.printf("[Debug] WebSocketManager started with user=%s\n", ConfigManager::getUserName().c_str());
+  Serial.println("[Debug] WebSocketManager restarted");
+
+  // 7) Clear busy so future DIFFERENT JSONs get applied
+  provisioningInProgress = false;
+  // Serial.println("[DBG] ◀ handleProvisioning() complete");
 }
+
+// // apply provisioning JSON at any time
+// static void handleProvisioning(const String& j){
+//   if (!isProvisionJson(j)) return;
+
+//   Serial.println("[Provision] Applying new config");
+//   Serial.printf("[Debug] raw JSON: %s\n", j.c_str());
+
+//   ConfigManager::initFromJson(j);
+//   ConfigManager::begin();
+//   Serial.println("[Debug] ConfigManager loaded from JSON");
+
+
+
+//   Serial.println("[Provision] Reconnecting Wi-Fi…");
+//   WiFiManager::begin();
+//   // Serial.printf("[Debug] Connected to Wi-Fi, IP=%s\n", WiFiManager::getIP().c_str());
+
+//   {
+//     uint8_t mac[6];
+//     ConfigManager::getSensorMacBytes(mac);
+//     ESPNowManager::setPeer(mac);
+//     ESPNowManager::begin();        // esp_wifi_set_channel(...)
+//   }
+//   Serial.println("[Debug] ESP-NOW peer set & initialized");
+
+//   BLEProvision::update();
+//   Serial.println("[Debug] BLEProvision updated with new creds");
+
+//   // send new IP back to Controller A
+//   {
+//     DynamicJsonDocument md(128);
+//     md["roomIP"] = WiFiManager::getIP().toString();
+//     String ipj; serializeJson(md, ipj);
+//     // Serial.printf("[Debug] Sending roomIP JSON: %s\n", ipj.c_str());
+//     SerialComm::sendJson(ipj);
+//   }
+
+//   // update WS credential
+//   WebSocketManager::begin(ConfigManager::getUserName());
+//   // Serial.printf("[Debug] WebSocketManager started with user=%s\n", ConfigManager::getUserName().c_str());
+// }
 
 // once we’ve re-assembled a full JSON, call this
 static void processFullJson(const String& json) {
