@@ -1213,7 +1213,7 @@
 
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   ScrollView,
@@ -1237,7 +1237,7 @@ export default function RoomListScreen() {
   const fetchRooms = async () => {
   setLoading(true);
   try {
-    const response = await axiosClient.get("/api/rooms/list?username=${USERNAME}");
+    const response = await axiosClient.get(`/api/rooms/list?username=${USERNAME}`);
 
     if (response.status === 200 && Array.isArray(response.data)) {
       const backendRooms = response.data.map((room) => ({
@@ -1259,6 +1259,10 @@ export default function RoomListScreen() {
   }
 };
 
+// Inside the component
+useEffect(() => {
+  fetchRooms();
+}, []);
 
   return (
     <View style={styles.container}>
