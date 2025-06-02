@@ -38,8 +38,12 @@ public class TopicService {
                 throw new RuntimeException(errorMsg);
             }
             Topic savedTopic = topicRepository.save(topic);
+
+            String baseTopic = savedTopic.getTopicString();
+            String subscribeTopic = baseTopic + "/esp_to_backend";
             try {
-                awsIotPubSubService.subscribe(savedTopic.getTopicString());
+                awsIotPubSubService.subscribe(subscribeTopic);
+                logger.info("Subscribed to receive-topic: {}", subscribeTopic);
             } catch (Exception e) {
                 logger.error("Error subscribing to topic: {}", savedTopic.getTopicString(), e);
                 throw new RuntimeException("Error subscribing to topic", e);

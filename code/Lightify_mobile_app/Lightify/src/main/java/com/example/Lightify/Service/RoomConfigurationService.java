@@ -143,7 +143,7 @@ public class RoomConfigurationService {
         return result;
     }
 
-    public void publishAutomationUpdate(String username, String roomName) throws ExecutionException, InterruptedException {
+    public void publishAutomationUpdate(String username, String roomName ,String targetModeName) throws ExecutionException, InterruptedException {
         // 1) Look up the MQTT topic string
         Topic topic = topicService.getTopicByRoomNameAndUsername(roomName, username);
         String topicString = topic.getTopicString();
@@ -156,14 +156,31 @@ public class RoomConfigurationService {
         Map<String,Object> root = new LinkedHashMap<>();
         root.put("command", "update_automation_mode");
 
-        // Pick one mode or iterate all; here we publish them all under the same key:
-        List<Map<String,Object>> modesList = new ArrayList<>();
+        List<Map<String, Object>> modesList = new ArrayList<>();
         for (ModeDetail m : am.getAutomation_Modes()) {
-            Map<String,Object> modeMap = new LinkedHashMap<>();
+            if (!m.getModeName().equals(targetModeName)) {
+                continue; // skip any mode whose name doesn’t match
+            }
+
+            Map<String, Object> modeMap = new LinkedHashMap<>();
             modeMap.put("Mode_Name", m.getModeName());
-            modeMap.put("Areas",    areaService.getArea(username, roomName).orElse(new Area()).getAreas());
-            modeMap.put("Rules",    m.getRules());
+            modeMap.put(
+                    "Areas",
+                    areaService
+                            .getArea(username, roomName)
+                            .orElse(new Area())
+                            .getAreas()
+            );
+            modeMap.put("Rules", m.getRules());
             modesList.add(modeMap);
+            break; // we found our one mode, no need to keep looping
+        }
+
+        if (modesList.isEmpty()) {
+            throw new RuntimeException(
+                    String.format("Mode '%s' not found for user='%s', room='%s'",
+                            targetModeName, username, roomName)
+            );
         }
         // Wrap into payload
         root.put("payload", modesList.size()==1 ? modesList.get(0) : Collections.singletonMap("Modes", modesList));
