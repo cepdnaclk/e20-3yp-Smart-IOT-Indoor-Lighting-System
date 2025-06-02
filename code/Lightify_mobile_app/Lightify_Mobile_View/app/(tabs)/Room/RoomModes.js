@@ -262,7 +262,8 @@ export default function RoomModesScreen() {
   const [modes, setModes] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [newModeName, setNewModeName] = useState("");
-  const USERNAME = "Tharindu"; // Replace with your username or fetch dynamically if needed
+  const USERNAME = "Tharindu"; 
+  // Replace with your username or fetch dynamically if needed
 
 useEffect(() => {
   const fetchRoomModes = async () => {
