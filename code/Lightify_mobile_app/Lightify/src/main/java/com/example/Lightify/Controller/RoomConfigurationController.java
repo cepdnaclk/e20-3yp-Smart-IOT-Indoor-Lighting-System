@@ -59,9 +59,10 @@ public class RoomConfigurationController {
 
     @PostMapping("/publishMqtt")
     public ResponseEntity<String> publishNow(@RequestParam String username,
-                                             @RequestParam String roomName) {
+                                             @RequestParam String roomName,
+                                             @RequestParam String modeName) {
         try {
-            configService.publishAutomationUpdate(username, roomName);
+            configService.publishAutomationUpdate(username, roomName, modeName);
             return ResponseEntity.ok("Published successfully");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

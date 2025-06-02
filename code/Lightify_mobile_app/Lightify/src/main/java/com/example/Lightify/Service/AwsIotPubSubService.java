@@ -16,6 +16,7 @@ import jakarta.annotation.PreDestroy;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
@@ -66,10 +67,12 @@ public class AwsIotPubSubService {
 
     private final ReceivedMessageRepository messageRepository;
     private final TopicRepository topicRepository;
+    private final BackendMessageService backendMessageService;
 
-    public AwsIotPubSubService(ReceivedMessageRepository messageRepository, TopicRepository topicRepository) {
+    public AwsIotPubSubService(ReceivedMessageRepository messageRepository, TopicRepository topicRepository,  @Lazy BackendMessageService backendMessageService) {
         this.messageRepository = messageRepository;
         this.topicRepository = topicRepository;
+        this.backendMessageService = backendMessageService;
     }
 
     @PostConstruct
@@ -131,13 +134,14 @@ public class AwsIotPubSubService {
         // On initialization, fetch all topics from the database and subscribe to each.
         List<Topic> topics = topicRepository.findAll();
         for (Topic t : topics) {
-            String topicString = t.getTopicString();
-                logger.info("fetched topics: {}", topicString);
+            String baseTopic = t.getTopicString();
+            String receiveTopic = baseTopic + "/esp_to_backend";
+            logger.info("Fetched base topic: {} → subscribing to: {}", baseTopic, receiveTopic);
             try {
-                subscribe(topicString);
-                logger.info("Automatically subscribed to topic: {}", topicString);
+                subscribe(receiveTopic);
+                logger.info("Automatically subscribed to topic: {}", receiveTopic);
             } catch (Exception e) {
-                logger.error("Error subscribing to topic {}: {}", topicString, e.getMessage());
+                logger.error("Error subscribing to topic {}: {}", receiveTopic, e.getMessage());
             }
         }
     }
@@ -155,7 +159,9 @@ public class AwsIotPubSubService {
                     byte[] payloadBytes = message.getPayload();
                     String payload = new String(payloadBytes, StandardCharsets.UTF_8);
                     logger.info("Received message on topic {}: {}", topic, payload);
-                    // Create a new ReceivedMessage entity.
+
+
+                    // 1) Save raw string into ReceivedMessage collection
                     ReceivedMessage receivedMessage = new ReceivedMessage();
                     receivedMessage.setTopic(topic);
                     receivedMessage.setPayload(payload);
@@ -172,6 +178,9 @@ public class AwsIotPubSubService {
                             logger.info("Deleted old message with id: {}", rm.getId());
                         }
                     }
+
+                    // 3) Delegate the SAME payload → command‐based routing service:
+                    backendMessageService.handleIncomingJson(topic, payload);
                 }
         );
         subscribed.get();

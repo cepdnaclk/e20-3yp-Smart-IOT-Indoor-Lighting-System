@@ -7,4 +7,5 @@ import java.util.Optional;
 
 public interface TopicRepository extends MongoRepository<Topic, String> {
     Optional<Topic> findByRoomNameAndUsername(String roomName, String username);
+    Optional<Topic> findByUsernameAndMacAddress(String username, String macAddress);
 }
