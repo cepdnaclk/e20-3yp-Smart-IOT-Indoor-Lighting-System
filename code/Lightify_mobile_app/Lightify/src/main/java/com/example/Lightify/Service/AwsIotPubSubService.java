@@ -199,6 +199,24 @@ public class AwsIotPubSubService {
     }
 
     /**
+     *  * LOOKUP + PUBLISH:  Given (username, roomName, payloadJson),
+     *  * 1) Find the Topic document where (username, roomName) match.
+     *  * 2) If not found, throw a RuntimeException ("Topic not found …").
+     *  * 3) Otherwise, call publish() using topic.getTopicString().
+     */
+    public void publishToRoom(String username, String roomName, String payloadJson) throws Exception {
+        Topic t = topicRepository
+                .findByRoomNameAndUsername(roomName, username)
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "Topic not found for user='" + username + "', room='" + roomName + "'"
+                        )
+                );
+        String topicString = t.getTopicString();
+        publish(topicString, payloadJson);
+    }
+
+    /**
      * Retrieves the latest received message for the given topic from the MongoDB database.
      */
     public String getLatestMessage(String topic) {
