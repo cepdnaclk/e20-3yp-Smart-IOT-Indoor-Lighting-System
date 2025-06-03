@@ -26,19 +26,19 @@ public class RoomSettingService {
     private final DeviceService deviceService;  // ← inject DeviceService
     private final AutomationModeService automationModeService;
     private final AreaService areaService;
-    private final RoomService roomService;
+    private final ScheduleService scheduleService;
     private final UserRepository userRepository;
 
 
     public RoomSettingService(RoomSettingRepository roomSettingRepository,
                               TopicService topicService,
-                              DeviceService deviceService, AutomationModeService automationModeService, AreaService areaService, RoomService roomService, UserRepository userRepository) {
+                              DeviceService deviceService, AutomationModeService automationModeService, AreaService areaService, ScheduleService scheduleService, UserRepository userRepository) {
         this.roomSettingRepository = roomSettingRepository;
         this.topicService          = topicService;
         this.deviceService         = deviceService;
         this.automationModeService = automationModeService;
         this.areaService = areaService;
-        this.roomService = roomService;
+        this.scheduleService = scheduleService;
         this.userRepository = userRepository;
     }
 
@@ -154,9 +154,9 @@ public class RoomSettingService {
             }
         };
 
-        // 2) rooms
+        // 2) schedule
         attempt.accept(
-                () -> roomService.updateRoomName(username, oldRoomName, newRoomName),
+                () -> scheduleService.updateRoomName(username, oldRoomName, newRoomName),
                 "RoomService"
         );
 
@@ -216,7 +216,7 @@ public class RoomSettingService {
 
         // 4) rooms collection
         try {
-            roomService.deleteRoom(username, roomName);
+            scheduleService.deleteRoom(username, roomName);
             logger.debug("[deleteRoom] room entry deleted");
         } catch (RuntimeException e) {
             logger.warn("[deleteRoom] no room entry for user='{}' room='{}', skipping", username, roomName);
