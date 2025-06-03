@@ -67,41 +67,37 @@
 {
   "command": "schedule_set",
   "payload": {
-    {
-      "room_name": "kitchen",
-      "message": [
-        {
-          "bulb_id": 1,
-          "brightness": 74
-        },
-        {
-          "bulb_id": 2,
-          "brightness": 74
-        },
-        {
-          "bulb_id": 3,
-          "brightness": 74
-        }
-      ],
-      "automation": [
-        {
-          "schedule_type": "non_permanent",
-            "schedule_working_period": 30
-        }
-      ]
-    }
+    "message": [
+      {
+        "bulb_id": 1,
+        "brightness": 70
+      },
+      {
+        "bulb_id": 2,
+        "brightness": 74
+      },
+      {
+        "bulb_id": 3,
+        "brightness": 74
+      }
+    ],
+    "automation": [
+      {
+        "schedule_type": "permanent",
+        "schedule_working_period": null
+      }
+    ]
   }
 }
 
 {
   "command": "schedule_set",
   "payload": {
-    {
-      "room_name": "kitchen",
-      "message": [
-        {
-          "bulb_id": 1,
-          "brightness": 74
+    "room_name": "kitchen",
+    "message": [
+      {
+        "bulb_id": 1,
+        "brightness": 74
         },
         {
           "bulb_id": 2,
@@ -119,17 +115,15 @@
         }
       ]
     }
-  }
 }
 
 {
   "command": "direct_light_set",
   "payload": {
-    {
-      "room_name": "kitchen",
-      "message": [
-        {
-          "bulb_id": 1,
+    "room_name": "kitchen",
+    "message": [
+      {
+        "bulb_id": 1,
           "brightness": 74
         },
         {
@@ -148,7 +142,6 @@
         }
       ]
     }
-  }
 }
 
 //TODO: SEND TO ESP -> Sensor automation update (set diffrent mode rule set json)
