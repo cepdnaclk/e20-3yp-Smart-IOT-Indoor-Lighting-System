@@ -49,6 +49,8 @@
 package com.example.Lightify.Controller;
 
 import com.example.Lightify.Service.AwsIotPubSubService;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -61,6 +63,8 @@ import java.util.concurrent.ExecutionException;
 @RequestMapping("/mqtt")
 public class MqttController {
 
+    private static final Logger logger = LogManager.getLogger(MqttController.class);
+
     private final AwsIotPubSubService pubSubService;
 
     @Autowired
@@ -68,7 +72,7 @@ public class MqttController {
         this.pubSubService = pubSubService;
     }
 
-    @PostMapping("/publish")
+    @PostMapping("/publish/any")
     public ResponseEntity<?> publishMessage(@RequestBody Map<String, Object> body) {
         try {
             String topic = (String) body.get("topic");
@@ -80,6 +84,38 @@ public class MqttController {
                     .body("Failed to publish message: " + e.getMessage());
         }
     }
+
+    @PostMapping("/publish")
+    public ResponseEntity<?> publishToRoom(
+            @RequestParam String username,
+            @RequestParam String roomName,
+            @RequestBody String rawJsonPayload
+    ) {
+        try {
+            pubSubService.publishToRoom(username, roomName, rawJsonPayload);
+            return ResponseEntity.ok("Published to user='" + username + "', room='" + roomName + "'");
+        }
+        catch (IllegalArgumentException notFoundEx) {
+            // topic not found for that user/room
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body(notFoundEx.getMessage());
+        }
+        catch (InterruptedException | ExecutionException connEx) {
+            // MQTT connection disruption → 503 Service Unavailable
+            logger.error("MQTT publish failed (connection): {}", connEx.getMessage(), connEx);
+            return ResponseEntity
+                    .status(HttpStatus.SERVICE_UNAVAILABLE)
+                    .body("MQTT service is temporarily unavailable. Please try again.");
+        }
+        catch (Exception ex) {
+            logger.error("Unexpected error in publishToRoom: {}", ex.getMessage(), ex);
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body("Bad request: " + ex.getMessage());
+        }
+    }
+
 
     @PostMapping("/subscribe")
     public ResponseEntity<?> subscribeTopic(@RequestParam String topic) {
