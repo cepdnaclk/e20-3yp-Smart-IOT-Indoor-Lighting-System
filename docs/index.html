@@ -262,76 +262,243 @@
           </li>
         </ul>
       </section>
+      <section id="video-section">
+  <h2>Watch Our Smart Lighting in Action</h2>
+  <br>
+  <button onclick="window.location.href='https://youtu.be/llTgOGMBNlA'" style="margin-top: 10px; padding: 10px 20px; font-size: 16px; cursor: pointer;">
+    Watch on YouTube
+  </button>
+</section>
+      <section id="architecture">
+  <h2>Solution Architecture & Components</h2>
+  <div class="screenshots">
+    <div>
+      <img src="images/SolutionArchitecture.png" alt="Solution Architecture" />
+      <h3>Solution Architecture</h3>
+    </div>
+    <div>
+      <img src="images/Components&DataFlow.png" alt="Components & DataFlow" />
+      <h3>Components & DataFlow</h3>
+    </div>
+    <div>
+      <img src="images/Components&DataFlowExplained.png" alt="Components & DataFlow Explained" />
+      <h3>Components & DataFlow Explained</h3>
+    </div>
+  </div>
 
-      <!-- Backend Section -->
-      <section id="backend">
-        <h2>Backend - Deployed on AWS</h2>
+  <!-- Our Solutions Architecture -->
+  <h2>Our Solutions Architecture</h2>
+  <ul>
+    <li><strong>Light Intensity Control:</strong> Adjust lights individually or in groups, with automatic intensity changes.</li>
+    <li><strong>Prevent Unnecessary Deactivations:</strong> Advanced sensors detect micro movements to keep lights active.</li>
+    <li><strong>Smart Scheduling:</strong> Set custom on/off times and adjust intensity via the app.</li>
+    <li><strong>Modes:</strong> Introduces different lighting modes for user convenience.</li>
+    <li><strong>Global Accessibility:</strong> Control lights remotely via a mobile app.</li>
+    <li><strong>Automation & Convenience:</strong> Enhances user experience with intelligent automation.</li>
+  </ul>
+
+  <!-- Components & Data Flow -->
+  <h2>Components & Data Flow</h2>
+  <h3>Room-Level Network (Sensors)</h3>
+  <ul>
+    <li>Sensor Units (ESP32 + RD-03D sensor) send data to the Control Unit.</li>
+    <li>Multiple sensor units per room for better coverage.</li>
+  </ul>
+
+  <h3>Control Unit (Lighting Control)</h3>
+  <ul>
+    <li>Control Units (ESP32 + AC dimmer circuit) manage lights.</li>
+    <li>Can turn on/off, dim lights, and receive sensor data.</li>
+    <li>Replaces traditional switches.</li>
+  </ul>
+
+  <h3>Central Hub (Main Control System)</h3>
+  <ul>
+    <li>Central Hub (ESP32/Raspberry Pi) manages all Control Units.</li>
+    <li>Users can control lighting via this hub.</li>
+    <li><strong>Cloud-Connected:</strong> Executes schedules from the backend.</li>
+  </ul>
+</section>
+
+      <!-- Architecture & Components Section -->
+      <section id="mobileapp">
+        <h2>Mobile App Design</h2>
         <div class="screenshots">
           <div>
             <img
-              src="images/backend_ss.png"
-              alt="Backend Architecture"
+              src="images/Mobile App 1.jpg"
+              alt="Welocome Screen"
             />
-            <h3>Backend Architecture (AWS Deployment)</h3>
+            <h3>Welcome Screen</h3>
+          </div>
+          <div>
+            <img
+              src="images/Mobile App 2.jpg"
+              alt="Create Room"
+            />
+            <h3>Create New Room Page</h3>
+          </div>
+          <div>
+            <img
+              src="images/Mobile App 3.jpg"
+              alt="Home View"
+            />
+            <h3>Home View</h3>
+          </div>
+           <div>
+            <img
+              src="images/Mobile App 4.jpg"
+              alt="Schedule Screen"
+            />
+            <h3>Schedule Screen</h3>
+          </div>
+          <div>
+            <img
+              src="images/Mobile App 6.jpg"
+              alt="Schedule Screen"
+            />
+            <h3>Schedule Screen</h3>
+          </div>
+          <div>
+            <img
+              src="images/Mobile App 7.jpg"
+              alt="Sign Up"
+            />
+            <h3>Sign Up Screen</h3>
           </div>
         </div>
-        <p>
-          The backend for the Lightify system is deployed on AWS (Amazon Web Services) using EC2 instances to handle requests and store data. 
-          It communicates with the central hub and control units for managing lighting schedules, automation rules, and more. The backend is scalable and robust, ensuring high availability and efficient performance.
-        </p>
       </section>
 
-      <!-- Architecture Section -->
-      <section id="architecture">
-        <h2>Solution Architecture & Components</h2>
-        <div class="screenshots">
-          <div>
-            <img src="images/SolutionArchitecture.png" alt="Solution Architecture" />
-            <h3>Solution Architecture</h3>
-          </div>
-          <div>
-            <img src="images/Components&DataFlow.png" alt="Components & DataFlow" />
-            <h3>Components & DataFlow</h3>
-          </div>
-          <div>
-            <img src="images/Components&DataFlowExplained.png" alt="Components & DataFlow Explained" />
-            <h3>Components & DataFlow Explained</h3>
-          </div>
-        </div>
 
-        <h2>Our Solutions Architecture</h2>
-        <ul>
-          <li><strong>Light Intensity Control:</strong> Adjust lights individually or in groups, with automatic intensity changes.</li>
-          <li><strong>Prevent Unnecessary Deactivations:</strong> Advanced sensors detect micro movements to keep lights active.</li>
-          <li><strong>Smart Scheduling:</strong> Set custom on/off times and adjust intensity via the app.</li>
-          <li><strong>Modes:</strong> Introduces different lighting modes for user convenience.</li>
-          <li><strong>Global Accessibility:</strong> Control lights remotely via a mobile app.</li>
-          <li><strong>Automation & Convenience:</strong> Enhances user experience with intelligent automation.</li>
-        </ul>
+      
+      <!--Budget-->
+  <style>
+  
+    
+      a {
+        text-decoration: none;
+        color: #ffc107;
+        transition: color 0.3s ease;
+      }
+      a:hover {
+        color: #ffb300;
+      }
+      header {
+        background: #1f1f1f;
+        padding: 1rem 2rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+      }
+      nav {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .nav-left {
+        display: flex;
+        align-items: center;
+      }
+      .nav-left img {
+        width: 50px;
+        margin-right: 0.75rem;
+      }
+      .logo-text {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #ffc107;
+      }
+      .nav-links {
+        list-style: none;
+        display: flex;
+      }
+      .nav-links li {
+        margin-left: 1.5rem;
+      }
+      .hero {
+        background: url("images/hero-bg.jpg") center/cover no-repeat;
+        min-height: 60vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        padding: 2rem;
+        position: relative;
+      }
+      .hero-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(18, 18, 18, 0.8);
+        z-index: 1;
+      }
+      .hero-content {
+        position: relative;
+        z-index: 2;
+      }
+      .hero-logo {
+        width: 120px;
+        margin-bottom: 1rem;
+      }
+      .hero h1 {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        color: #ffc107;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+      }
+      .hero p {
+        font-size: 1.2rem;
+        max-width: 800px;
+      }
+      main {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+      }
+      section {
+        margin-bottom: 3rem;
+      }
+      section h2 {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+        color: #ffffff;
+        border-bottom: 2px solid #ffc107;
+        display: inline-block;
+        padding-bottom: 0.2rem;
+      }
+      .team ul {
+        list-style: none;
+        margin-top: 1rem;
+      }
+      .team ul li {
+        background: #1f1f1f;
+        padding: 1rem;
+        margin-bottom: 0.8rem;
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+      }
+      .team ul li strong {
+        color: #ffc107;
+      }
+      .team ul li a {
+        font-size: 0.9rem;
+        margin-top: 0.2rem;
+      }
+      .budget {
+        padding: 1.5rem;
+        margin-top: 2rem;
+        border-radius: 8px;
+      }
+      .budget h2 {
+        color: #ffc107;
+      }
+    </style>
 
-        <h2>Components & Data Flow</h2>
-        <h3>Room-Level Network (Sensors)</h3>
-        <ul>
-          <li>Sensor Units (ESP32 + RD-03D sensor) send data to the Control Unit.</li>
-          <li>Multiple sensor units per room for better coverage.</li>
-        </ul>
-
-        <h3>Control Unit (Lighting Control)</h3>
-        <ul>
-          <li>Control Units (ESP32 + AC dimmer circuit) manage lights.</li>
-          <li>Can turn on/off, dim lights, and receive sensor data.</li>
-          <li>Replaces traditional switches.</li>
-        </ul>
-
-        <h3>Central Hub (Main Control System)</h3>
-        <ul>
-          <li>Central Hub (ESP32/Raspberry Pi) manages all Control Units.</li>
-          <li>Users can control lighting via this hub.</li>
-          <li><strong>Cloud-Connected:</strong> Executes schedules from the backend.</li>
-        </ul>
-      </section>
-
-      <!-- Budget -->
       <section id="budget" class="budget">
         <h2>Budget</h2>
         <p>Control Unit</p>
@@ -349,6 +516,7 @@
           <li>RD-03D mm wave radar sensor = LKR 1250</li>
           <li>VEML7700 Ambient light sensor = LKR 1200</li>
         </ul>
+        <p></p>
         <p>Total cost per unit = LKR 8150</p>
       </section>
 
