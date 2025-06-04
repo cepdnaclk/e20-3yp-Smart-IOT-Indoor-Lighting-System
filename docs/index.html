@@ -339,6 +339,36 @@
     <li><strong>Cloud-Connected:</strong> Executes schedules from the backend.</li>
   </ul>
 </section>
+<!-- High-Level Architecture Section -->
+<section id="high-level-architecture">
+  <h2>High-Level Architecture & Data Flow</h2>
+  <div class="screenshots">
+    <div>
+      <img
+        src="images/HighLevelArchitecture.png"
+        alt="High-Level Architecture"
+      />
+      <h3>Automation Data Flow and Architecture</h3>
+    </div>
+  </div>
+
+  <p>
+    The Lightify system works by integrating multiple ESP32 devices that communicate wirelessly for controlling lighting, automating processes, and monitoring the environment. Below is an overview of how the system functions:
+  </p>
+
+  <h3>Data Flow</h3>
+  <ul>
+    <li><strong>Sensor Unit (ESP32 + mm Wave Radar):</strong> The sensor unit detects movements or presence in the room. It continuously sends X, Y coordinates of the detected object to the control units.</li>
+    <li><strong>Control Units (ESP32):</strong> The control units receive the sensor data and manage the lighting and automation rules based on the received information. They also communicate with the central hub for processing.</li>
+    <li><strong>Central Hub (Home Wi-Fi):</strong> This hub connects the control units via the local Wi-Fi network, ensuring smooth communication across devices. It also facilitates communication with the cloud system for cloud-based management and remote control.</li>
+    <li><strong>Mobile App:</strong> The mobile app serves as a user interface, allowing the user to control the lighting, set schedules, and view real-time sensor data remotely from anywhere, leveraging cloud access.</li>
+  </ul>
+
+  <p>
+    This architecture ensures a reliable, automated, and user-friendly system where each part communicates seamlessly to enhance the smart indoor lighting experience.
+  </p>
+</section>
+
 
       <!-- Architecture & Components Section -->
       <section id="mobileapp">
