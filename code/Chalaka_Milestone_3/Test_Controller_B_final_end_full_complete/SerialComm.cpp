@@ -30,11 +30,17 @@ namespace SerialComm {
       // Serial.printf("[RX] 0x%02X\n", b);
 
       String payload;
+// 2) Feed it into the frame‐parser
       if (parser.parse(b, payload)) {
+        // 3) When a complete frame emerges:
         Serial.printf("[RX] → complete frame, len=%u\n", payload.length());
         Serial.println(payload);
+
+        // 4) If someone registered an onJsonReceived callback, call it:
         if (rxCb) {
+          Serial.println("[RX] Calling rxCb(...) now");
           rxCb(payload);
+          Serial.println("[RX] Return from rxCb(...)");
         }
       }
     }
