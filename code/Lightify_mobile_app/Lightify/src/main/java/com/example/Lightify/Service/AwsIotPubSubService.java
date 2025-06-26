@@ -77,13 +77,21 @@ public class AwsIotPubSubService {
 
     @PostConstruct
     public void init() throws IOException, ExecutionException, InterruptedException {
-        // Convert classpath resources to file paths so that the native SDK can read them.
-        Resource certResource = new ClassPathResource(certificatePath);
-        Resource keyResource  = new ClassPathResource(privateKeyPath);
-        String certAbsolutePath = certResource.getFile().getAbsolutePath();
-        String keyAbsolutePath  = keyResource.getFile().getAbsolutePath();
+        String certAbsolutePath;
+        String keyAbsolutePath;
 
-        // Build the connection using mutual TLS.
+        if (certificatePath.startsWith("/") || certificatePath.contains(":/")) {
+            // Use raw absolute path for EC2 or Windows
+            certAbsolutePath = certificatePath;
+            keyAbsolutePath = privateKeyPath;
+        } else {
+            // Use classpath resource for local dev
+            Resource certResource = new ClassPathResource(certificatePath);
+            Resource keyResource = new ClassPathResource(privateKeyPath);
+            certAbsolutePath = certResource.getFile().getAbsolutePath();
+            keyAbsolutePath = keyResource.getFile().getAbsolutePath();
+        }
+
         AwsIotMqttConnectionBuilder builder =
                 AwsIotMqttConnectionBuilder.newMtlsBuilderFromPath(certAbsolutePath, keyAbsolutePath);
 
@@ -93,12 +101,32 @@ public class AwsIotPubSubService {
                 .withCleanSession(cleanSession)
                 .withProtocolOperationTimeoutMs(protocolTimeoutMs);
 
-        // Optionally load a certificate authority if provided.
         if (certificateAuthorityPath != null && !certificateAuthorityPath.isEmpty()) {
-            Resource caResource = new ClassPathResource(certificateAuthorityPath);
-            String caAbsolutePath = caResource.getFile().getAbsolutePath();
-            builder.withCertificateAuthorityFromPath(null, caAbsolutePath);
+            builder.withCertificateAuthorityFromPath(null, certificateAuthorityPath);
         }
+
+//        // Convert classpath resources to file paths so that the native SDK can read them.
+//        Resource certResource = new ClassPathResource(certificatePath);
+//        Resource keyResource  = new ClassPathResource(privateKeyPath);
+//        String certAbsolutePath = certResource.getFile().getAbsolutePath();
+//        String keyAbsolutePath  = keyResource.getFile().getAbsolutePath();
+//
+//        // Build the connection using mutual TLS.
+//        AwsIotMqttConnectionBuilder builder =
+//                AwsIotMqttConnectionBuilder.newMtlsBuilderFromPath(certAbsolutePath, keyAbsolutePath);
+//
+//        builder.withClientId(clientId)
+//                .withEndpoint(endpoint)
+//                .withPort(port)
+//                .withCleanSession(cleanSession)
+//                .withProtocolOperationTimeoutMs(protocolTimeoutMs);
+//
+//        // Optionally load a certificate authority if provided.
+//        if (certificateAuthorityPath != null && !certificateAuthorityPath.isEmpty()) {
+//            Resource caResource = new ClassPathResource(certificateAuthorityPath);
+//            String caAbsolutePath = caResource.getFile().getAbsolutePath();
+//            builder.withCertificateAuthorityFromPath(null, caAbsolutePath);
+//        }
 
         // Optionally configure proxy settings.
         if (proxyHost != null && !proxyHost.isEmpty() && proxyPort > 0) {

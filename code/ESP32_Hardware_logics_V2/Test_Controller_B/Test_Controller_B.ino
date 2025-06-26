@@ -397,6 +397,7 @@ void setup(){
       else {
         // everything else just goes to the websocket
         WebSocketManager::broadcast(s);
+        Serial.printf("[ESP-NOW] queued reduced JSON for serial: %s\n", s);
       }
     });
 

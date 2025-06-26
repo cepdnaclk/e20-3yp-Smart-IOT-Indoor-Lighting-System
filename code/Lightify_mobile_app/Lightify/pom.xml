@@ -109,8 +109,13 @@
 			<version>2.31.50</version>
 			<scope>compile</scope>
 		</dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
 
-	</dependencies>
+    </dependencies>
 	<build>
 		<plugins>
 			<plugin>

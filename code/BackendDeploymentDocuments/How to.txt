@@ -1,0 +1,119 @@
+sudo cp /mnt/c/Users/drpra/Downloads/lightify-backend-ec2-key.pem ~/.ssh/
+sudo chmod 400 ~/.ssh/lightify-backend-ec2-key.pem
+
+
+ssh -i ~/.ssh/lightify-backend-ec2-key.pem ec2-user@13.49.222.130
+
+### Installing JDK ###
+
+# 1. Download the JDK 22 archive
+wget https://download.java.net/openjdk/jdk22/ri/openjdk-22+36_linux-x64_bin.tar.gz
+
+# 2. Create a directory and extract it
+sudo mkdir -p /opt/java
+sudo tar -xzf openjdk-22+36_linux-x64_bin.tar.gz -C /opt/java
+
+# 3. Set up JAVA_HOME and PATH
+sudo tee /etc/profile.d/jdk22.sh > /dev/null <<EOF
+export JAVA_HOME=/opt/java/jdk-22
+export PATH=\$JAVA_HOME/bin:\$PATH
+EOF
+
+# 4. Apply the environment variables
+source /etc/profile.d/jdk22.sh
+
+# 5. Confirm installation
+java -version
+
+
+✅ Create a Directory for Your App
+
+mkdir ~/lightify-backend
+cd ~/lightify-backend
+
+
+
+#### COPIENG THE .Jar file, Cert folder, application.properties to EC2 #####
+
+✅ 1. Copy the .jar file to EC2
+
+scp -i ~/.ssh/lightify-backend-ec2-key.pem \
+  "/mnt/c/Users/drpra/OneDrive/Documents/GitHub/e20-3yp-Smart-IOT-Indoor-Lighting-System/code/Lightify_mobile_app/Lightify/target/Lightify-0.0.1-SNAPSHOT.jar" \
+  ec2-user@16.170.202.154:~/lightify-backend/
+
+
+✅ 2. Copy the Cert folder
+
+scp -i ~/.ssh/lightify-backend-ec2-key.pem -r \
+  "/mnt/c/Users/drpra/OneDrive/Documents/GitHub/e20-3yp-Smart-IOT-Indoor-Lighting-System/code/Lightify_mobile_app/Lightify/src/main/resources/Cert" \
+  ec2-user@16.170.202.154:~/lightify-backend/
+
+✅ 3. Copy application.properties (optional, if not already inside the JAR)
+
+scp -i ~/.ssh/lightify-backend-ec2-key.pem \
+  "/mnt/c/Users/drpra/OneDrive/Documents/GitHub/e20-3yp-Smart-IOT-Indoor-Lighting-System/code/Lightify_mobile_app/Lightify/src/main/resources/application.properties" \
+  ec2-user@13.60.4.121:~/lightify-backend/
+
+
+✅ 4. To check if the application.properties is in the .jar run the following on local wsl
+
+jar tf /mnt/c/Users/drpra/OneDrive/Documents/GitHub/e20-3yp-Smart-IOT-Indoor-Lighting-System/code/Lightify_mobile_app/Lightify/target/Lightify-0.0.1-SNAPSHOT.jar
+
+✅ 5.On EC2, ensure the JAR is executable (optional but helpful):
+
+cd ~/lightify-backend
+chmod +x lightify-backend-0.0.1-SNAPSHOT.jar
+
+✅ From anywhere in your EC2 terminal:
+
+sudo tee /etc/systemd/system/lightify-backend.service > /dev/null <<EOF
+[Unit]
+Description=Lightify Smart IoT Lighting Backend
+After=network.target
+
+[Service]
+User=ec2-user
+WorkingDirectory=/home/ec2-user/lightify-backend
+ExecStart=/opt/java/jdk-22/bin/java -jar /home/ec2-user/lightify-backend/Lightify-0.0.1-SNAPSHOT.jar
+SuccessExitStatus=143
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+✅ Reload systemd to apply changes:
+
+sudo systemctl daemon-reload
+
+✅ Restart the service:
+
+sudo systemctl restart lightify-backend
+
+✅ Check the status:
+
+sudo systemctl status lightify-backend
+
+✅ Watch logs (optional):
+
+sudo journalctl -u lightify-backend -f
+
+✅ stop your backend service:
+
+sudo systemctl stop lightify-backend
+
+
+🧹 How to Check Storage Usage
+
+✅ Run this on your EC2 instance:
+
+
+df -h       # Show overall disk usage
+du -sh *    # Show size of each folder in current dir
+
+
+✅ Example deeper dive:
+
+sudo du -sh /home/ec2-user/*
+sudo du -sh /var/*
