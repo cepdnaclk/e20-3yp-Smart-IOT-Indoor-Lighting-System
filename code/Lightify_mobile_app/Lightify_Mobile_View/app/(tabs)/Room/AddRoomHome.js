@@ -1515,11 +1515,15 @@ const handleToggleWishlist = async (roomName) => {
       };
     });
 
+    console.log("🔶 Wishlist payload:", wishlistPayload);
+
     // 4️⃣ Send to backend
     await axiosClient.post("/api/rooms/wishlist", {
       username: USERNAME,
       wishlist: wishlistPayload,
     });
+
+
 
     // 5️⃣ User feedback
     const action = wishlistRooms.includes(roomName) ? "removed" : "added";

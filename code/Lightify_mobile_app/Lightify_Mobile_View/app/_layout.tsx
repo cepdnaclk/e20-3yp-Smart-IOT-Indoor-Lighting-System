@@ -50,3 +50,19 @@
 //     </ThemeProvider>
 //   );
 // }
+
+
+import { Slot } from "expo-router";
+import FlashMessage from "react-native-flash-message";
+
+export default function RoomListScreen() {
+  return (
+    <>
+      {/* this renders all your screens */}
+      <Slot />
+
+      {/* this must live at the root so toasts can overlay anything */}
+      <FlashMessage position="top" />
+    </>
+  );
+}

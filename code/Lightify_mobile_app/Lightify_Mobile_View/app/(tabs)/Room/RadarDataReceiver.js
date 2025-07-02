@@ -2635,8 +2635,8 @@ export default function ShapeSelector() {
         );
         console.log("WebSocket IP response:", response.data);
         if (response.status === 200 && response.data && response.data.ipaddress) {
-          //const ip = response.data.ipaddress; // e.g. "192.168.8.101"
-          const ip = "192.168.8.100";
+          const ip = response.data.ipaddress; // e.g. "192.168.8.101"
+          // const ip = "192.168.8.100";
           const wsUrl = `ws://${ip}:81`;
 
           wsInstance = new WebSocket(wsUrl);
@@ -2646,6 +2646,14 @@ export default function ShapeSelector() {
             console.log("✅ WebSocket connected to", wsUrl);
             // If your server expects an initial message, send it here:
             wsInstance.send(JSON.stringify({ username: USERNAME }));
+          };
+
+          socket.onmessage = (e) => {
+            const msg = JSON.parse(e.data);
+            if (msg.ping) {
+              // Optionally reply:
+              socket.send(JSON.stringify({ pong: true }));
+            }
           };
 
           wsInstance.onmessage = (e) => {
