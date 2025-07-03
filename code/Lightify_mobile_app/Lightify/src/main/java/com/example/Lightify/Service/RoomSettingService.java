@@ -2,6 +2,7 @@ package com.example.Lightify.Service;
 
 
 import com.example.Lightify.DTO.RoomInfoDTO;
+import com.example.Lightify.DTO.RoomWishlistDTO;
 import com.example.Lightify.Entity.DeviceAssignment;
 import com.example.Lightify.Entity.RoomSetting;
 import com.example.Lightify.Entity.Topic;
@@ -228,4 +229,72 @@ public class RoomSettingService {
 
         logger.info("[deleteRoom] finished for user='{}' room='{}'", username, roomName);
     }
+
+    /**
+     * Mark a room as added to the wishlist.
+     */
+    @Transactional
+    public RoomSetting addToWishlist(String username, String roomName) {
+        logger.info("[addToWishlist] user='{}' room='{}'", username, roomName);
+
+        // Find the room setting
+        RoomSetting roomSetting = roomSettingRepository
+                .findByUsernameAndRoomName(username, roomName)
+                .orElseThrow(() -> new RuntimeException(
+                        "RoomSetting not found for " + username + "/" + roomName));
+
+        // Mark the room as added to the wishlist
+        roomSetting.setWishlist(true);
+
+        // Save the updated room setting
+        RoomSetting updatedRoomSetting = roomSettingRepository.save(roomSetting);
+
+        logger.info("[addToWishlist] Room '{}' added to wishlist for user '{}'", roomName, username);
+        return updatedRoomSetting;
+    }
+
+
+    /**
+     * Remove a room from the wishlist.
+     */
+    @Transactional
+    public RoomSetting removeFromWishlist(String username, String roomName) {
+        logger.info("[removeFromWishlist] user='{}' room='{}'", username, roomName);
+
+        // Find the room setting
+        RoomSetting roomSetting = roomSettingRepository
+                .findByUsernameAndRoomName(username, roomName)
+                .orElseThrow(() -> new RuntimeException(
+                        "RoomSetting not found for " + username + "/" + roomName));
+
+        // Mark the room as not on the wishlist
+        roomSetting.setWishlist(false);
+
+        // Save the updated room setting
+        RoomSetting updatedRoomSetting = roomSettingRepository.save(roomSetting);
+
+        logger.info("[removeFromWishlist] Room '{}' removed from wishlist for user '{}'", roomName, username);
+        return updatedRoomSetting;
+    }
+
+    public List<RoomWishlistDTO> getWishlistRoomsForUser(String username) {
+        if (username == null || username.isBlank()) {
+            logger.warn("[getRoomsForUser] Missing username");
+            throw new IllegalArgumentException("username must be provided");
+        }
+        if (!userRepository.existsByUsername(username)) {
+            logger.warn("[getRoomsForUser] No such user='{}'", username);
+            throw new RuntimeException("User not found");
+        }
+
+        // Fetch rooms for the user and include the isWishlist field
+        return roomSettingRepository.findByUsername(username)
+                .stream()
+                .map(rs -> new RoomWishlistDTO(rs.getId(), rs.getRoomName(), rs.isWishlist()))  // Include the isWishlist value
+                .collect(Collectors.toList());
+    }
+
+
+
+
 }
