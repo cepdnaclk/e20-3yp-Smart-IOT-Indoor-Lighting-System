@@ -1,8 +1,5 @@
 package com.example.Lightify.Controller;
-import com.example.Lightify.DTO.AddDevicesRequest;
-import com.example.Lightify.DTO.DeleteRoomRequest;
-import com.example.Lightify.DTO.RenameRoomRequest;
-import com.example.Lightify.DTO.RoomInfoDTO;
+import com.example.Lightify.DTO.*;
 import com.example.Lightify.Entity.RoomSetting;
 import com.example.Lightify.Service.RoomSettingService;
 import org.slf4j.Logger;
@@ -111,5 +108,65 @@ public class RoomSettingController {
                     .body("Failed to delete room: " + msg);
         }
     }
+
+    // Endpoint to add a room to the wishlist
+    @PutMapping("/wishlist/add")
+    public ResponseEntity<?> addToWishlist(@RequestParam String username, @RequestParam String roomName) {
+        logger.info("[addToWishlist] user='{}' room='{}'", username, roomName);
+        try {
+            RoomSetting updated = roomSettingService.addToWishlist(username, roomName);
+            return ResponseEntity.ok(updated);
+        } catch (RuntimeException e) {
+            logger.error("[addToWishlist] error", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to add room to wishlist: " + e.getMessage());
+        }
+    }
+
+    // Endpoint to remove a room from the wishlist
+    @PutMapping("/wishlist/remove")
+    public ResponseEntity<?> removeFromWishlist(@RequestParam String username, @RequestParam String roomName) {
+        logger.info("[removeFromWishlist] user='{}' room='{}'", username, roomName);
+        try {
+            RoomSetting updated = roomSettingService.removeFromWishlist(username, roomName);
+            return ResponseEntity.ok(updated);
+        } catch (RuntimeException e) {
+            logger.error("[removeFromWishlist] error", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to remove room from wishlist: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/wishlist")
+    public ResponseEntity<?> listWishlistRooms(@RequestParam String username) {
+        logger.info("[listRooms] for user='{}'", username);
+        try {
+            List<RoomWishlistDTO> rooms = roomSettingService.getWishlistRoomsForUser(username);
+            return ResponseEntity.ok(rooms);
+
+        } catch (IllegalArgumentException e) {
+            // missing or blank username
+            logger.warn("[listRooms] bad request: {}", e.getMessage());
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(e.getMessage());
+
+        } catch (RuntimeException e) {
+            // user not found
+            if ("User not found".equals(e.getMessage())) {
+                logger.warn("[listRooms] user not found='{}'", username);
+                return ResponseEntity
+                        .status(HttpStatus.NOT_FOUND)
+                        .body(e.getMessage());
+            }
+            // any other error
+            logger.error("[listRooms] unexpected error for user='{}': {}", username, e.getMessage(), e);
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to fetch rooms: " + e.getMessage());
+        }
+    }
+
+
 
 }

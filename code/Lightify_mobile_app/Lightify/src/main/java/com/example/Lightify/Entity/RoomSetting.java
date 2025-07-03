@@ -20,4 +20,6 @@ public class RoomSetting {
     private String username;
     private String roomName;
     private List<DeviceAssignment> addedDevices;
+    private boolean isWishlist;
+
 }

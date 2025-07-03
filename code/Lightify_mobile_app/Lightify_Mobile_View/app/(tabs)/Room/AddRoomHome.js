@@ -1425,9 +1425,735 @@
 
 // RoomListScreen.js
 
+// import { Ionicons } from "@expo/vector-icons";
+// import AsyncStorage from "@react-native-async-storage/async-storage";
+// import { useLocalSearchParams, useRouter } from "expo-router";
+// import { useEffect, useState } from "react";
+// import {
+//   ActivityIndicator,
+//   Alert,
+//   ScrollView,
+//   StyleSheet,
+//   Text,
+//   TouchableOpacity,
+//   View,
+// } from "react-native";
+// import axiosClient from "../../../utils/axiosClient";
+
+// export default function RoomListScreen() {
+//   const router = useRouter();
+//   const { newRoom } = useLocalSearchParams();
+//   const [rooms, setRooms] = useState([]);
+//   const [wishlistRooms, setWishlistRooms] = useState([]);
+//   const [loading, setLoading] = useState(true);
+//   const [selectedRoomIndex, setSelectedRoomIndex] = useState(null);
+//   const [showOptionsModal, setShowOptionsModal] = useState(false);
+//   const USERNAME = "Tharindu";
+
+//   const fetchRooms = async () => {
+//     setLoading(true);
+//     try {
+//       const response = await axiosClient.get(
+//         `/api/rooms/list?username=${USERNAME}`
+//       );
+//       if (response.status === 200 && Array.isArray(response.data)) {
+//         const backendRooms = response.data.map((room) => ({
+//           _id: room.id,
+//           room: room.roomName,
+//           devices: [],
+//         }));
+//         setRooms(backendRooms);
+//       } else {
+//         throw new Error("Invalid backend response");
+//       }
+//     } catch (error) {
+//       console.error("❌ Failed to fetch rooms:", error);
+//       Alert.alert("Error", "Unable to fetch rooms from the server.");
+//       setRooms([]);
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   useEffect(() => {
+//     fetchRooms();
+//   }, []);
+
+//   useEffect(() => {
+//     (async () => {
+//       try {
+//         const wishJson = await AsyncStorage.getItem("wishlistRooms");
+//         if (wishJson) setWishlistRooms(JSON.parse(wishJson));
+//       } catch (error) {
+//         console.error("❌ Failed to load wishlist:", error);
+//       }
+//     })();
+//   }, []);
+
+//   // inside RoomListScreen.js
+
+// const handleToggleWishlist = async (roomName) => {
+//   try {
+//     // 1️⃣ Compute new name‐only list
+//     let newNames;
+//     if (wishlistRooms.includes(roomName)) {
+//       newNames = wishlistRooms.filter((r) => r !== roomName);
+//     } else {
+//       newNames = [...wishlistRooms, roomName];
+//     }
+
+//     // 2️⃣ Persist locally
+//     await AsyncStorage.setItem("wishlistRooms", JSON.stringify(newNames));
+//     setWishlistRooms(newNames);
+
+//     // 3️⃣ Build payload with IDs + names
+//     const wishlistPayload = newNames.map((name) => {
+//       const roomObj = rooms.find((r) => r.room === name) || {};
+//       return {
+//         id: roomObj._id || null,
+//         roomName: roomObj.room || name,
+//       };
+//     });
+
+//     console.log("🔶 Wishlist payload:", wishlistPayload);
+
+//     // 4️⃣ Send to backend
+//     await axiosClient.post("/api/rooms/wishlist", {
+//       username: USERNAME,
+//       wishlist: wishlistPayload,
+//     });
+
+
+
+//     // 5️⃣ User feedback
+//     const action = wishlistRooms.includes(roomName) ? "removed" : "added";
+//     Alert.alert("Wishlist", `"${roomName}" ${action} your wishlist.`);
+//   } catch (error) {
+//     console.error("❌ Failed to update wishlist:", error);
+//     Alert.alert("Error", "Could not update wishlist.");
+//   }
+// };
+
+//   // split rooms
+//   const wishlistRoomObjs = rooms.filter((r) =>
+//     wishlistRooms.includes(r.room)
+//   );
+//   const availableRoomObjs = rooms.filter(
+//     (r) => !wishlistRooms.includes(r.room)
+//   );
+
+//   return (
+//     <View style={styles.container}>
+//       <View style={styles.header}>
+//         <Text style={styles.title}>Your Rooms</Text>
+//         <TouchableOpacity
+//           style={styles.plusButton}
+//           onPress={() => router.push("/Room/AddRoom")}
+//         >
+//           <Ionicons name="add" size={28} color="#FFD700" />
+//         </TouchableOpacity>
+//       </View>
+
+//       <ScrollView contentContainerStyle={styles.roomList}>
+//         {loading ? (
+//           <ActivityIndicator size="large" color="#FFD700" />
+//         ) : (
+//           <>
+//             <Text style={styles.sectionTitle}>Wishlist</Text>
+//             {wishlistRoomObjs.length === 0 ? (
+//               <Text style={styles.noRooms}>No wishlist rooms.</Text>
+//             ) : (
+//               wishlistRoomObjs.map((roomObj) => {
+//                 const fullIndex = rooms.findIndex(
+//                   (r) => r._id === roomObj._id
+//                 );
+//                 return (
+//                   <View key={roomObj._id} style={styles.roomCard}>
+//                     <TouchableOpacity
+//                       style={{ flex: 1 }}
+//                       onPress={() =>
+//                         router.push(
+//                           `/Room/RoomModes?roomName=${roomObj.room}`
+//                         )
+//                       }
+//                     >
+//                       <Text style={styles.roomName}>{roomObj.room}</Text>
+//                     </TouchableOpacity>
+//                     <TouchableOpacity
+//                       style={styles.wishlistBtn}
+//                       onPress={() => handleToggleWishlist(roomObj.room)}
+//                     >
+//                       <Text style={styles.btnText}>❤️ Remove</Text>
+//                     </TouchableOpacity>
+//                     <TouchableOpacity
+//                       onPress={(e) => {
+//                         e.stopPropagation();
+//                         setSelectedRoomIndex(fullIndex);
+//                         setShowOptionsModal(true);
+//                       }}
+//                     >
+//                       <Text style={styles.menuDots}>⋯</Text>
+//                     </TouchableOpacity>
+//                   </View>
+//                 );
+//               })
+//             )}
+
+//             <Text style={styles.sectionTitle}>Available Rooms</Text>
+//             {availableRoomObjs.length === 0 ? (
+//               <Text style={styles.noRooms}>No available rooms.</Text>
+//             ) : (
+//               availableRoomObjs.map((roomObj) => {
+//                 const fullIndex = rooms.findIndex(
+//                   (r) => r._id === roomObj._id
+//                 );
+//                 return (
+//                   <View key={roomObj._id} style={styles.roomCard}>
+//                     <TouchableOpacity
+//                       style={{ flex: 1 }}
+//                       onPress={() =>
+//                         router.push(
+//                           `/Room/RoomModes?roomName=${roomObj.room}`
+//                         )
+//                       }
+//                     >
+//                       <Text style={styles.roomName}>{roomObj.room}</Text>
+//                     </TouchableOpacity>
+//                     <TouchableOpacity
+//                       style={styles.wishlistBtn}
+//                       onPress={() => handleToggleWishlist(roomObj.room)}
+//                     >
+//                       <Text style={styles.btnText}>🤍 Wishlist</Text>
+//                     </TouchableOpacity>
+//                     <TouchableOpacity
+//                       onPress={(e) => {
+//                         e.stopPropagation();
+//                         setSelectedRoomIndex(fullIndex);
+//                         setShowOptionsModal(true);
+//                       }}
+//                     >
+//                       <Text style={styles.menuDots}>⋯</Text>
+//                     </TouchableOpacity>
+//                   </View>
+//                 );
+//               })
+//             )}
+//           </>
+//         )}
+//       </ScrollView>
+
+//       {showOptionsModal && selectedRoomIndex !== null && (
+//         <View style={styles.modalOverlay}>
+//           <View style={styles.modalBox}>
+//             <TouchableOpacity
+//               style={styles.modalButton}
+//               onPress={() => {
+//                 const roomId =
+//                   rooms[selectedRoomIndex]._id || "N/A";
+//                 setShowOptionsModal(false);
+//                 router.push(`/Room/EditRoomScreen?id=${roomId}`);
+//               }}
+//             >
+//               <Text style={styles.modalButtonText}>Modify</Text>
+//             </TouchableOpacity>
+//             <TouchableOpacity
+//               style={[styles.modalButton, { backgroundColor: "#700" }]}
+//               onPress={() => {
+//                 const updated = rooms.filter(
+//                   (_, i) => i !== selectedRoomIndex
+//                 );
+//                 setRooms(updated);
+//                 setShowOptionsModal(false);
+//               }}
+//             >
+//               <Text style={styles.modalButtonText}>Delete</Text>
+//             </TouchableOpacity>
+//             <TouchableOpacity
+//               onPress={() => setShowOptionsModal(false)}
+//               style={[styles.modalButton, { backgroundColor: "#555" }]}
+//             >
+//               <Text style={styles.modalButtonText}>Cancel</Text>
+//             </TouchableOpacity>
+//           </View>
+//         </View>
+//       )}
+//     </View>
+//   );
+// }
+
+// const styles = StyleSheet.create({
+//   container: {
+//     flex: 1,
+//     backgroundColor: "#000",
+//     paddingHorizontal: 20,
+//     paddingTop: 50,
+//   },
+//   header: {
+//     flexDirection: "row",
+//     justifyContent: "space-between",
+//     alignItems: "center",
+//     marginBottom: 20,
+//   },
+//   title: {
+//     fontSize: 22,
+//     color: "#FFD700",
+//     fontWeight: "bold",
+//   },
+//   plusButton: {
+//     padding: 6,
+//   },
+//   roomList: {
+//     paddingBottom: 20,
+//   },
+//   sectionTitle: {
+//     color: "#FFD700",
+//     fontSize: 20,
+//     fontWeight: "bold",
+//     marginVertical: 10,
+//   },
+//   roomCard: {
+//     backgroundColor: "#111",
+//     borderColor: "#FFD700",
+//     borderWidth: 1,
+//     borderRadius: 10,
+//     padding: 16,
+//     marginBottom: 10,
+//     flexDirection: "row",
+//     alignItems: "center",
+//   },
+//   roomName: {
+//     color: "#FFF",
+//     fontSize: 16,
+//   },
+//   wishlistBtn: {
+//     backgroundColor: "#e74c3c",
+//     paddingVertical: 6,
+//     paddingHorizontal: 10,
+//     borderRadius: 5,
+//     marginHorizontal: 8,
+//   },
+//   btnText: {
+//     color: "#FFF",
+//     fontWeight: "bold",
+//     fontSize: 14,
+//   },
+//   menuDots: {
+//     color: "#FFD700",
+//     fontSize: 24,
+//   },
+//   noRooms: {
+//     color: "#888",
+//     textAlign: "center",
+//     marginTop: 10,
+//   },
+//   modalOverlay: {
+//     position: "absolute",
+//     top: 0,
+//     left: 0,
+//     right: 0,
+//     bottom: 0,
+//     backgroundColor: "rgba(0,0,0,0.6)",
+//     justifyContent: "center",
+//     alignItems: "center",
+//     zIndex: 100,
+//   },
+//   modalBox: {
+//     backgroundColor: "#222",
+//     padding: 20,
+//     borderRadius: 10,
+//     width: "80%",
+//   },
+//   modalButton: {
+//     padding: 12,
+//     backgroundColor: "#FFD700",
+//     borderRadius: 8,
+//     marginBottom: 10,
+//     alignItems: "center",
+//   },
+//   modalButtonText: {
+//     color: "#000",
+//     fontWeight: "bold",
+//   },
+// });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// import { Ionicons } from "@expo/vector-icons";
+// import AsyncStorage from "@react-native-async-storage/async-storage";
+// import { useLocalSearchParams, useRouter } from "expo-router";
+// import { useEffect, useState } from "react";
+// import { showMessage } from "react-native-flash-message";
+// import {
+//   ActivityIndicator,
+//   Alert,
+//   ScrollView,
+//   StyleSheet,
+//   Text,
+//   TouchableOpacity,
+//   View,
+// } from "react-native";
+// import axiosClient from "../../../utils/axiosClient";
+
+// export default function RoomListScreen() {
+//   const router = useRouter();
+//   const { newRoom } = useLocalSearchParams();
+//   const [rooms, setRooms] = useState([]);
+//   const [wishlistRooms, setWishlistRooms] = useState([]);
+//   const [loading, setLoading] = useState(true);
+//   const [selectedRoomIndex, setSelectedRoomIndex] = useState(null);
+//   const [showOptionsModal, setShowOptionsModal] = useState(false);
+//   const USERNAME = "Tharindu";
+
+//   const fetchRooms = async () => {
+//     setLoading(true);
+//     try {
+//       const response = await axiosClient.get(
+//         `/api/rooms/list?username=${USERNAME}`
+//       );
+//       if (response.status === 200 && Array.isArray(response.data)) {
+//         const backendRooms = response.data.map((room) => ({
+//           _id: room.id,
+//           room: room.roomName,
+//           devices: [],
+//         }));
+//         setRooms(backendRooms);
+//       } else {
+//         throw new Error("Invalid backend response");
+//       }
+//     } catch (error) {
+//       console.error("❌ Failed to fetch rooms:", error);
+//       Alert.alert("Error", "Unable to fetch rooms from the server.");
+//       setRooms([]);
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   useEffect(() => {
+//     fetchRooms();
+//   }, []);
+
+//   useEffect(() => {
+//     (async () => {
+//       try {
+//         const wishJson = await AsyncStorage.getItem("wishlistRooms");
+//         if (wishJson) setWishlistRooms(JSON.parse(wishJson));
+//       } catch (error) {
+//         console.error("❌ Failed to load wishlist:", error);
+//       }
+//     })();
+//   }, []);
+
+//   // inside RoomListScreen.js
+
+// async function handleToggleWishlist(roomName) {
+//   // 1️⃣ compute new list of room names
+//   const newNames = wishlistRooms.includes(roomName)
+//     ? wishlistRooms.filter((r) => r !== roomName)
+//     : [...wishlistRooms, roomName];
+
+//   // 2️⃣ build payload
+//   const wishlistPayload = newNames.map((name) => {
+//     const roomObj = rooms.find((r) => r.room === name) || {};
+//     return { id: roomObj._id || null, roomName: roomObj.room || name };
+//   });
+
+//   try {
+//     // 3️⃣ send to backend
+//     const { status } = await axiosClient.post("/api/rooms/wishlist", {
+//       username: USERNAME,
+//       wishlist: wishlistPayload,
+//     });
+
+//     if (status === 200) {
+//       // 4️⃣ on success: update local state + storage
+//       setWishlistRooms(newNames);
+//       await AsyncStorage.setItem("wishlistRooms", JSON.stringify(newNames));
+
+//       // 5️⃣ show a green “success” toast
+//       showMessage({
+//         message: "Wishlist updated!",
+//         type: "success",
+//         icon: "success",
+//       });
+//     } else {
+//       throw new Error("Non-200 status");
+//     }
+//   } catch (err) {
+//     console.error("Wishlist update failed", err);
+//     // 6️⃣ show a red “error” toast
+//     showMessage({
+//       message: "Could not update wishlist",
+//       description: err.message,
+//       type: "danger",
+//       icon: "danger",
+//     });
+//   }
+// }
+
+
+//   // split rooms
+//   const wishlistRoomObjs = rooms.filter((r) =>
+//     wishlistRooms.includes(r.room)
+//   );
+//   const availableRoomObjs = rooms.filter(
+//     (r) => !wishlistRooms.includes(r.room)
+//   );
+
+//   return (
+//     <View style={styles.container}>
+//       <View style={styles.header}>
+//         <Text style={styles.title}>Your Rooms</Text>
+//         <TouchableOpacity
+//           style={styles.plusButton}
+//           onPress={() => router.push("/Room/AddRoom")}
+//         >
+//           <Ionicons name="add" size={28} color="#FFD700" />
+//         </TouchableOpacity>
+//       </View>
+
+//       <ScrollView contentContainerStyle={styles.roomList}>
+//         {loading ? (
+//           <ActivityIndicator size="large" color="#FFD700" />
+//         ) : (
+//           <>
+//             <Text style={styles.sectionTitle}>Wishlist</Text>
+//             {wishlistRoomObjs.length === 0 ? (
+//               <Text style={styles.noRooms}>No wishlist rooms.</Text>
+//             ) : (
+//               wishlistRoomObjs.map((roomObj) => {
+//                 const fullIndex = rooms.findIndex(
+//                   (r) => r._id === roomObj._id
+//                 );
+//                 return (
+//                   <View key={roomObj._id} style={styles.roomCard}>
+//                     <TouchableOpacity
+//                       style={{ flex: 1 }}
+//                       onPress={() =>
+//                         router.push(
+//                           `/Room/RoomModes?roomName=${roomObj.room}`
+//                         )
+//                       }
+//                     >
+//                       <Text style={styles.roomName}>{roomObj.room}</Text>
+//                     </TouchableOpacity>
+//                     <TouchableOpacity
+//                       style={styles.wishlistBtn}
+//                       onPress={() => handleToggleWishlist(roomObj.room)}
+//                     >
+//                       <Text style={styles.btnText}>❤️ Remove</Text>
+//                     </TouchableOpacity>
+//                     <TouchableOpacity
+//                       onPress={(e) => {
+//                         e.stopPropagation();
+//                         setSelectedRoomIndex(fullIndex);
+//                         setShowOptionsModal(true);
+//                       }}
+//                     >
+//                       <Text style={styles.menuDots}>⋯</Text>
+//                     </TouchableOpacity>
+//                   </View>
+//                 );
+//               })
+//             )}
+
+//             <Text style={styles.sectionTitle}>Available Rooms</Text>
+//             {availableRoomObjs.length === 0 ? (
+//               <Text style={styles.noRooms}>No available rooms.</Text>
+//             ) : (
+//               availableRoomObjs.map((roomObj) => {
+//                 const fullIndex = rooms.findIndex(
+//                   (r) => r._id === roomObj._id
+//                 );
+//                 return (
+//                   <View key={roomObj._id} style={styles.roomCard}>
+//                     <TouchableOpacity
+//                       style={{ flex: 1 }}
+//                       onPress={() =>
+//                         router.push(
+//                           `/Room/RoomModes?roomName=${roomObj.room}`
+//                         )
+//                       }
+//                     >
+//                       <Text style={styles.roomName}>{roomObj.room}</Text>
+//                     </TouchableOpacity>
+//                     <TouchableOpacity
+//                       style={styles.wishlistBtn}
+//                       onPress={() => handleToggleWishlist(roomObj.room)}
+//                     >
+//                       <Text style={styles.btnText}>🤍 Wishlist</Text>
+//                     </TouchableOpacity>
+//                     <TouchableOpacity
+//                       onPress={(e) => {
+//                         e.stopPropagation();
+//                         setSelectedRoomIndex(fullIndex);
+//                         setShowOptionsModal(true);
+//                       }}
+//                     >
+//                       <Text style={styles.menuDots}>⋯</Text>
+//                     </TouchableOpacity>
+//                   </View>
+//                 );
+//               })
+//             )}
+//           </>
+//         )}
+//       </ScrollView>
+
+//       {showOptionsModal && selectedRoomIndex !== null && (
+//         <View style={styles.modalOverlay}>
+//           <View style={styles.modalBox}>
+//             <TouchableOpacity
+//               style={styles.modalButton}
+//               onPress={() => {
+//                 const roomId =
+//                   rooms[selectedRoomIndex]._id || "N/A";
+//                 setShowOptionsModal(false);
+//                 router.push(`/Room/EditRoomScreen?id=${roomId}`);
+//               }}
+//             >
+//               <Text style={styles.modalButtonText}>Modify</Text>
+//             </TouchableOpacity>
+//             <TouchableOpacity
+//               style={[styles.modalButton, { backgroundColor: "#700" }]}
+//               onPress={() => {
+//                 const updated = rooms.filter(
+//                   (_, i) => i !== selectedRoomIndex
+//                 );
+//                 setRooms(updated);
+//                 setShowOptionsModal(false);
+//               }}
+//             >
+//               <Text style={styles.modalButtonText}>Delete</Text>
+//             </TouchableOpacity>
+//             <TouchableOpacity
+//               onPress={() => setShowOptionsModal(false)}
+//               style={[styles.modalButton, { backgroundColor: "#555" }]}
+//             >
+//               <Text style={styles.modalButtonText}>Cancel</Text>
+//             </TouchableOpacity>
+//           </View>
+//         </View>
+//       )}
+//     </View>
+//   );
+// }
+
+// const styles = StyleSheet.create({
+//   container: {
+//     flex: 1,
+//     backgroundColor: "#000",
+//     paddingHorizontal: 20,
+//     paddingTop: 50,
+//   },
+//   header: {
+//     flexDirection: "row",
+//     justifyContent: "space-between",
+//     alignItems: "center",
+//     marginBottom: 20,
+//   },
+//   title: {
+//     fontSize: 22,
+//     color: "#FFD700",
+//     fontWeight: "bold",
+//   },
+//   plusButton: {
+//     padding: 6,
+//   },
+//   roomList: {
+//     paddingBottom: 20,
+//   },
+//   sectionTitle: {
+//     color: "#FFD700",
+//     fontSize: 20,
+//     fontWeight: "bold",
+//     marginVertical: 10,
+//   },
+//   roomCard: {
+//     backgroundColor: "#111",
+//     borderColor: "#FFD700",
+//     borderWidth: 1,
+//     borderRadius: 10,
+//     padding: 16,
+//     marginBottom: 10,
+//     flexDirection: "row",
+//     alignItems: "center",
+//   },
+//   roomName: {
+//     color: "#FFF",
+//     fontSize: 16,
+//   },
+//   wishlistBtn: {
+//     backgroundColor: "#e74c3c",
+//     paddingVertical: 6,
+//     paddingHorizontal: 10,
+//     borderRadius: 5,
+//     marginHorizontal: 8,
+//   },
+//   btnText: {
+//     color: "#FFF",
+//     fontWeight: "bold",
+//     fontSize: 14,
+//   },
+//   menuDots: {
+//     color: "#FFD700",
+//     fontSize: 24,
+//   },
+//   noRooms: {
+//     color: "#888",
+//     textAlign: "center",
+//     marginTop: 10,
+//   },
+//   modalOverlay: {
+//     position: "absolute",
+//     top: 0,
+//     left: 0,
+//     right: 0,
+//     bottom: 0,
+//     backgroundColor: "rgba(0,0,0,0.6)",
+//     justifyContent: "center",
+//     alignItems: "center",
+//     zIndex: 100,
+//   },
+//   modalBox: {
+//     backgroundColor: "#222",
+//     padding: 20,
+//     borderRadius: 10,
+//     width: "80%",
+//   },
+//   modalButton: {
+//     padding: 12,
+//     backgroundColor: "#FFD700",
+//     borderRadius: 8,
+//     marginBottom: 10,
+//     alignItems: "center",
+//   },
+//   modalButtonText: {
+//     color: "#000",
+//     fontWeight: "bold",
+//   },
+// });
+
+
+
 import { Ionicons } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -1438,38 +2164,38 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { showMessage } from "react-native-flash-message";
 import axiosClient from "../../../utils/axiosClient";
 
 export default function RoomListScreen() {
   const router = useRouter();
-  const { newRoom } = useLocalSearchParams();
-  const [rooms, setRooms] = useState([]);
-  const [wishlistRooms, setWishlistRooms] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedRoomIndex, setSelectedRoomIndex] = useState(null);
-  const [showOptionsModal, setShowOptionsModal] = useState(false);
   const USERNAME = "Tharindu";
 
+  const [rooms, setRooms] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // 1️⃣ Fetch all rooms + wishlist flag
   const fetchRooms = async () => {
     setLoading(true);
     try {
-      const response = await axiosClient.get(
-        `/api/rooms/list?username=${USERNAME}`
+      const { data, status } = await axiosClient.get(
+        `/api/rooms/wishlist?username=${USERNAME}`
       );
-      if (response.status === 200 && Array.isArray(response.data)) {
-        const backendRooms = response.data.map((room) => ({
-          _id: room.id,
-          room: room.roomName,
-          devices: [],
-        }));
-        setRooms(backendRooms);
+      if (status === 200 && Array.isArray(data)) {
+        // map to internal shape
+        setRooms(
+          data.map((r) => ({
+            _id: r.id,
+            room: r.roomName,
+            wishlist: r.wishlist,
+          }))
+        );
       } else {
-        throw new Error("Invalid backend response");
+        throw new Error("Invalid response");
       }
-    } catch (error) {
-      console.error("❌ Failed to fetch rooms:", error);
-      Alert.alert("Error", "Unable to fetch rooms from the server.");
-      setRooms([]);
+    } catch (err) {
+      console.error("❌ Failed to fetch rooms:", err);
+      Alert.alert("Error", "Unable to load rooms.");
     } finally {
       setLoading(false);
     }
@@ -1479,68 +2205,43 @@ export default function RoomListScreen() {
     fetchRooms();
   }, []);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const wishJson = await AsyncStorage.getItem("wishlistRooms");
-        if (wishJson) setWishlistRooms(JSON.parse(wishJson));
-      } catch (error) {
-        console.error("❌ Failed to load wishlist:", error);
+  // 2️⃣ Toggle a single room’s wishlist status
+  const handleToggleWishlist = async (roomName, currentlyWishlisted) => {
+    const action = currentlyWishlisted ? "remove" : "add";
+    try {
+      const url = `/api/rooms/wishlist/${action}?username=${USERNAME}&roomName=${encodeURIComponent(
+        roomName
+      )}`;
+      const { status } = await axiosClient.put(url);
+      if (status === 200) {
+        // update local state
+        setRooms((prev) =>
+          prev.map((r) =>
+            r.room === roomName ? { ...r, wishlist: !currentlyWishlisted } : r
+          )
+        );
+        showMessage({
+          message: "Wishlist updated",
+          type: "success",
+          icon: "success",
+        });
+      } else {
+        throw new Error(`Status ${status}`);
       }
-    })();
-  }, []);
-
-  // inside RoomListScreen.js
-
-const handleToggleWishlist = async (roomName) => {
-  try {
-    // 1️⃣ Compute new name‐only list
-    let newNames;
-    if (wishlistRooms.includes(roomName)) {
-      newNames = wishlistRooms.filter((r) => r !== roomName);
-    } else {
-      newNames = [...wishlistRooms, roomName];
+    } catch (err) {
+      console.error("❌ Wishlist toggle failed:", err);
+      showMessage({
+        message: "Could not update wishlist",
+        description: err.message,
+        type: "danger",
+        icon: "danger",
+      });
     }
+  };
 
-    // 2️⃣ Persist locally
-    await AsyncStorage.setItem("wishlistRooms", JSON.stringify(newNames));
-    setWishlistRooms(newNames);
-
-    // 3️⃣ Build payload with IDs + names
-    const wishlistPayload = newNames.map((name) => {
-      const roomObj = rooms.find((r) => r.room === name) || {};
-      return {
-        id: roomObj._id || null,
-        roomName: roomObj.room || name,
-      };
-    });
-
-    console.log("🔶 Wishlist payload:", wishlistPayload);
-
-    // 4️⃣ Send to backend
-    await axiosClient.post("/api/rooms/wishlist", {
-      username: USERNAME,
-      wishlist: wishlistPayload,
-    });
-
-
-
-    // 5️⃣ User feedback
-    const action = wishlistRooms.includes(roomName) ? "removed" : "added";
-    Alert.alert("Wishlist", `"${roomName}" ${action} your wishlist.`);
-  } catch (error) {
-    console.error("❌ Failed to update wishlist:", error);
-    Alert.alert("Error", "Could not update wishlist.");
-  }
-};
-
-  // split rooms
-  const wishlistRoomObjs = rooms.filter((r) =>
-    wishlistRooms.includes(r.room)
-  );
-  const availableRoomObjs = rooms.filter(
-    (r) => !wishlistRooms.includes(r.room)
-  );
+  // 3️⃣ Split into two lists
+  const wishlistRooms = rooms.filter((r) => r.wishlist);
+  const availableRooms = rooms.filter((r) => !r.wishlist);
 
   return (
     <View style={styles.container}>
@@ -1560,123 +2261,56 @@ const handleToggleWishlist = async (roomName) => {
         ) : (
           <>
             <Text style={styles.sectionTitle}>Wishlist</Text>
-            {wishlistRoomObjs.length === 0 ? (
+            {wishlistRooms.length === 0 ? (
               <Text style={styles.noRooms}>No wishlist rooms.</Text>
             ) : (
-              wishlistRoomObjs.map((roomObj) => {
-                const fullIndex = rooms.findIndex(
-                  (r) => r._id === roomObj._id
-                );
-                return (
-                  <View key={roomObj._id} style={styles.roomCard}>
-                    <TouchableOpacity
-                      style={{ flex: 1 }}
-                      onPress={() =>
-                        router.push(
-                          `/Room/RoomModes?roomName=${roomObj.room}`
-                        )
-                      }
-                    >
-                      <Text style={styles.roomName}>{roomObj.room}</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.wishlistBtn}
-                      onPress={() => handleToggleWishlist(roomObj.room)}
-                    >
-                      <Text style={styles.btnText}>❤️ Remove</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      onPress={(e) => {
-                        e.stopPropagation();
-                        setSelectedRoomIndex(fullIndex);
-                        setShowOptionsModal(true);
-                      }}
-                    >
-                      <Text style={styles.menuDots}>⋯</Text>
-                    </TouchableOpacity>
-                  </View>
-                );
-              })
+              wishlistRooms.map((r) => (
+                <RoomCard
+                  key={r._id}
+                  roomObj={r}
+                  onToggle={() => handleToggleWishlist(r.room, true)}
+                  router={router}
+                />
+              ))
             )}
 
             <Text style={styles.sectionTitle}>Available Rooms</Text>
-            {availableRoomObjs.length === 0 ? (
+            {availableRooms.length === 0 ? (
               <Text style={styles.noRooms}>No available rooms.</Text>
             ) : (
-              availableRoomObjs.map((roomObj) => {
-                const fullIndex = rooms.findIndex(
-                  (r) => r._id === roomObj._id
-                );
-                return (
-                  <View key={roomObj._id} style={styles.roomCard}>
-                    <TouchableOpacity
-                      style={{ flex: 1 }}
-                      onPress={() =>
-                        router.push(
-                          `/Room/RoomModes?roomName=${roomObj.room}`
-                        )
-                      }
-                    >
-                      <Text style={styles.roomName}>{roomObj.room}</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.wishlistBtn}
-                      onPress={() => handleToggleWishlist(roomObj.room)}
-                    >
-                      <Text style={styles.btnText}>🤍 Wishlist</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      onPress={(e) => {
-                        e.stopPropagation();
-                        setSelectedRoomIndex(fullIndex);
-                        setShowOptionsModal(true);
-                      }}
-                    >
-                      <Text style={styles.menuDots}>⋯</Text>
-                    </TouchableOpacity>
-                  </View>
-                );
-              })
+              availableRooms.map((r) => (
+                <RoomCard
+                  key={r._id}
+                  roomObj={r}
+                  onToggle={() => handleToggleWishlist(r.room, false)}
+                  router={router}
+                />
+              ))
             )}
           </>
         )}
       </ScrollView>
+    </View>
+  );
+}
 
-      {showOptionsModal && selectedRoomIndex !== null && (
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalBox}>
-            <TouchableOpacity
-              style={styles.modalButton}
-              onPress={() => {
-                const roomId =
-                  rooms[selectedRoomIndex]._id || "N/A";
-                setShowOptionsModal(false);
-                router.push(`/Room/EditRoomScreen?id=${roomId}`);
-              }}
-            >
-              <Text style={styles.modalButtonText}>Modify</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.modalButton, { backgroundColor: "#700" }]}
-              onPress={() => {
-                const updated = rooms.filter(
-                  (_, i) => i !== selectedRoomIndex
-                );
-                setRooms(updated);
-                setShowOptionsModal(false);
-              }}
-            >
-              <Text style={styles.modalButtonText}>Delete</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => setShowOptionsModal(false)}
-              style={[styles.modalButton, { backgroundColor: "#555" }]}
-            >
-              <Text style={styles.modalButtonText}>Cancel</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      )}
+// Extracted RoomCard for clarity
+function RoomCard({ roomObj, onToggle, router }) {
+  return (
+    <View style={styles.roomCard}>
+      <TouchableOpacity
+        style={{ flex: 1 }}
+        onPress={() =>
+          router.push(`/Room/RoomModes?roomName=${encodeURIComponent(roomObj.room)}`)
+        }
+      >
+        <Text style={styles.roomName}>{roomObj.room}</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.wishlistBtn} onPress={onToggle}>
+        <Text style={styles.btnText}>
+          {roomObj.wishlist ? "❤️ Remove" : "🤍 Wishlist"}
+        </Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -1730,48 +2364,16 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 10,
     borderRadius: 5,
-    marginHorizontal: 8,
+    marginLeft: 8,
   },
   btnText: {
     color: "#FFF",
     fontWeight: "bold",
     fontSize: 14,
   },
-  menuDots: {
-    color: "#FFD700",
-    fontSize: 24,
-  },
   noRooms: {
     color: "#888",
     textAlign: "center",
     marginTop: 10,
-  },
-  modalOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(0,0,0,0.6)",
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: 100,
-  },
-  modalBox: {
-    backgroundColor: "#222",
-    padding: 20,
-    borderRadius: 10,
-    width: "80%",
-  },
-  modalButton: {
-    padding: 12,
-    backgroundColor: "#FFD700",
-    borderRadius: 8,
-    marginBottom: 10,
-    alignItems: "center",
-  },
-  modalButtonText: {
-    color: "#000",
-    fontWeight: "bold",
   },
 });
