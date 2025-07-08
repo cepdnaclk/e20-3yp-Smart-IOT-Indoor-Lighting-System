@@ -9,7 +9,7 @@ static ESPNowManager::RecvCb userCb = nullptr;
 static void onDataRecv(const uint8_t* mac, const uint8_t* data, int len) {
   String s;
   for (int i = 0; i < len; i++) s += (char)data[i];
-  Serial.println("⟵ ESP-NOW: " + s);
+  // Serial.println("⟵ ESP-NOW recived (ESPNowManager): " + s);
   if (userCb) userCb(s);
 }
 

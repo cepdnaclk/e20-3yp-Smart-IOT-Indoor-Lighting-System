@@ -31,8 +31,8 @@ namespace SerialComm {
     String wrapped = String("{\"seq\":") + seqCounter++ +
                      ",\"payload\":" + rawJson + "}";
     txQ.push(wrapped);
-    // Serial.printf("[SerialComm][Gen] Pushed seq=%u payload=%s\n",
-    //               seqCounter-1, wrapped.c_str());
+    Serial.printf("[SerialComm][Gen] Pushed seq=%u payload=%s\n",
+                  seqCounter-1, wrapped.c_str());
     // Serial.printf("[SerialComm][Debug] txQ head=%u, tail=%u\n",
     //               txQ.getHead(), txQ.getTail());
   }

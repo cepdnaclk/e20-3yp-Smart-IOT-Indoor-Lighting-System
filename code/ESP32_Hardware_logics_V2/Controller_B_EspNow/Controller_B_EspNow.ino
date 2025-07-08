@@ -98,7 +98,7 @@ void setup(){
 
   // —— 3) Catch all JSON from A ——  
   SerialComm::onJsonReceived([](const String& j){
-    // Serial.printf("[Debug] Received framed JSON from A: %s\n", j.c_str());
+    Serial.printf("[Debug] Received framed JSON from A: %s\n", j.c_str());
 
     // first-boot provisioning?
     if (!gotInitial && ConfigManager::getSSID().isEmpty()){
@@ -157,7 +157,7 @@ void setup(){
     ESPNowManager::setPeer(mac);
     ESPNowManager::onReceive([](const String& s){
       // Serial.printf("[Debug] onReceive ESP-NOW JSON: %s\n", s.c_str());
-      Serial.println("⟵ ESP-NOW: " + s);
+      // Serial.println("⟵ ESP-NOW Recived: " + s);
 
       // optional JSON field parsing
       DynamicJsonDocument doc(1024);
@@ -165,7 +165,7 @@ void setup(){
         int seq  = doc["seq"];
         int16_t x = doc["x"];
         int16_t y = doc["y"];
-        Serial.printf("    seq=%d  x=%d  y=%d\n", seq, x, y);
+        // Serial.printf("    seq=%d  x=%d  y=%d\n", seq, x, y);
       }
 
       // buffer for paced send to A
@@ -226,9 +226,11 @@ void loop(){
     if (p) {
       Serial.println("[Recv JSON] " + *p);
       Serial.println("[Process Cmd] " + *p);
-      // Serial.printf("[Debug] Sending to sensor via ESP-NOW: %s\n", p->c_str());
+      Serial.printf("[Debug] Sending to sensor via ESP-NOW: %s\n", p->c_str());
       if (!ESPNowManager::send(*p)) {
         Serial.println("[Error] ESP-NOW send failed");
+      } else {
+        Serial.println("[✅ ESP-NOW] Sent to sensor: " + *p);
       }
     }
     cmdQ.pop();

@@ -48,6 +48,13 @@ struct JSONMsg {
   char     data[512];
 };
 
+void printMacAddress() {
+  uint8_t mac[6];
+  esp_read_mac(mac, ESP_MAC_WIFI_STA);
+  Serial.printf("MAC Address Sensor: %02X:%02X:%02X:%02X:%02X:%02X\n",
+                mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+}
+
 // ——— simple ring-buffer queue for up to 128 messages ———
 static const int QUEUE_SIZE = 64;
 JSONMsg queueBuf[QUEUE_SIZE];
@@ -233,6 +240,9 @@ class ScanCB: public BLEAdvertisedDeviceCallbacks {
 
 void setup() {
   Serial.begin(115200);
+
+  printMacAddress();
+
   delay(500);
 
   // 1) Scan for controller via BLE
