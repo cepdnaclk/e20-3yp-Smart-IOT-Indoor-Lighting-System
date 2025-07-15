@@ -40,14 +40,18 @@ public class TopicService {
             Topic savedTopic = topicRepository.save(topic);
 
             String baseTopic = savedTopic.getTopicString();
-            String subscribeTopic = baseTopic + "/esp_to_backend";
-            try {
-                awsIotPubSubService.subscribe(subscribeTopic);
-                logger.info("Subscribed to receive-topic: {}", subscribeTopic);
-            } catch (Exception e) {
-                logger.error("Error subscribing to topic: {}", savedTopic.getTopicString(), e);
-                throw new RuntimeException("Error subscribing to topic", e);
+            for (String suffix : new String[]{"/esp_to_backend", "/request_rule_from_backend"}) {
+                String fullTopic = baseTopic + suffix;
+                try {
+                    awsIotPubSubService.subscribe(fullTopic);
+                    logger.info("Subscribed to receive-topic: {}", fullTopic);
+                } catch (Exception e) {
+                    logger.error("Error subscribing to topic: {}", fullTopic, e);
+                    // if you want to fail the whole addTopic on subscribe‐error, rethrow here
+                    throw new RuntimeException("Error subscribing to topic " + fullTopic, e);
+                }
             }
+
             // Remove device from "devices" collection once it has been added to a topic
             deviceService.deleteDeviceByUsernameAndMacAddress(
                     topic.getUsername(), topic.getMacAddress());
@@ -101,26 +105,21 @@ public class TopicService {
     }
 
     public void publishMessage(String roomName, String message) {
-        try {
-            // Hardcoded username for now (should be extracted from authentication token)
-            String username = "topic";
+        // Hardcoded username for now (should be extracted from authentication token)
+        String username = "topic";
 
-            // Retrieve the topic entity using roomName and username
-            Optional<Topic> topicOptional = topicRepository.findByRoomNameAndUsername(roomName, username);
-            if (topicOptional.isEmpty()) {
-                throw new RuntimeException("Topic not found for room: " + roomName);
-            }
-
-            Topic topic = topicOptional.get();
-            String topicString = topic.getTopicString();
-
-            // Publish message to AWS IoT
-            awsIotPubSubService.publish(topicString, message);
-            logger.info("Message published successfully to {}", topicString);
-        } catch (InterruptedException | ExecutionException e) {
-            logger.error("Failed to publish message to AWS IoT", e);
-            throw new RuntimeException("Failed to publish message: " + e.getMessage(), e);
+        // Retrieve the topic entity using roomName and username
+        Optional<Topic> topicOptional = topicRepository.findByRoomNameAndUsername(roomName, username);
+        if (topicOptional.isEmpty()) {
+            throw new RuntimeException("Topic not found for room: " + roomName);
         }
+
+        Topic topic = topicOptional.get();
+        String topicString = topic.getTopicString();
+
+        // Publish message to AWS IoT
+        awsIotPubSubService.publish(topicString, message);
+        logger.info("Message published successfully to {}", topicString);
     }
 
     // TopicService.java

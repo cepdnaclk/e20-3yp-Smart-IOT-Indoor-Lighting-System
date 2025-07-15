@@ -71,4 +71,16 @@ public class AutomationModeService {
         }
     }
 
+    @Transactional
+    public void setCurrentlyActivatedMode(String username,
+                                          String roomName,
+                                          String modeName) {
+        repository.findByUsernameAndRoomName(username, roomName)
+                .ifPresent(m -> {
+                    m.setCurrentlyActivatedMode(modeName);
+                    repository.save(m);
+                    logger.debug("Set currentlyActivatedMode='{}' for {}/{}", modeName, username, roomName);
+                });
+    }
+
 }

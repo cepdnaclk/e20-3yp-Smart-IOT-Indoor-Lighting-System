@@ -85,7 +85,8 @@ public class RoomConfigurationService {
                     null,
                     request.getUsername(),
                     request.getRoomName(),
-                    modes
+                    modes,
+                    null
             );
             modeService.addOrUpdateAutomationMode(mode);
 
@@ -173,7 +174,7 @@ public class RoomConfigurationService {
             );
             modeMap.put("Rules", m.getRules());
             modesList.add(modeMap);
-            break; // we found our one mode, no need to keep looping
+            break;
         }
 
         if (modesList.isEmpty()) {
@@ -183,7 +184,7 @@ public class RoomConfigurationService {
             );
         }
         // Wrap into payload
-        root.put("payload", modesList.size()==1 ? modesList.get(0) : Collections.singletonMap("Modes", modesList));
+        root.put("payload", modesList.size()==1 ? modesList.getFirst() : Collections.singletonMap("Modes", modesList));
 
         String json;
         try {
@@ -191,9 +192,89 @@ public class RoomConfigurationService {
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Failed to serialize MQTT payload", e);
         }
+        logger.info("[publishAutomationUpdate] payload JSON = {}", json);
+
+        //0) persist “this is the mode we are about to send”
+        modeService.setCurrentlyActivatedMode(username, roomName, targetModeName);
 
         // 4) Publish
         awsIotPubSubService.publish(topicString, json);
         logger.info("[publishAutomationUpdate] Published to {}: {}", topicString, json);
+    }
+
+    public void publishLatestAutomationUpdate(
+            String username,
+            String roomName,
+            String targetModeName
+    ) throws ExecutionException, InterruptedException {
+        logger.info("[publishLatestAutomationUpdate] entered for {}/{} mode='{}'",
+                username, roomName, targetModeName);
+
+        // 1) Look up the base topic
+        Topic topic = topicService.getTopicByRoomNameAndUsername(roomName, username);
+        String baseTopic = topic.getTopicString();
+        logger.info("[publishLatestAutomationUpdate] baseTopic = {}", baseTopic);
+
+        // 2) Append the “receive_rule_from_backend” suffix
+        String targetTopic = baseTopic + "/receive_rule_from_backend";
+        logger.info("[publishLatestAutomationUpdate] targetTopic = {}", targetTopic);
+
+        // 3) Load the AutomationMode doc
+        AutomationMode am = modeService.getAutomationMode(username, roomName)
+                .orElseThrow(() -> new RuntimeException(
+                        "No automation mode found for " + username + "/" + roomName
+                ));
+        logger.info("[publishLatestAutomationUpdate] fetched AutomationMode with {} modes",
+                am.getAutomation_Modes().size());
+
+        // 4) Build the JSON payload
+        Map<String, Object> root = new LinkedHashMap<>();
+        root.put("command", "update_automation_mode");
+
+        List<Map<String, Object>> modesList = new ArrayList<>();
+        for (ModeDetail m : am.getAutomation_Modes()) {
+            if (!m.getModeName().equals(targetModeName)) continue;
+            Map<String, Object> modeMap = new LinkedHashMap<>();
+            modeMap.put("Mode_Name", m.getModeName());
+            modeMap.put("Areas", areaService
+                    .getArea(username, roomName)
+                    .orElse(new Area())
+                    .getAreas());
+            modeMap.put("Rules", m.getRules());
+            modesList.add(modeMap);
+            break;
+        }
+
+        if (modesList.isEmpty()) {
+            logger.warn("[publishLatestAutomationUpdate] no matching mode '{}' for {}/{}",
+                    targetModeName, username, roomName);
+            throw new RuntimeException(
+                    String.format("Mode '%s' not found for user='%s', room='%s'",
+                            targetModeName, username, roomName)
+            );
+        }
+        logger.info("[publishLatestAutomationUpdate] built modesList size = {}",
+                modesList.size());
+
+        root.put(
+                "payload",
+                modesList.size() == 1
+                        ? modesList.get(0)
+                        : Collections.singletonMap("Modes", modesList)
+        );
+
+        String json;
+        try {
+            json = objectMapper.writeValueAsString(root);
+        } catch (JsonProcessingException e) {
+            logger.error("[publishLatestAutomationUpdate] JSON serialization failed", e);
+            throw new RuntimeException("Failed to serialize MQTT payload", e);
+        }
+        logger.info("[publishLatestAutomationUpdate] payload JSON = {}", json);
+
+        // 5) Publish
+        awsIotPubSubService.publish(targetTopic, json);
+        logger.info("[publishLatestAutomationUpdate] successfully published to {}",
+                targetTopic);
     }
 }

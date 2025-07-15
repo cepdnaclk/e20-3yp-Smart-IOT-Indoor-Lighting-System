@@ -74,15 +74,10 @@ public class MqttController {
 
     @PostMapping("/publish/any")
     public ResponseEntity<?> publishMessage(@RequestBody Map<String, Object> body) {
-        try {
-            String topic = (String) body.get("topic");
-            String message = (String) body.get("message");
-            pubSubService.publish(topic, message);
-            return ResponseEntity.ok("Message published");
-        } catch (ExecutionException | InterruptedException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Failed to publish message: " + e.getMessage());
-        }
+        String topic = (String) body.get("topic");
+        String message = (String) body.get("message");
+        pubSubService.publish(topic, message);
+        return ResponseEntity.ok("Message published");
     }
 
     @PostMapping("/publish")
