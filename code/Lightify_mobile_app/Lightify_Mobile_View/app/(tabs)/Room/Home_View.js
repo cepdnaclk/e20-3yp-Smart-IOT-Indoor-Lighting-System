@@ -2453,9 +2453,9 @@ const publishDirectLightSet = async (allSections, sectionIndex) => {
 
   try {
     await axiosClient.post(fullUrl, payload);
-    console.log("✅ direct_light_set sent:", payload);
+    // console.log("✅ direct_light_set sent:", payload);
   } catch (err) {
-    console.error("❌ Error sending direct_light_set:", err);
+    // console.error("❌ Error sending direct_light_set:", err);
   }
 };
 
@@ -2606,7 +2606,7 @@ const SmartHomeDashboard = () => {
           );
         });
       } catch (err) {
-        console.error("Error fetching wishlist rooms:", err);
+        // console.error("Error fetching wishlist rooms:", err);
       }
     };
 
