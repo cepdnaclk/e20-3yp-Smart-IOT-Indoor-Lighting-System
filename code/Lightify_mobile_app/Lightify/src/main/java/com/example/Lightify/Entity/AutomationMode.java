@@ -18,4 +18,5 @@ public class AutomationMode {
     private String username;
     private String roomName;
     private List<ModeDetail> Automation_Modes;
+    private String currentlyActivatedMode;
 }

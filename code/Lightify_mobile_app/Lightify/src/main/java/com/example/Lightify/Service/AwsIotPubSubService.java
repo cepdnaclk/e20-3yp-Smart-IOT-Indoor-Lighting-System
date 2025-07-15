@@ -79,17 +79,28 @@ public class AwsIotPubSubService {
     public void init() throws IOException, ExecutionException, InterruptedException {
         String certAbsolutePath;
         String keyAbsolutePath;
+        String caAbsolutePath = null;
 
-        if (certificatePath.startsWith("/") || certificatePath.contains(":/")) {
-            // Use raw absolute path for EC2 or Windows
+        boolean useAbsolutePath = certificatePath.startsWith("/") || certificatePath.contains(":/");
+
+        if (useAbsolutePath) {
+            // EC2 or local absolute path
             certAbsolutePath = certificatePath;
             keyAbsolutePath = privateKeyPath;
+            if (certificateAuthorityPath != null && !certificateAuthorityPath.isEmpty()) {
+                caAbsolutePath = certificateAuthorityPath;
+            }
         } else {
-            // Use classpath resource for local dev
+            // Local dev using classpath
             Resource certResource = new ClassPathResource(certificatePath);
             Resource keyResource = new ClassPathResource(privateKeyPath);
             certAbsolutePath = certResource.getFile().getAbsolutePath();
             keyAbsolutePath = keyResource.getFile().getAbsolutePath();
+
+            if (certificateAuthorityPath != null && !certificateAuthorityPath.isEmpty()) {
+                Resource caResource = new ClassPathResource(certificateAuthorityPath);
+                caAbsolutePath = caResource.getFile().getAbsolutePath();
+            }
         }
 
         AwsIotMqttConnectionBuilder builder =
@@ -101,17 +112,83 @@ public class AwsIotPubSubService {
                 .withCleanSession(cleanSession)
                 .withProtocolOperationTimeoutMs(protocolTimeoutMs);
 
-        if (certificateAuthorityPath != null && !certificateAuthorityPath.isEmpty()) {
-            builder.withCertificateAuthorityFromPath(null, certificateAuthorityPath);
+        if (caAbsolutePath != null && !caAbsolutePath.isEmpty()) {
+            builder.withCertificateAuthorityFromPath(null, caAbsolutePath);
         }
 
-//        // Convert classpath resources to file paths so that the native SDK can read them.
-//        Resource certResource = new ClassPathResource(certificatePath);
-//        Resource keyResource  = new ClassPathResource(privateKeyPath);
-//        String certAbsolutePath = certResource.getFile().getAbsolutePath();
-//        String keyAbsolutePath  = keyResource.getFile().getAbsolutePath();
+        if (proxyHost != null && !proxyHost.isEmpty() && proxyPort > 0) {
+            HttpProxyOptions proxyOptions = new HttpProxyOptions();
+            proxyOptions.setHost(proxyHost);
+            proxyOptions.setPort(proxyPort);
+            builder.withHttpProxyOptions(proxyOptions);
+        }
+
+        builder.withConnectionEventCallbacks(new MqttClientConnectionEvents() {
+            @Override
+            public void onConnectionInterrupted(int errorCode) {
+                if (errorCode != 0) {
+                    logger.error("Connection interrupted: {}", errorCode);
+                }
+            }
+
+            @Override
+            public void onConnectionResumed(boolean sessionPresent) {
+                logger.info("Connection resumed: {}", sessionPresent ? "existing session" : "clean session");
+                if (!sessionPresent) {
+                    List<Topic> topics = topicRepository.findAll();
+                    for (Topic t : topics) {
+                        for (String suffix : new String[]{"/esp_to_backend", "/request_rule_from_backend"}) {
+                            String fullTopic = t.getTopicString() + suffix;
+                            try {
+                                subscribe(fullTopic);
+                                logger.info("Re-subscribed to topic: {}", fullTopic);
+                            } catch (Exception e) {
+                                logger.error("Error re-subscribing to topic {}: {}", fullTopic, e.getMessage());
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        connection = builder.build();
+        builder.close();
+
+        CompletableFuture<Boolean> connectedFuture = connection.connect();
+        boolean sessionPresent = connectedFuture.get();
+        logger.info("Connected to {} session!", (!sessionPresent ? "new" : "existing"));
+
+        List<Topic> topics = topicRepository.findAll();
+        for (Topic t : topics) {
+            for (String suffix : new String[]{"/esp_to_backend", "/request_rule_from_backend"}) {
+                String fullTopic = t.getTopicString() + suffix;
+                try {
+                    subscribe(fullTopic);
+                    logger.info("Automatically subscribed to topic: {}", fullTopic);
+                } catch (Exception e) {
+                    logger.error("Error subscribing automatically to topic {}: {}", fullTopic, e.getMessage());
+                }
+            }
+        }
+    }
+
+//    @PostConstruct
+//    public void init() throws IOException, ExecutionException, InterruptedException {
+//        String certAbsolutePath;
+//        String keyAbsolutePath;
 //
-//        // Build the connection using mutual TLS.
+//        if (certificatePath.startsWith("/") || certificatePath.contains(":/")) {
+//            // Use raw absolute path for EC2 or Windows
+//            certAbsolutePath = certificatePath;
+//            keyAbsolutePath = privateKeyPath;
+//        } else {
+//            // Use classpath resource for local dev
+//            Resource certResource = new ClassPathResource(certificatePath);
+//            Resource keyResource = new ClassPathResource(privateKeyPath);
+//            certAbsolutePath = certResource.getFile().getAbsolutePath();
+//            keyAbsolutePath = keyResource.getFile().getAbsolutePath();
+//        }
+//
 //        AwsIotMqttConnectionBuilder builder =
 //                AwsIotMqttConnectionBuilder.newMtlsBuilderFromPath(certAbsolutePath, keyAbsolutePath);
 //
@@ -121,58 +198,105 @@ public class AwsIotPubSubService {
 //                .withCleanSession(cleanSession)
 //                .withProtocolOperationTimeoutMs(protocolTimeoutMs);
 //
-//        // Optionally load a certificate authority if provided.
 //        if (certificateAuthorityPath != null && !certificateAuthorityPath.isEmpty()) {
-//            Resource caResource = new ClassPathResource(certificateAuthorityPath);
-//            String caAbsolutePath = caResource.getFile().getAbsolutePath();
-//            builder.withCertificateAuthorityFromPath(null, caAbsolutePath);
+//            if (certificateAuthorityPath.startsWith("/") || certificateAuthorityPath.contains(":/")) {
+//                builder.withCertificateAuthorityFromPath(null, certificateAuthorityPath);
+//            } else {
+//                Resource caResource = new ClassPathResource(certificateAuthorityPath);
+//                String caAbsolutePath = caResource.getFile().getAbsolutePath();
+//                builder.withCertificateAuthorityFromPath(null, caAbsolutePath);
+//            }
 //        }
-
-        // Optionally configure proxy settings.
-        if (proxyHost != null && !proxyHost.isEmpty() && proxyPort > 0) {
-            HttpProxyOptions proxyOptions = new HttpProxyOptions();
-            proxyOptions.setHost(proxyHost);
-            proxyOptions.setPort(proxyPort);
-            builder.withHttpProxyOptions(proxyOptions);
-        }
-
-        // Set up connection event callbacks.
-        builder.withConnectionEventCallbacks(new MqttClientConnectionEvents() {
-            @Override
-            public void onConnectionInterrupted(int errorCode) {
-                if (errorCode != 0) {
-                    logger.error("Connection interrupted: {}", errorCode);
-                }
-            }
-            @Override
-            public void onConnectionResumed(boolean sessionPresent) {
-                logger.info("Connection resumed: {}", (sessionPresent ? "existing session" : "clean session"));
-            }
-        });
-
-        // Build the connection and close the builder.
-        connection = builder.build();
-        builder.close();
-
-        // Connect to AWS IoT Core.
-        CompletableFuture<Boolean> connectedFuture = connection.connect();
-        boolean sessionPresent = connectedFuture.get();
-        logger.info("Connected to {} session!", (!sessionPresent ? "new" : "existing"));
-
-        // On initialization, fetch all topics from the database and subscribe to each.
-        List<Topic> topics = topicRepository.findAll();
-        for (Topic t : topics) {
-            String baseTopic = t.getTopicString();
-            String receiveTopic = baseTopic + "/esp_to_backend";
-            logger.info("Fetched base topic: {} → subscribing to: {}", baseTopic, receiveTopic);
-            try {
-                subscribe(receiveTopic);
-                logger.info("Automatically subscribed to topic: {}", receiveTopic);
-            } catch (Exception e) {
-                logger.error("Error subscribing to topic {}: {}", receiveTopic, e.getMessage());
-            }
-        }
-    }
+//
+////        if (certificateAuthorityPath != null && !certificateAuthorityPath.isEmpty()) {
+////            builder.withCertificateAuthorityFromPath(null, certificateAuthorityPath);
+////        }
+//
+////        // Convert classpath resources to file paths so that the native SDK can read them.
+////        Resource certResource = new ClassPathResource(certificatePath);
+////        Resource keyResource  = new ClassPathResource(privateKeyPath);
+////        String certAbsolutePath = certResource.getFile().getAbsolutePath();
+////        String keyAbsolutePath  = keyResource.getFile().getAbsolutePath();
+////
+////        // Build the connection using mutual TLS.
+////        AwsIotMqttConnectionBuilder builder =
+////                AwsIotMqttConnectionBuilder.newMtlsBuilderFromPath(certAbsolutePath, keyAbsolutePath);
+////
+////        builder.withClientId(clientId)
+////                .withEndpoint(endpoint)
+////                .withPort(port)
+////                .withCleanSession(cleanSession)
+////                .withProtocolOperationTimeoutMs(protocolTimeoutMs);
+////
+////        // Optionally load a certificate authority if provided.
+////        if (certificateAuthorityPath != null && !certificateAuthorityPath.isEmpty()) {
+////            Resource caResource = new ClassPathResource(certificateAuthorityPath);
+////            String caAbsolutePath = caResource.getFile().getAbsolutePath();
+////            builder.withCertificateAuthorityFromPath(null, caAbsolutePath);
+////        }
+//
+//        // Optionally configure proxy settings.
+//        if (proxyHost != null && !proxyHost.isEmpty() && proxyPort > 0) {
+//            HttpProxyOptions proxyOptions = new HttpProxyOptions();
+//            proxyOptions.setHost(proxyHost);
+//            proxyOptions.setPort(proxyPort);
+//            builder.withHttpProxyOptions(proxyOptions);
+//        }
+//
+//        // Set up connection event callbacks.
+//        builder.withConnectionEventCallbacks(new MqttClientConnectionEvents() {
+//            @Override
+//            public void onConnectionInterrupted(int errorCode) {
+//                if (errorCode != 0) {
+//                    logger.error("Connection interrupted: {}", errorCode);
+//                }
+//            }
+//            @Override
+//            public void onConnectionResumed(boolean sessionPresent) {
+//                logger.info("Connection resumed: {}", (sessionPresent ? "existing session" : "clean session"));
+//                if (!sessionPresent) {
+//                    // Re-subscribe to topics manually
+//                    List<Topic> topics = topicRepository.findAll();
+//                    for (Topic t : topics) {
+//                        for (String suffix : new String[]{"/esp_to_backend", "/request_rule_from_backend"}) {
+//                            String fullTopic = t.getTopicString() + suffix;
+//                            try {
+//                                subscribe(fullTopic);
+//                                logger.info("Re-subscribed to topic: {}", fullTopic);
+//                            } catch (Exception e) {
+//                                logger.error("Error re-subscribing to topic {}: {}", fullTopic, e.getMessage());
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//
+//        });
+//
+//        // Build the connection and close the builder.
+//        connection = builder.build();
+//        builder.close();
+//
+//        // Connect to AWS IoT Core.
+//        CompletableFuture<Boolean> connectedFuture = connection.connect();
+//        boolean sessionPresent = connectedFuture.get();
+//        logger.info("Connected to {} session!", (!sessionPresent ? "new" : "existing"));
+//
+//        // On initialization, fetch all topics from the database and subscribe to each.
+//        List<Topic> topics = topicRepository.findAll();
+//        for (Topic t : topics) {
+//
+//            for (String suffix : new String[]{"/esp_to_backend", "/request_rule_from_backend"}) {
+//                String fullTopic = t.getTopicString() + suffix;
+//                try {
+//                    subscribe(fullTopic);
+//                    logger.info("Automatically subscribed to topic: {}", fullTopic);
+//                } catch (Exception e) {
+//                    logger.error("Error subscribing automatically to topic {}: {}", fullTopic, e.getMessage());
+//                }
+//            }
+//        }
+//    }
 
     /**
      * Subscribes to the given topic. When a message is received, it is converted from a byte array
@@ -218,12 +342,26 @@ public class AwsIotPubSubService {
     /**
      * Publishes the given payload to the specified topic.
      */
-    public void publish(String topic, String payload) throws InterruptedException, ExecutionException {
+//    public void publish(String topic, String payload) throws InterruptedException, ExecutionException {
+//        byte[] payloadBytes = payload.getBytes(StandardCharsets.UTF_8);
+//        MqttMessage message = new MqttMessage(topic, payloadBytes, QualityOfService.AT_LEAST_ONCE, false);
+//        CompletableFuture<Integer> published = connection.publish(message);
+//        published.get();
+//        logger.info("Published message to topic {}: {}", topic, payload);
+//    }
+
+    public void publish(String topic, String payload) {
         byte[] payloadBytes = payload.getBytes(StandardCharsets.UTF_8);
         MqttMessage message = new MqttMessage(topic, payloadBytes, QualityOfService.AT_LEAST_ONCE, false);
-        CompletableFuture<Integer> published = connection.publish(message);
-        published.get();
-        logger.info("Published message to topic {}: {}", topic, payload);
+
+        connection.publish(message)
+                .whenComplete((packetId, err) -> {
+                    if (err != null) {
+                        logger.error("Publish failed on {}: {}", topic, err.getMessage(), err);
+                    } else {
+                        logger.info("Published message to topic {} (packetId={})", topic, packetId);
+                    }
+                });
     }
 
     /**

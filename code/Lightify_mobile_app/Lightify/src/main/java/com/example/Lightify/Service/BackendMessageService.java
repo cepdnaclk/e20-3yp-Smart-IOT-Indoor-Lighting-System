@@ -1,5 +1,7 @@
 package com.example.Lightify.Service;
 
+import com.example.Lightify.DTO.ActivatedModeInfoDTO;
+import com.example.Lightify.Entity.AutomationMode;
 import com.example.Lightify.Entity.RoomState;
 import com.example.Lightify.Entity.RoomState.BulbInfo;
 import com.example.Lightify.Entity.Topic;
@@ -37,16 +39,20 @@ public class BackendMessageService {
     private final WebsocketIpRepository websocketIpRepository;
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final AwsIotPubSubService awsIotPubSubService;
+    private final AutomationModeService modeService;
+    private final RoomConfigurationService roomConfigService;
 
     public BackendMessageService(
             TopicRepository topicRepository,
             RoomStateRepository roomStateRepository,
-            WebsocketIpRepository websocketIpRepository, AwsIotPubSubService awsIotPubSubService
+            WebsocketIpRepository websocketIpRepository, AwsIotPubSubService awsIotPubSubService, AutomationModeService modeService, RoomConfigurationService roomConfigService
     ) {
         this.topicRepository        = topicRepository;
         this.roomStateRepository    = roomStateRepository;
         this.websocketIpRepository  = websocketIpRepository;
         this.awsIotPubSubService = awsIotPubSubService;
+        this.modeService = modeService;
+        this.roomConfigService = roomConfigService;
     }
 
     /**
@@ -65,7 +71,6 @@ public class BackendMessageService {
                 logger.warn("Ignoring payload with no 'command' field: {}", payloadStr);
                 return;
             }
-
             // 2) Split topic → [ username, macAddress, "esp_to_backend" ]
             //    We assume the topic always has exactly this form.
             String[] parts = fullTopic.split("/");
@@ -84,7 +89,7 @@ public class BackendMessageService {
                 return; // or throw, depending on desired behavior
             }
             String roomName = topicOpt.get().getRoomName();
-
+            logger.warn("command: {}", command);
             // 4) Depending on command, route into RoomState or WebsocketIp
             switch (command) {
                 case "room_state":
@@ -94,7 +99,9 @@ public class BackendMessageService {
                 case "websocket_ip":
                     handleWebsocketIp(username, roomName, root);
                     break;
-
+                case "send_latest_sensor_rules":
+                    handleSendLatestSensorRules(username, roomName);
+                    break;
                 default:
                     logger.warn("Unknown command '{}' in payload: {}", command, payloadStr);
             }
@@ -195,8 +202,10 @@ public class BackendMessageService {
         String topicString = t.getTopicString();
         try {
             awsIotPubSubService.publish(topicString, json);
-        } catch (InterruptedException | ExecutionException ex) {
-            throw new RuntimeException("Failed to publish room_state request to MQTT", ex);
+            logger.info("Requested room_state on topic {}", topicString);
+        } catch (Exception e) {
+            logger.error("Failed to publish room_state request to MQTT on {}: {}",
+                    topicString, e.getMessage(), e);
         }
     }
 
@@ -212,6 +221,37 @@ public class BackendMessageService {
      */
     public Optional<WebsocketIp> getWebsocketIp(String username, String roomName) {
         return websocketIpRepository.findByUsernameAndRoomName(username, roomName);
+    }
+
+    /**
+     * Handles the "send_latest_sensor_rules" command by looking up
+     * the currentlyActivatedMode for (username, roomName) and
+     * publishing the full ruleset.
+     */
+    private void handleSendLatestSensorRules(String username, String roomName) {
+        // 1) fetch the stored AutomationMode
+        logger.warn("Reached handleLatestSensorRule. userName: {} roomName: {}", username,roomName);
+        AutomationMode am = modeService.getAutomationMode(username, roomName)
+                .orElseThrow(() ->
+                        new RuntimeException("No automation mode found for " + username + "/" + roomName)
+                );
+
+        // 2) get the field
+        String activeMode = am.getCurrentlyActivatedMode();
+        if (activeMode == null) {
+            logger.warn("No currentlyActivatedMode set for {}/{}", username, roomName);
+            return;
+        }
+
+        logger.warn("activeMode: {}", activeMode);
+
+        // 3) delegate to RoomConfigurationService to fetch & publish the full ruleset
+        try {
+            roomConfigService.publishLatestAutomationUpdate(username, roomName, activeMode);
+        } catch (InterruptedException | ExecutionException e) {
+            logger.error("Failed to publish latest automation update for {}/{}: {}",
+                    username, roomName, e.getMessage(), e);
+        }
     }
 
     public List<RoomState> getAllRoomStates() {

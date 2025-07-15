@@ -1,8 +1,9 @@
+### Copy the pem key from downloads and grant permission
 sudo cp /mnt/c/Users/drpra/Downloads/lightify-backend-ec2-key.pem ~/.ssh/
 sudo chmod 400 ~/.ssh/lightify-backend-ec2-key.pem
 
 
-ssh -i ~/.ssh/lightify-backend-ec2-key.pem ec2-user@13.49.222.130
+ssh -i ~/.ssh/lightify-backend-ec2-key.pem ubuntu@51.21.223.122
 
 ### Installing JDK ###
 
@@ -35,7 +36,7 @@ cd ~/lightify-backend
 
 #### COPIENG THE .Jar file, Cert folder, application.properties to EC2 #####
 
-✅ 1. Copy the .jar file to EC2
+✅ 1. Copy the .jar file to EC2 (This should be run in plain ubuntu WSL)
 
 scp -i ~/.ssh/lightify-backend-ec2-key.pem \
   "/mnt/c/Users/drpra/OneDrive/Documents/GitHub/e20-3yp-Smart-IOT-Indoor-Lighting-System/code/Lightify_mobile_app/Lightify/target/Lightify-0.0.1-SNAPSHOT.jar" \
@@ -62,7 +63,7 @@ jar tf /mnt/c/Users/drpra/OneDrive/Documents/GitHub/e20-3yp-Smart-IOT-Indoor-Lig
 ✅ 5.On EC2, ensure the JAR is executable (optional but helpful):
 
 cd ~/lightify-backend
-chmod +x lightify-backend-0.0.1-SNAPSHOT.jar
+chmod +x Lightify-0.0.1-SNAPSHOT.jar
 
 ✅ From anywhere in your EC2 terminal:
 
