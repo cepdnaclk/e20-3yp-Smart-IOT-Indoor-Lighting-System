@@ -377,6 +377,48 @@
           margin-bottom: 0.5rem;
         }
 
+      /* High‑Level Architecture & Data Flow */
+      .hl-architecture-container {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        gap: 2rem;
+        justify-content: center;
+        background: #1f1f1f;
+        padding: 2rem;
+        border-radius: 8px;
+      }
+      
+      .hl-arch-img {
+        width: 300px;
+        max-width: 100%;
+        border-radius: 8px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+      }
+      
+      .hl-architecture-text {
+        max-width: 600px;
+        text-align: left;
+        color: #e0e0e0;
+      }
+      
+      .hl-architecture-text h3 {
+        color: #ffc107;
+        margin: 1rem 0 0.5rem;
+      }
+      
+      .hl-architecture-text ul {
+        list-style-type: disc;
+        padding-left: 1.2rem;
+        margin-bottom: 1rem;
+      }
+      
+      .hl-architecture-text ul li {
+        margin-bottom: 0.5rem;
+        line-height: 1.5;
+      }
+
+
 
       /* Footer */
       footer {
@@ -596,35 +638,56 @@
   </section>
 
 </section>
-<!-- High-Level Architecture Section -->
+<!-- High‑Level Architecture & Data Flow -->
 <section id="high-level-architecture">
   <h2>High-Level Architecture & Data Flow</h2>
-  <div class="screenshots">
-    <div>
-      <img
-        src="images/HighLevelArchitecture.png"
-        alt="High-Level Architecture"
-      />
-      <h3>Automation Data Flow and Architecture</h3>
+
+  <div class="hl-architecture-container">
+    <!-- Smaller diagram -->
+    <img
+      src="images/HighLevelArchitecture.png"
+      alt="High‑Level Architecture"
+      class="hl-arch-img"
+    />
+
+    <!-- Text card -->
+    <div class="hl-architecture-text">
+      <p>
+        The Lightify system works by integrating multiple ESP32 devices that
+        communicate wirelessly for controlling lighting, automating processes,
+        and monitoring the environment. Below is an overview of how the system
+        functions:
+      </p>
+
+      <h3>Data Flow</h3>
+      <ul>
+        <li>
+          <strong>Sensor Unit (ESP32 + mm Wave Radar):</strong> Detects movement
+          or presence and sends X, Y coordinates to control units.
+        </li>
+        <li>
+          <strong>Control Units (ESP32):</strong> Manage lights based on sensor
+          data and execute automation rules.
+        </li>
+        <li>
+          <strong>Central Hub (Home Wi‑Fi):</strong> Orchestrates control units
+          and connects to the cloud for remote management.
+        </li>
+        <li>
+          <strong>Mobile App:</strong> Provides a user interface for real‑time
+          control, scheduling, and status monitoring from anywhere.
+        </li>
+      </ul>
+
+      <p>
+        This architecture ensures a reliable, automated, and user‑friendly
+        system where each part communicates seamlessly to enhance the smart
+        indoor lighting experience.
+      </p>
     </div>
   </div>
-
-  <p>
-    The Lightify system works by integrating multiple ESP32 devices that communicate wirelessly for controlling lighting, automating processes, and monitoring the environment. Below is an overview of how the system functions:
-  </p>
-
-  <h3>Data Flow</h3>
-  <ul>
-    <li><strong>Sensor Unit (ESP32 + mm Wave Radar):</strong> The sensor unit detects movements or presence in the room. It continuously sends X, Y coordinates of the detected object to the control units.</li>
-    <li><strong>Control Units (ESP32):</strong> The control units receive the sensor data and manage the lighting and automation rules based on the received information. They also communicate with the central hub for processing.</li>
-    <li><strong>Central Hub (Home Wi-Fi):</strong> This hub connects the control units via the local Wi-Fi network, ensuring smooth communication across devices. It also facilitates communication with the cloud system for cloud-based management and remote control.</li>
-    <li><strong>Mobile App:</strong> The mobile app serves as a user interface, allowing the user to control the lighting, set schedules, and view real-time sensor data remotely from anywhere, leveraging cloud access.</li>
-  </ul>
-
-  <p>
-    This architecture ensures a reliable, automated, and user-friendly system where each part communicates seamlessly to enhance the smart indoor lighting experience.
-  </p>
 </section>
+
 
       <section id="tech-stack">
   <h2>Technology Stack</h2>
