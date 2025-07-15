@@ -247,6 +247,73 @@
         font-size: 1rem;
         color: #ffc107;
       }
+      .member-info {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+        
+        .member-info img {
+          width: 80px;
+          height: 80px;
+          border-radius: 50%;
+          object-fit: cover;
+          margin-left: 1rem;
+          border: 2px solid #ffc107;
+        }
+      .member-info img:hover {
+          transform: scale(1.05);
+          transition: transform 0.3s ease;
+        }
+
+      #architecture {
+        padding: 2rem 1rem;
+        background-color: #121212;
+        text-align: center;
+      }
+      
+      #architecture h2 {
+        font-size: 2rem;
+        margin-bottom: 2rem;
+        color: #ffffff;
+        border-bottom: 2px solid #ffc107;
+        display: inline-block;
+        padding-bottom: 0.3rem;
+      }
+      
+      .feature-grid {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 2rem;
+      }
+      
+      .feature-card {
+        background-color: #1f1f1f;
+        color: #ffffff;
+        border: 1px solid #ff4f4f;
+        border-radius: 12px;
+        padding: 1.5rem;
+        width: 300px;
+        box-shadow: 0 0 12px rgba(255, 79, 79, 0.3);
+        transition: transform 0.3s ease;
+      }
+      
+      .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0 18px rgba(255, 79, 79, 0.6);
+      }
+      
+      .feature-card h3 {
+        color: #ff4f4f;
+        margin-bottom: 0.8rem;
+        font-size: 1.2rem;
+      }
+      
+      .feature-card p {
+        font-size: 0.95rem;
+        line-height: 1.4;
+      }
 
       /* Footer */
       footer {
@@ -280,7 +347,6 @@
       <nav>
         <div class="nav-left">
           <img src="images/Logo_white.png" alt="Lightify Logo" />
-          <div class="logo-text">Lightify</div>
         </div>
         <ul class="nav-links">
           <li><a href="#team">Team</a></li>
@@ -327,20 +393,40 @@
         <h2>Our Team</h2>
         <ul>
           <li>
-            <strong>E/20/262:</strong> Tharindu Lakshan
-            <a href="mailto:e20262@eng.pdn.ac.lk">e20262@eng.pdn.ac.lk</a>
+            <div class="member-info">
+              <div>
+                <strong>E/20/262:</strong> Tharindu Lakshan<br />
+                <a href="mailto:e20262@eng.pdn.ac.lk">e20262@eng.pdn.ac.lk</a>
+              </div>
+              <img src="images/tharindu.jpg" alt="Tharindu Lakshan" />
+            </div>
           </li>
           <li>
-            <strong>E/20/266:</strong> Pradeep Nilupul
-            <a href="mailto:e20266@eng.pdn.ac.lk">e20266@eng.pdn.ac.lk</a>
+            <div class="member-info">
+              <div>
+                <strong>E/20/266:</strong> Pradeep Nilupul<br />
+                <a href="mailto:e20266@eng.pdn.ac.lk">e20266@eng.pdn.ac.lk</a>
+              </div>
+              <img src="images/pradeep.jpg" alt="Pradeep Nilupul" />
+            </div>
           </li>
           <li>
-            <strong>E/20/449:</strong> Sandaru Wijewardhana
-            <a href="mailto:e20449@eng.pdn.ac.lk">e20449@eng.pdn.ac.lk</a>
+            <div class="member-info">
+              <div>
+                <strong>E/20/449:</strong> Sandaru Wijewardhana<br />
+                <a href="mailto:e20449@eng.pdn.ac.lk">e20449@eng.pdn.ac.lk</a>
+              </div>
+              <img src="images/sandaru.jpg" alt="Sandaru Wijewardhana" />
+            </div>
           </li>
           <li>
-            <strong>E/20/288:</strong> Chalaka Perera
-            <a href="mailto:e20288@eng.pdn.ac.lk">e20288@eng.pdn.ac.lk</a>
+            <div class="member-info">
+              <div>
+                <strong>E/20/288:</strong> Chalaka Perera<br />
+                <a href="mailto:e20288@eng.pdn.ac.lk">e20288@eng.pdn.ac.lk</a>
+              </div>
+              <img src="images/chalaka.jpg" alt="Chalaka Perera" />
+            </div>
           </li>
         </ul>
       </section>
@@ -389,15 +475,35 @@
   </div>
 
   <!-- Our Solutions Architecture -->
+  <section id="architecture">
   <h2>Our Solutions Architecture</h2>
-  <ul>
-    <li><strong>Light Intensity Control:</strong> Adjust lights individually or in groups, with automatic intensity changes.</li>
-    <li><strong>Prevent Unnecessary Deactivations:</strong> Advanced sensors detect micro movements to keep lights active.</li>
-    <li><strong>Smart Scheduling:</strong> Set custom on/off times and adjust intensity via the app.</li>
-    <li><strong>Modes:</strong> Introduces different lighting modes for user convenience.</li>
-    <li><strong>Global Accessibility:</strong> Control lights remotely via a mobile app.</li>
-    <li><strong>Automation & Convenience:</strong> Enhances user experience with intelligent automation.</li>
-  </ul>
+  <div class="feature-grid">
+    <div class="feature-card">
+      <h3>Light Intensity Control</h3>
+      <p>Adjust lights individually or in groups, with automatic intensity changes.</p>
+    </div>
+    <div class="feature-card">
+      <h3>Prevent Unnecessary Deactivations</h3>
+      <p>Advanced sensors detect micro movements to keep lights active.</p>
+    </div>
+    <div class="feature-card">
+      <h3>Smart Scheduling</h3>
+      <p>Set custom on/off times and adjust intensity via the app.</p>
+    </div>
+    <div class="feature-card">
+      <h3>Modes</h3>
+      <p>Introduces different lighting modes for user convenience.</p>
+    </div>
+    <div class="feature-card">
+      <h3>Global Accessibility</h3>
+      <p>Control lights remotely via a mobile app.</p>
+    </div>
+    <div class="feature-card">
+      <h3>Automation & Convenience</h3>
+      <p>Enhances user experience with intelligent automation.</p>
+    </div>
+  </div>
+</section>
 
   <!-- Components & Data Flow -->
   <h2>Components & Data Flow</h2>
