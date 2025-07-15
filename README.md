@@ -11,7 +11,6 @@
 | Component        | Description                                                                         |
 |------------------|-------------------------------------------------------------------------------------|
 | **Control Unit** | ESP32 + 4‑channel AC dimmer circuit for real‑time light intensity control.         |
-| **Central Hub**  | ESP32/Raspberry Pi hub managing schedules, cloud communication & WebSockets.        |
 | **Sensor Unit**  | ESP32 + RD‑03D mm‑wave radar + VEML7700 ambient‑light + humidity sensors.           |
 
 
