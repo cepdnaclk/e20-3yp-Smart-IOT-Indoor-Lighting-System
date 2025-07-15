@@ -4,13 +4,6 @@
 
 **Lightify** is a next‑generation home and commercial lighting solution that combines advanced sensor technologies, cloud connectivity, and automation to deliver adaptive, personalized illumination. By continuously detecting human presence and position via ultrasonic and millimeter‑wave sensors, it dynamically adjusts light intensity only where needed, drastically cutting energy waste. Thermal imaging further enables sleep‑mode dimming—gently reducing brightness when occupants rest and smoothly brightening as they awaken. Remote access through a React Native mobile app gives users full global control. Overall, Lightify enhances comfort and fits seamlessly into modern smart homes and offices.
 
-**Scope & Audience**  
-This document is intended for:
-- **Hardware Engineers** assembling and wiring ESP32 modules, sensors and driver circuits.  
-- **Firmware Developers** implementing real‑time position detection, sensor fusion and WebSocket stacks on ESP32.  
-- **Cloud & Backend Teams** provisioning AWS IoT Core, writing Lambda functions, modeling data in MongoDB Atlas, and developing Spring Boot APIs.  
-- **Mobile App Developers** building the React Native client, including device pairing flows, state management and voice‑assistant integration.
-
 ---
 
 ## 2. Project Overview
@@ -21,13 +14,6 @@ This document is intended for:
 | **Central Hub**  | ESP32/Raspberry Pi hub managing schedules, cloud communication & WebSockets.        |
 | **Sensor Unit**  | ESP32 + RD‑03D mm‑wave radar + VEML7700 ambient‑light + humidity sensors.           |
 
-### Architecture Diagrams
-
-<p align="center">
-  <img src="images/SolutionArchitecture.png" alt="Solution Architecture" width="200"/>
-  <img src="images/Components&DataFlow.png" alt="Components & Data Flow" width="200"/>
-  <img src="images/Components&DataFlowExplained.png" alt="Components & Data Flow Explained" width="200"/>
-</p>
 
 ---
 
@@ -41,9 +27,7 @@ This document is intended for:
 | **E/20/288**| Chalaka Perera               | <e20288@eng.pdn.ac.lk>                 |
 
 **Supervisors**  
-- Dr. Firstname Lastname – firstname.lastname@eng.pdn.ac.lk  
-- Dr. Firstname Lastname – firstname.lastname@eng.pdn.ac.lk
-
+- Dr. Isuru Navinne – "isurunawinne@eng.pdn.ac.lk"   
 ---
 
 ## 4. Objectives
@@ -66,8 +50,6 @@ This document is intended for:
 - **Ultrasonic & mm‑Wave Detection**  
   - Ultrasonic (RD‑03D): precise distance measurements.  
   - 24 GHz FMCW radar: angle & range resolution for position tracking.  
-- **Thermal Imaging**  
-  - IR sensor dims lights when occupants are at rest.  
 - **Control Unit**  
   - ESP32‑WROOM‑32 for local scheduling & fallback routines.  
   - 4‑channel AC dimmer (MOSFET based) for per‑bulb PWM control.  
@@ -88,7 +70,7 @@ This document is intended for:
   - **Rekognition**: facial recognition for personalized voice greetings.  
   - **S3**: stores profile images.  
 - **Mobile**  
-  - Firebase Auth (email/password, Google).  
+  - Used react native.
   - QR code for network credentials (`react-native-qrcode-svg`).  
   - OTA updates via Expo EAS.
 
