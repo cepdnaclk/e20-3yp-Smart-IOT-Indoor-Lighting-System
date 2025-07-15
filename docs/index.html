@@ -376,6 +376,35 @@
           color: #121212;
         }
 
+      /* Mobile App Gallery */
+      #app-gallery {
+        margin-bottom: 3rem;
+        text-align: center;
+      }
+      #app-gallery h2 {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+        color: #ffffff;
+        border-bottom: 2px solid #ffc107;
+        display: inline-block;
+        padding-bottom: 0.2rem;
+      }
+      .gallery-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1.5rem;
+        margin-top: 1rem;
+      }
+      .gallery-item img {
+        width: 100%;
+        border-radius: 8px;
+        transition: transform 0.3s ease;
+      }
+      .gallery-item img:hover {
+        transform: scale(1.05);
+      }
+
+
 
 
       /* Footer */
@@ -652,6 +681,25 @@
         </ul>
       </section>
 
+      <!-- Mobile App Gallery -->
+      <section id="app-gallery">
+        <h2>Mobile App Gallery</h2>
+        <div class="gallery-grid">
+          <div class="gallery-item">
+            <img src="images/app-screen1.png" alt="App Screenshot 1" />
+          </div>
+          <div class="gallery-item">
+            <img src="images/app-screen2.png" alt="App Screenshot 2" />
+          </div>
+          <div class="gallery-item">
+            <img src="images/app-screen3.png" alt="App Screenshot 3" />
+          </div>
+          <div class="gallery-item">
+            <img src="images/app-screen4.png" alt="App Screenshot 4" />
+          </div>
+        </div>
+      </section>
+
       <!-- Technology Stack -->
       <section id="tech-stack">
         <h2>Technology Stack</h2>
@@ -714,8 +762,8 @@
             <tr>
               <td>4‑channel AC dimmer circuit</td>
               <td>1</td>
-              <td>1,000</td>
-              <td>1,000</td>
+              <td>2,800</td>
+              <td>2,800</td>
             </tr>
             <tr>
               <td>RD‑03D mm Wave Radar</td>
@@ -739,7 +787,7 @@
           <tfoot>
             <tr>
               <td colspan="3">Total</td>
-              <td>7,750</td>
+              <td>9,550</td>
             </tr>
           </tfoot>
         </table>
