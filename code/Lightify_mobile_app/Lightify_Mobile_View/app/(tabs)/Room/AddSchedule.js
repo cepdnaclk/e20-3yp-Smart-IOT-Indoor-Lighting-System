@@ -1534,26 +1534,26 @@ const SchedulePage = () => {
         )}
 
         {/* Schedule Type */}
-        <Text style={styles.label}>Schedule Type</Text>
-        <View style={styles.typeContainer}>
-          {["permanent", "non_permanent"].map((type) => (
-            <TouchableOpacity
-              key={type}
-              style={[
-                styles.typeOption,
-                scheduleType === type && {
-                  borderColor: "#FFD700",
-                  backgroundColor: "#333"
-                }
-              ]}
-              onPress={() => setScheduleType(type)}
-            >
-              <Text style={{ color: "#FFF", fontWeight: "bold" }}>
-                {type.replace("_", " ").toUpperCase()}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+          <Text style={styles.label}>Schedule Type</Text>
+          <View style={styles.typeContainer}>
+            {["permanent", "non_permanent"].map((type) => (
+              <TouchableOpacity
+                key={type}
+                style={[
+                  styles.typeOption,
+                  scheduleType === type && {
+                    borderColor: "#FFD700",
+                    backgroundColor: "#333"
+                  }
+                ]}
+                onPress={() => setScheduleType(type)}
+              >
+                <Text style={{ color: "#FFF", fontWeight: "bold" }}>
+                  {type === "non_permanent" ? "TEMPORARILY" : "PERMANENT"}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
 
         {/* Working Period (only if non_permanent) */}
         {scheduleType === "non_permanent" && (
