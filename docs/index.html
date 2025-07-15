@@ -315,6 +315,69 @@
         line-height: 1.4;
       }
 
+      #components {
+          background-color: #121212;
+          padding: 2rem 1rem;
+          text-align: center;
+        }
+        
+        #components h2 {
+          font-size: 2rem;
+          color: #ffc107;
+          border-bottom: 2px solid #ffc107;
+          display: inline-block;
+          padding-bottom: 0.3rem;
+          margin-bottom: 2rem;
+        }
+        
+        .component-grid {
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: center;
+          gap: 2rem;
+        }
+        
+        .component-card {
+          background-color: #1f1f1f;
+          color: #ffffff;
+          border: 1px solid #444;
+          border-radius: 12px;
+          width: 340px;
+          padding: 1.5rem;
+          box-shadow: 0 0 10px rgba(255, 193, 7, 0.15);
+          transition: transform 0.3s ease;
+          text-align: left;
+        }
+        
+        .component-card:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 0 20px rgba(255, 193, 7, 0.4);
+        }
+        
+        .component-card img {
+          width: 100%;
+          border-radius: 8px;
+          margin-bottom: 1rem;
+        }
+        
+        .component-card h3 {
+          color: #ffc107;
+          font-size: 1.3rem;
+          margin-bottom: 0.8rem;
+        }
+        
+        .component-card ul {
+          padding-left: 1.2rem;
+          list-style-type: disc;
+        }
+        
+        .component-card ul li {
+          font-size: 0.95rem;
+          line-height: 1.5;
+          margin-bottom: 0.5rem;
+        }
+
+
       /* Footer */
       footer {
         background: #1f1f1f;
@@ -506,25 +569,32 @@
 </section>
 
   <!-- Components & Data Flow -->
-  <h2>Components & Data Flow</h2>
-  <h3>Room-Level Network (Sensors)</h3>
-  <ul>
-    <li>Sensor Units (ESP32 + RD-03D sensor) send data to the Control Unit.</li>
-    <li>Multiple sensor units per room for better coverage.</li>
-  </ul>
-  <div class="components-images">
-    <img src="images/Sensor.jpg" alt="ESP32 Sensor Unit" />
-  </div>
-
-  <h3>Control Unit (Lighting Control)</h3>
-  <ul>
-    <li>Control Units (ESP32 + AC dimmer circuit) manage lights.</li>
-    <li>Can turn on/off, dim lights, and receive sensor data.</li>
-    <li>Replaces traditional switches.</li>
-  </ul>
-    <div class="components-images">
-      <img src="images/acdimmer.jpg" alt="ESP32 Dimmer Circuit" />
+  <section id="components">
+    <h2>Components & Data Flow</h2>
+    <div class="component-grid">
+      <!-- Sensor Unit Card -->
+      <div class="component-card">
+        <img src="images/Sensor.jpg" alt="ESP32 Sensor Unit" />
+        <h3>Room-Level Network (Sensors)</h3>
+        <ul>
+          <li>ESP32 + RD-03D sensor units send presence data to the Control Unit.</li>
+          <li>Multiple sensors per room ensure comprehensive coverage.</li>
+        </ul>
+      </div>
+  
+      <!-- Control Unit Card -->
+      <div class="component-card">
+        <img src="images/acdimmer.jpg" alt="ESP32 Dimmer Circuit" />
+        <h3>Control Unit (Lighting Control)</h3>
+        <ul>
+          <li>ESP32 + AC dimmer circuit to manage and dim lights.</li>
+          <li>Receives sensor data to automate lighting decisions.</li>
+          <li>Replaces traditional wall switches with smart automation.</li>
+        </ul>
+      </div>
     </div>
+  </section>
+
 </section>
 <!-- High-Level Architecture Section -->
 <section id="high-level-architecture">
