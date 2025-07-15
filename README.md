@@ -1,103 +1,137 @@
-# Lightify - Smart Indoor Light Control & Automation System
+# Lightify – Smart Indoor Light Control & Automation System
 
-Lightify is a Smart Indoor Light Control & Automation System designed to transform any indoor space into an intelligent, automated environment. Our system offers motion-based lighting activation, zone-specific lighting control, and app-based management, providing convenience, energy efficiency, and modern automation.
+## 1. Introduction
 
----
+**Lightify** is a next‑generation home and commercial lighting solution that combines advanced sensor technologies, cloud connectivity, and automation to deliver adaptive, personalized illumination. By continuously detecting human presence and position via ultrasonic and millimeter‑wave sensors, it dynamically adjusts light intensity only where needed, drastically cutting energy waste. Thermal imaging further enables sleep‑mode dimming—gently reducing brightness when occupants rest and smoothly brightening as they awaken. Remote access through a React Native mobile app gives users full global control. Overall, Lightify enhances comfort and fits seamlessly into modern smart homes and offices.
 
-## Project Overview
-
-The project involves developing an embedded system that integrates smart lighting solutions with IoT technology. Key features include:
-- **Motion-based lighting activation** to save energy.
-- **Zone-specific lighting control** for customized lighting environments.
-- **App-based control** for ease of access and management.
-
-This repository contains all necessary files and documentation related to the project.
+**Scope & Audience**  
+This document is intended for:
+- **Hardware Engineers** assembling and wiring ESP32 modules, sensors and driver circuits.  
+- **Firmware Developers** implementing real‑time position detection, sensor fusion and WebSocket stacks on ESP32.  
+- **Cloud & Backend Teams** provisioning AWS IoT Core, writing Lambda functions, modeling data in MongoDB Atlas, and developing Spring Boot APIs.  
+- **Mobile App Developers** building the React Native client, including device pairing flows, state management and voice‑assistant integration.
 
 ---
 
-## Team Members
-- **E/20/262:** Tharindu Lakshan ([e20262@eng.pdn.ac.lk](mailto:e20262@eng.pdn.ac.lk))
-- **E/20/266:** Pradeep Nilupul ([e20266@eng.pdn.ac.lk](mailto:e20266@eng.pdn.ac.lk))
-- **E/20/449:** Sandaru Wijewardhana ([e20449@eng.pdn.ac.lk](mailto:e20449@eng.pdn.ac.lk))
-- **E/20/288:** Chalaka Perera ([e20288@eng.pdn.ac.lk](mailto:e20288@eng.pdn.ac.lk))
+## 2. Project Overview
 
----
-
-## Solution Architecture & Components
-
-The system comprises three main components:
-- **Control Unit:** ESP32 and AC dimmer circuit for light control.
-- **Central Hub:** Manages communication and overall control.
-- **Sensor Unit:** Includes humidity, radar, and ambient light sensors.
+| Component        | Description                                                                         |
+|------------------|-------------------------------------------------------------------------------------|
+| **Control Unit** | ESP32 + 4‑channel AC dimmer circuit for real‑time light intensity control.         |
+| **Central Hub**  | ESP32/Raspberry Pi hub managing schedules, cloud communication & WebSockets.        |
+| **Sensor Unit**  | ESP32 + RD‑03D mm‑wave radar + VEML7700 ambient‑light + humidity sensors.           |
 
 ### Architecture Diagrams
-- ![Solution Architecture](images/SolutionArchitecture.png)
-- ![Components & Data Flow](images/Components&DataFlow.png)
-- ![Components & Data Flow Explained](images/Components&DataFlowExplained.png)
+
+<p align="center">
+  <img src="images/SolutionArchitecture.png" alt="Solution Architecture" width="200"/>
+  <img src="images/Components&DataFlow.png" alt="Components & Data Flow" width="200"/>
+  <img src="images/Components&DataFlowExplained.png" alt="Components & Data Flow Explained" width="200"/>
+</p>
 
 ---
 
-## Budget
+## 3. Team Members
 
-- **Control Unit:**
-  - ESP32 = LKR 1200
-  - 4-channel AC dimmer circuit = LKR 1000
-- **Central Hub:**
-  - ESP32 and other components = LKR 3000
-- **Sensor Unit:**
-  - Humidity Sensor = LKR 500
-  - RD-03D mm wave radar sensor = LKR 1250
-  - VEML7700 Ambient light sensor = LKR 1200
+| Student No. | Name                         | Email                                  |
+|------------:|------------------------------|----------------------------------------|
+| **E/20/262**| Tharindu Lakshan             | <e20262@eng.pdn.ac.lk>                 |
+| **E/20/266**| Pradeep Nilupul              | <e20266@eng.pdn.ac.lk>                 |
+| **E/20/449**| Sandaru Wijewardhana         | <e20449@eng.pdn.ac.lk>                 |
+| **E/20/288**| Chalaka Perera               | <e20288@eng.pdn.ac.lk>                 |
 
-**Total cost per unit: LKR 8150**
-
----
-
-## Useful Links
-- [Project Repository](https://github.com/cepdnaclk/e20-3yp-Smart-IOT-Indoor-Lighting-System)
-- [Project Page](https://cepdnaclk.github.io/e20-3yp-Smart-IOT-Indoor-Lighting-System)
+**Supervisors**  
+- Dr. Firstname Lastname – firstname.lastname@eng.pdn.ac.lk  
+- Dr. Firstname Lastname – firstname.lastname@eng.pdn.ac.lk
 
 ---
 
-This project is part of the Embedded Systems module at the Department of Computer Engineering, University of Peradeniya.
+## 4. Objectives
 
+1. **Adaptive Illumination**  
+   Real‑time human position detection & dynamic intensity adjustment.
+2. **Energy Efficiency**  
+   Zone‑specific lighting & sleep‑mode dimming to minimize waste.
+3. **Seamless Control**  
+   Mobile app and cloud‑based scheduling for on/off and brightness presets.
+4. **User Comfort**  
+   Personalized experience with motion‑based and voice‑activated modes.
 
-```
-{
-  "title": "This is the title of the project",
-  "team": [
-    {
-      "name": "Team Member Name 1",
-      "email": "email@eng.pdn.ac.lk",
-      "eNumber": "E/yy/xxx"
-    },
-    {
-      "name": "Team Member Name 2",
-      "email": "email@eng.pdn.ac.lk",
-      "eNumber": "E/yy/xxx"
-    },
-    {
-      "name": "Team Member Name 3",
-      "email": "email@eng.pdn.ac.lk",
-      "eNumber": "E/yy/xxx"
-    }
-  ],
-  "supervisors": [
-    {
-      "name": "Dr. Supervisor 1",
-      "email": "email@eng.pdn.ac.lk"
-    },
-    {
-      "name": "Supervisor 2",
-      "email": "email@eng.pdn.ac.lk"
-    }
-  ],
-  "tags": ["Web", "Embedded Systems"]
-}
-```
+---
 
-Once you filled this _index.json_ file, please verify the syntax is correct. (You can use [this](https://jsonlint.com/) tool).
+## 5. Features
 
-### Page Theme
+### 5.1 Hardware
 
-A custom theme integrated with this GitHub Page, which is based on [github.com/cepdnaclk/eYY-project-theme](https://github.com/cepdnaclk/eYY-project-theme). If you like to remove this default theme, you can remove the file, _docs/\_config.yml_ and use HTML based website.
+- **Ultrasonic & mm‑Wave Detection**  
+  - Ultrasonic (RD‑03D): precise distance measurements.  
+  - 24 GHz FMCW radar: angle & range resolution for position tracking.  
+- **Thermal Imaging**  
+  - IR sensor dims lights when occupants are at rest.  
+- **Control Unit**  
+  - ESP32‑WROOM‑32 for local scheduling & fallback routines.  
+  - 4‑channel AC dimmer (MOSFET based) for per‑bulb PWM control.  
+- **Communication**  
+  - **MQTT** via AWS IoT Core for cloud sync.  
+  - **ESP‑NOW & BLE** for local sensor ↔ controller messaging (chunked JSON with seq/ACK).  
+  - **WebSocket** server on hub for live coordinate streaming to mobile app.
+- **Mobile App**  
+  - React Native + Expo UI for profile management, QR Wi‑Fi setup, scheduling, live‑map view.
+
+### 5.2 Software & Cloud
+
+- **Backend**  
+  - Spring Boot REST & WebSocket endpoints.  
+  - MongoDB Atlas for device, user prefs & schedule storage.  
+- **AWS Services**  
+  - **IoT Core**: secure device MQTT broker & rules engine.  
+  - **Rekognition**: facial recognition for personalized voice greetings.  
+  - **S3**: stores profile images.  
+- **Mobile**  
+  - Firebase Auth (email/password, Google).  
+  - QR code for network credentials (`react-native-qrcode-svg`).  
+  - OTA updates via Expo EAS.
+
+---
+
+## 6. Detailed Architecture
+
+### 6.1 High‑Level Communication
+
+Controller is split into **A** (Internet/IoT) and **B** (local comms):
+
+1. **Controller A** connects to AWS IoT Core over Wi‑Fi → handles schedules & direct user settings.  
+2. **Controller B** uses BLE to receive Wi‑Fi creds & ESP‑NOW channel info from Controller A → streams sensor coordinates & automation triggers.  
+3. **Serial link** between A & B carries chunked JSON (seq‑number + ACK + buffering) for reliable data exchange.  
+4. **Mobile WebSocket**: Controller B hosts WS server → mobile app listens for live position dots on room map.
+
+### 6.2 Sensor Unit FSM
+
+| State        | Flags       | Actions                                                                                     | Next            |
+|--------------|-------------|---------------------------------------------------------------------------------------------|-----------------|
+| **State 1**  | BLE=1, R=1  | Connect BLE → Receive & store Wi‑Fi creds → BLE=0, restart → ↠ State 2                     | State 2         |
+| **State 2**  | BLE=0, R=1  | Deinit BLE → Connect Wi‑Fi & MQTT → Store rules JSON → BLE=1, R=0, restart → ↠ State 3     | State 3         |
+| **State 3**  | BLE=1, R=0  | Normal op → BLE monitoring → On config change set BLE=1, R=1 + restart → ↠ State 1         | (loop back)     |
+
+---
+
+## 7. Budget
+
+| Item                             | Qty | Unit Price (LKR) | Total (LKR) |
+|----------------------------------|----:|------------------:|------------:|
+| ESP32                            |   3 |            1,250 |       3,750 |
+| 4‑channel AC dimmer circuit      |   1 |            1,000 |       1,000 |
+| RD‑03D mm‑Wave Radar             |   1 |            1,250 |       1,250 |
+| USB Cables                       |   3 |              250 |         750 |
+| Miscellaneous                    |   – |            **–** |       1,000 |
+| **Total per unit**               |     |                   |       7,750 |
+
+---
+
+## 8. Getting Started
+
+### 8.1 Clone & Prerequisites
+
+```bash
+git clone https://github.com/cepdnaclk/e20-3yp-Smart-IOT-Indoor-Lighting-System.git
+cd e20-3yp-Smart-IOT-Indoor-Lighting-System
