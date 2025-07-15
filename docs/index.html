@@ -317,6 +317,32 @@
         list-style-type: disc;
       }
 
+      .budget-table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-top: 1rem;
+          background: #1f1f1f;
+        }
+        .budget-table th,
+        .budget-table td {
+          border: 1px solid #444;
+          padding: 0.75rem 1rem;
+          text-align: left;
+        }
+        .budget-table th {
+          background: #2c2c2c;
+          color: #ffc107;
+        }
+        .budget-table tbody tr:nth-child(odd) {
+          background: #181818;
+        }
+        .budget-table tfoot tr td {
+          border-top: 2px solid #ffc107;
+          font-weight: bold;
+          color: #ffffff;
+        }
+
+
       /* Footer */
       footer {
         background: #1f1f1f;
@@ -634,23 +660,55 @@
 
       <!-- Budget -->
       <section id="budget" class="budget">
-        <h2>Budget</h2>
-        <p>Control Unit</p>
-        <ul>
-          <li>ESP32 = LKR 1200</li>
-          <li>4-channel AC dimmer circuit = LKR 1000</li>
-        </ul>
-        <p>Central Hub</p>
-        <ul>
-          <li>ESP32 and other components = LKR 3000</li>
-        </ul>
-        <p>Sensor Unit</p>
-        <ul>
-          <li>Humidity Sensor = LKR 500</li>
-          <li>RD-03D mm Wave Radar = LKR 1250</li>
-          <li>VEML7700 Ambient Light Sensor = LKR 1200</li>
-        </ul>
-        <p>Total cost per unit = LKR 8150</p>
+        <h2>Budget For Mass Production</h2>
+        <table class="budget-table">
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Quantity</th>
+              <th>Unit Price (Rs)</th>
+              <th>Total Cost (Rs)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>ESP32</td>
+              <td>3</td>
+              <td>1,250</td>
+              <td>3,750</td>
+            </tr>
+            <tr>
+              <td>4‑channel AC dimmer circuit</td>
+              <td>1</td>
+              <td>1,000</td>
+              <td>1,000</td>
+            </tr>
+            <tr>
+              <td>RD‑03D mm Wave Radar</td>
+              <td>1</td>
+              <td>1,250</td>
+              <td>1,250</td>
+            </tr>
+            <tr>
+              <td>USB Cables</td>
+              <td>3</td>
+              <td>250</td>
+              <td>750</td>
+            </tr>
+            <tr>
+              <td>Other</td>
+              <td>–</td>
+              <td>–</td>
+              <td>1,000</td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="3">Total</td>
+              <td>7,750</td>
+            </tr>
+          </tfoot>
+        </table>
       </section>
 
       <!-- Useful Links -->
