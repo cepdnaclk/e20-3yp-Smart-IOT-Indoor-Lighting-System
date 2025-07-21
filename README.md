@@ -81,58 +81,38 @@
 
 Controller is split into **A** (Internet/IoT) and **B** (local comms):
 
-1. **Controller A** connects to AWS IoT Core over Wi‑Fi → handles schedules & direct user settings.  
-2. **Controller B** uses BLE to receive Wi‑Fi creds & ESP‑NOW channel info from Controller A → streams sensor coordinates & automation triggers.  
-3. **Serial link** between A & B carries chunked JSON (seq‑number + ACK + buffering) for reliable data exchange.  
-4. **Mobile WebSocket**: Controller B hosts WS server → mobile app listens for live position dots on room map.
+- **Controller A** connects to AWS IoT Core over Wi‑Fi → handles schedules & direct user settings.  
+- **Controller B** uses BLE to receive Wi‑Fi creds & ESP‑NOW channel info from Controller A → streams sensor coordinates & automation triggers.  
+- **Serial link** between A & B carries chunked JSON (seq‑number + ACK + buffering) for reliable data exchange.  
+- **Mobile WebSocket**: Controller B hosts WS server → mobile app listens for live position dots on room map.  
 
-6.1 High‑Level Communication
-
-Controller is split into A (Internet/IoT) and B (local comms):
-
-Controller A connects to AWS IoT Core over Wi‑Fi → handles schedules & direct user settings.
-
-Controller B uses BLE to receive Wi‑Fi creds & ESP‑NOW channel info from Controller A → streams sensor coordinates & automation triggers.
-
-Serial link between A & B carries chunked JSON (seq‑number + ACK + buffering) for reliable data exchange.
-
-Mobile WebSocket: Controller B hosts WS server → mobile app listens for live position dots on room map.
-
-6.2 Controller Communication Design
+### 6.2 Controller Communication Design
 
 Our controller design uses two ESP32s due to a hardware constraint: simultaneous use of Wi‑Fi (for AWS IoT Core) and ESP‑NOW/BLE (for local communication) isn’t possible with a single antenna. To solve this:
 
-We split the controller into Controller A and Controller B, connected via serial communication.
+- We split the controller into **Controller A** and **Controller B**, connected via serial communication.
 
-Controller A:
+#### Controller A
+- Connects to the internet via Wi‑Fi.  
+- Handles MQTT communication with AWS IoT Core and fetches bulb settings/schedules from the backend database.  
+- Directly controls the AC/DC dimmer hardware wired to it.  
+- Sends Wi‑Fi credentials and the MAC address of the sensor to Controller B for network access and WebSocket streaming.  
 
-Connects to the internet via Wi‑Fi.
+#### Controller B
+- Receives automation lighting setup triggers from the sensor (via ESP‑NOW/BLE).  
+- Relays triggers to Controller A over the serial link.  
+- Hosts a WebSocket server over TCP/IP to stream real-time sensor coordinates to the mobile app GUI (for live dot placement).  
 
-Handles MQTT communication with AWS IoT Core and fetches bulb settings/schedules from the backend database.
+Local sensor communication is handled via:  
+- **BLE** for credential transfer and control signals (including broadcast restarts on Controller B reboot).  
+- **ESP‑NOW** for position data and lighting rule distribution.  
 
-Directly controls the AC/DC dimmer hardware wired to it.
+Automation rules are stored in MongoDB Atlas and distributed to sensors as needed.  
 
-Sends Wi‑Fi credentials and the MAC address of the sensor to Controller B for network access and WebSocket streaming.
+Reliability over the serial link is ensured using a chunked JSON transmission system with sequence numbers, acknowledgments, buffers, and queues.  
 
-Controller B:
 
-Receives automation lighting setup triggers from the sensor (via ESP‑NOW/BLE).
-
-Relays triggers to Controller A over the serial link.
-
-Hosts a WebSocket server over TCP/IP to stream real-time sensor coordinates to the mobile app GUI (for live dot placement).
-
-Local sensor communication is handled via:
-
-BLE for credential transfer and control signals (including broadcast restarts on Controller B reboot).
-
-ESP‑NOW for position data and lighting rule distribution.
-
-Automation rules are stored in MongoDB Atlas and distributed to sensors as needed.
-
-Reliability over the serial link is ensured using a chunked JSON transmission system with sequence numbers, acknowledgments, buffers, and queues.
-
-### 6.2 Sensor Unit FSM
+### 6.3 Sensor Unit FSM
 
 | State        | Flags       | Actions                                                                                     | Next            |
 |--------------|-------------|---------------------------------------------------------------------------------------------|-----------------|
