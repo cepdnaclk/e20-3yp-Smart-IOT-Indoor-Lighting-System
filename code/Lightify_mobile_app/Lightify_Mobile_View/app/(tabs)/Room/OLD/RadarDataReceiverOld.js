@@ -1,12 +1,9 @@
 
-import NetInfo from '@react-native-community/netinfo';
 import { useFocusEffect } from '@react-navigation/native';
 import { useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
-
 import {
   Alert,
-  AppState,
   Modal,
   SafeAreaView,
   ScrollView,
@@ -17,167 +14,10 @@ import {
   View,
 } from "react-native";
 import Svg, { Circle, Line, Path, Rect } from "react-native-svg";
-import axiosClient from "../../../utils/axiosClient"; // make sure path is correct
-import RuleManager from "./OLD/RuleManagerOld";
+import axiosClient from "../../../../utils/axiosClient"; // make sure path is correct
+import RuleManager from "./RuleManagerOld";
 
 const REAL_WORLD_RADIUS = 6000; // sensor radius in mm
-
-const WS_PING_MS = 15000;           // client ping interval (≤ server idle kill)
-const MAX_BACKOFF_MS = 15000;       // cap reconnect backoff
-
-function createWsConnector({
-  getUrl,            // async () => string (e.g., "ws://<ip>:81")
-  username,          // string to auth with
-  onMessageJson,     // (msg: any) => void
-  onOpen, onClose,   // optional callbacks
-}) {
-  let ws= null;
-  let connecting = false;
-  let authed = false;
-  let aliveTs = 0;
-  let pingTimer = null;
-  let backoff = 1000;                  // start at 1s
-  let stopped = false;
-
-  // queue messages until authed/open
-  const buffer = [];
-
-  const safeSendNow = (obj) => {
-    if (ws && ws.readyState === WebSocket.OPEN) {
-      ws.send(typeof obj === "string" ? obj : JSON.stringify(obj));
-      return true;
-    }
-    return false;
-  };
-
-  const flush = () => {
-    if (!authed) return;
-    while (buffer.length && ws && ws.readyState === WebSocket.OPEN) {
-      const m = buffer.shift();
-      ws.send(typeof m === "string" ? m : JSON.stringify(m));
-    }
-  };
-
-  const send = (obj) => {
-    // If we're not open or not authed yet, buffer it.
-    if (!ws || ws.readyState !== WebSocket.OPEN || !authed) {
-      buffer.push(obj);
-      return false;
-    }
-    return safeSendNow(obj);
-  };
-
-  const startPing = () => {
-    stopPing();
-    aliveTs = Date.now();
-    pingTimer = setInterval(() => {
-      // App-level heartbeat for ESP32 server (gTrackAppHeartbeat=true)
-      safeSendNow({ type: "ping" });
-
-      // If totally silent for a long time, force a close (reconnect will kick in)
-      if (Date.now() - aliveTs > WS_PING_MS * 2) {
-        try { ws?.close(); } catch {}
-      }
-    }, WS_PING_MS);
-  };
-
-  const stopPing = () => {
-    if (pingTimer) {
-      clearInterval(pingTimer);
-      pingTimer = null;
-    }
-  };
-
-  const connect = async () => {
-    if (stopped) return;
-
-    // already open/connecting? bail
-    if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) return;
-    if (connecting) return;
-    connecting = true;
-
-    try {
-      authed = false;
-      const url = await getUrl();        // re-fetch IP each attempt
-      ws = new WebSocket(url);
-
-      ws.onopen = () => {
-        connecting = false;
-        aliveTs = Date.now();
-        backoff = 1000;                  // reset backoff on success
-        onOpen?.();
-        // authenticate with server (server replies {"status":"ok"})
-        safeSendNow({ username });
-        startPing();
-      };
-
-      ws.onmessage = (e) => {
-        aliveTs = Date.now();
-        let msg = null;
-        try { msg = JSON.parse(e.data); } catch { /* ignore non-JSON frames */ }
-        if (!msg) return;
-
-        // server auth ack
-        if (msg.status === "ok") {
-          authed = true;
-          flush();
-          return;
-        }
-        // optional server pong text (if gReplyPongText=true)
-        if (msg.type === "pong") return;
-
-        // explicit auth failure
-        if (msg.error === "bad user") {
-          console.warn("WS auth rejected for username:", username);
-          return;
-        }
-
-        onMessageJson?.(msg);
-      };
-
-      ws.onerror = () => {
-        // no-op; onclose handles retry/backoff
-      };
-
-      ws.onclose = () => {
-        connecting = false;
-        stopPing();
-        authed = false;
-        onClose?.();
-
-        if (stopped) return;
-
-        // exponential backoff + small jitter
-        const delay = Math.min(backoff, MAX_BACKOFF_MS) + Math.floor(Math.random() * 400);
-        setTimeout(connect, delay);
-        backoff = Math.min(backoff * 2, MAX_BACKOFF_MS);
-      };
-    } catch (e) {
-      connecting = false;
-      const delay = Math.min(backoff, MAX_BACKOFF_MS);
-      setTimeout(connect, delay);
-      backoff = Math.min(backoff * 2, MAX_BACKOFF_MS);
-    }
-  };
-
-  const stop = () => {
-    stopped = true;
-    stopPing();
-    try { ws?.close(); } catch {}
-    ws = null;
-    connecting = false;
-    // keep buffer so user actions made while offline flush after reconnect
-  };
-
-  return {
-    connect,
-    stop,
-    send,
-    isAuthed: () => authed,
-    isOpen: () => !!ws && ws.readyState === WebSocket.OPEN,
-  };
-}
-
 
 export default function ShapeSelector() {
   const [instructionVisible, setInstructionVisible] = useState(false);
@@ -189,6 +29,7 @@ export default function ShapeSelector() {
   const [shapeName, setShapeName] = useState("");
   const [inputs, setInputs] = useState({});
   const [editingIndex, setEditingIndex] = useState(null);
+  const ws = useRef(null);
   const [calibrationStates, setCalibrationStates] = useState({});
   const [calibratingIndex, setCalibratingIndex] = useState(null);
   
@@ -202,70 +43,66 @@ export default function ShapeSelector() {
   const ROOM_NAME = roomName || "Bathroom";
   const USERNAME = username || "Tharindu";
 
-const connectorRef = useRef(null);
-const lastCoordTsRef = useRef(0);
-
 useFocusEffect(
   useCallback(() => {
-    let netSub;
-    let appSub;
-
-    const getUrl = async () => {
+    let wsInstance = null;
+    const fetchIpAndConnect = async () => {
+    try {
       const res = await axiosClient.get(
         `/api/backend/websocketIp?username=${USERNAME}&roomName=${ROOM_NAME}`
       );
-      const ip = res?.data?.ipaddress;
-      if (!ip) throw new Error("No ipaddress from backend");
-      return `ws://${ip}:81`;
-    };
+      if (res.status === 200 && res.data.ipaddress) {
+        const ip = res.data.ipaddress;
+        const wsUrl = `ws://${ip}:81`;
+        wsInstance = new WebSocket(wsUrl);
+        ws.current = wsInstance;
 
-    connectorRef.current = createWsConnector({
-      getUrl,
-      username: USERNAME,
-      onMessageJson: (msg) => {
-        // only handle coordinates from the ESP32
-        if (msg.command === "coordinates" && msg.payload) {
-          const now = Date.now();
-          // throttle UI updates to ~10 Hz to avoid UI jank
-          if (now - lastCoordTsRef.current > 100) {
-            lastCoordTsRef.current = now;
-            const { x, y } = msg.payload;
-            setLiveCoords({ x, y });
+        wsInstance.onopen = () => {
+          console.log("✅ WS connected to", wsUrl);
+          wsInstance.send(JSON.stringify({ username: USERNAME }));
+        };
+
+        wsInstance.onmessage = (e) => {
+          try {
+            const msg = JSON.parse(e.data);
+            console.log("📥 WS Received:", msg);
+
+            // only handle the coordinates shape:
+            if (msg.command === "coordinates" && msg.payload) {
+              const { x, y } = msg.payload;
+              console.log(`→ coords received: x=${x}, y=${y}`);
+              setLiveCoords({ x, y });
+            } else {
+              console.warn("⚠️ Unrecognized WS message:", msg);
+            }
+          } catch (err) {
+            console.warn("❌ WS JSON error:", err);
           }
-        }
-      },
-      onOpen: () => console.log("✅ WS open"),
-      onClose: () => console.log("🔌 WS closed → will retry"),
-    });
+        };
 
-    // Connect only when app is active AND network is up
-    const maybeConnect = (netState) => {
-      const online = netState?.isConnected ?? true;
-      if (online && AppState.currentState === "active") {
-        connectorRef.current?.connect();
+        wsInstance.onerror = (err) => {
+          console.error("WS error", err.message);
+        };
+
+        wsInstance.onclose = () => {
+          console.log("WebSocket closed");
+        };
       } else {
-        connectorRef.current?.stop();
+        console.warn("⚠️ No ipaddress in response", res.data);
       }
-    };
+    } catch (err) {
+      console.error("❌ Failed to fetch WS IP:", err);
+    }
+  };
 
-    NetInfo.fetch().then(maybeConnect);
-    netSub = NetInfo.addEventListener(maybeConnect);
+  fetchIpAndConnect();
 
-    appSub = AppState.addEventListener("change", (s) => {
-      if (s === "active") {
-        // resume
-        NetInfo.fetch().then(maybeConnect);
-      } else {
-        // pause WS on background to save power and avoid timeouts
-        connectorRef.current?.stop();
-      }
-    });
 
     return () => {
-      netSub && netSub();
-      appSub && appSub.remove();
-      connectorRef.current?.stop();
-      connectorRef.current = null;
+      if (wsInstance) {
+        console.log('🔌 Closing WS (screen blurred)');
+        wsInstance.close();
+      }
     };
   }, [USERNAME, ROOM_NAME])
 );
@@ -443,11 +280,6 @@ const parseLineEquation = (eq) => {
     setModalVisible(true);
   };
 
-  const sendWS = (payload) => {
-  const ok = connectorRef.current?.send(payload);
-  if (!ok) console.warn("WS not ready; buffered:", payload);
-  };
-
   const handleSubmit = () => {
     if (!validate()) {
       Alert.alert("Error", "Fill name & all fields.");
@@ -483,11 +315,13 @@ const parseLineEquation = (eq) => {
     }
 
     // Send over WebSocket
-    sendWS({
-      action: editingIndex != null ? "update" : "add",
-      index: editingIndex,
-      shape,
-    });
+    ws.current.send(
+      JSON.stringify({
+        action: editingIndex != null ? "update" : "add",
+        index: editingIndex,
+        shape,
+      })
+    );
 
     setModalVisible(false);
 
@@ -541,7 +375,7 @@ const parseLineEquation = (eq) => {
           const newShapes = shapes.filter((_, idx) => idx !== i);
           setShapes(newShapes);
           submitToBackend(newShapes);
-          sendWS({ action: "delete", index: i });
+          ws.current.send(JSON.stringify({ action: "delete", index: i }));
         },
       },
     ]);

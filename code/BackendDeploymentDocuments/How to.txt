@@ -103,6 +103,7 @@ sudo journalctl -u lightify-backend -f
 ✅ stop your backend service:
 
 sudo systemctl stop lightify-backend
+sudo systemctl stop lightify-backend
 
 
 🧹 How to Check Storage Usage

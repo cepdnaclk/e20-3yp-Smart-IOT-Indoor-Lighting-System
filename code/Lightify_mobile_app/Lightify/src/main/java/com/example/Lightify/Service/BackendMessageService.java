@@ -202,7 +202,7 @@ public class BackendMessageService {
         String topicString = t.getTopicString();
         try {
             awsIotPubSubService.publish(topicString, json);
-            logger.info("Requested room_state on topic {}", topicString);
+            logger.info("Requested room_state on topic {} , {} ", topicString,json);
         } catch (Exception e) {
             logger.error("Failed to publish room_state request to MQTT on {}: {}",
                     topicString, e.getMessage(), e);

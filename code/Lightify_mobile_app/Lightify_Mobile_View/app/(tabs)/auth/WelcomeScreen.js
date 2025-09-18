@@ -1,8 +1,7 @@
 
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
 
 const WelcomeScreen = ({ navigation }) => {
   return (
@@ -15,10 +14,6 @@ const WelcomeScreen = ({ navigation }) => {
       {/* Greeting Text */}
       <Text style={styles.title}>Welcome</Text>
       <Text style={styles.subtitle}>Illuminate your world with smart lighting</Text>
-      
-      {/* Illustration (Uncomment if images are available) */}
-      {/* <Image source={require('../assets/cityscape.png')} style={styles.illustration} />
-      <Image source={require('../assets/car.png')} style={styles.car} /> */}
       
       {/* Sign In Button */}
       <TouchableOpacity style={styles.signInButton} onPress={() => navigation.navigate('SignIn')}>

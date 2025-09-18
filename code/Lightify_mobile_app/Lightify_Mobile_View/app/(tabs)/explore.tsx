@@ -1,6 +1,4 @@
-import { View, Text, StyleSheet } from "react-native";
-// import SignupScreen from "@/components/Authentication/SignUp"
-// import Login from "@/components/Authentication/Login"
+import { StyleSheet, Text, View } from "react-native";
 
 export default function ExploreScreen() {
   return (
@@ -9,8 +7,6 @@ export default function ExploreScreen() {
       <Text style={styles.subtitle}>
         Discover the various lighting options.
       </Text>
-      {/* <Login/>
-      <SignupScreen/> */}
     </View>
   );
 }
