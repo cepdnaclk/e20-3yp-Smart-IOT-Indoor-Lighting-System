@@ -111,6 +111,8 @@ Automation rules are stored in MongoDB Atlas and distributed to sensors as neede
 
 Reliability over the serial link is ensured using a chunked JSON transmission system with sequence numbers, acknowledgments, buffers, and queues.  
 
+Pin assignments, the frame format, the MQTT command list and build instructions for both controllers are in [`code/Lightify_Endproduct/README.md`](code/Lightify_Endproduct/README.md).  
+
 
 ### 6.3 Sensor Unit FSM
 
