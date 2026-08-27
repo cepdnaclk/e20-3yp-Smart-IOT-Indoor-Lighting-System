@@ -3,6 +3,9 @@
 
 static const uint8_t FRAME_START = 0x7E;
 
+// Both controllers must agree on this, or the bigger side's frames get dropped.
+static const uint16_t FRAME_MAX_PAYLOAD = 1024;
+
 // XOR‐over‐payload checksum
 inline uint8_t computeChecksum(const uint8_t* data, size_t len) {
   uint8_t c = 0;
@@ -41,7 +44,11 @@ public:
         break;
       case READ_LEN_L:
         length |= b;
-        if (length > sizeof(buffer)) state = WAIT_START;
+        if (length > sizeof(buffer)) {
+          Serial.printf("[Frame] dropped oversized frame: %u bytes (max %u)\n",
+                        length, (unsigned)sizeof(buffer));
+          state = WAIT_START;
+        }
         else {
           idx = 0; chk = 0;
           state = READ_PAYLOAD;
@@ -67,5 +74,5 @@ public:
 private:
   enum { WAIT_START, READ_LEN_H, READ_LEN_L, READ_PAYLOAD, READ_CHECK } state;
   uint16_t length, idx;
-  uint8_t  chk, buffer[256];
+  uint8_t  chk, buffer[FRAME_MAX_PAYLOAD];
 };
