@@ -857,10 +857,21 @@ unsigned long now = millis();
 if (!chunkQueue.empty()) {
   if (waitingForAck) {
   if (now - lastSendTime > 1000) {  // 1 second retry interval
-    Serial.printf("[BLE][RETRY] Resending Chunk %u (seq=%lu), attempt #%u\n", currentChunkIndex, sendSeq, retryCount);
-    BLEProvision::sendChunk(chunkQueue.front());
-    lastSendTime = now;
-    retryCount++;
+    if (retryCount >= MAX_RETRIES) {
+      // Sensor has stopped answering. Drop the whole message rather than retry
+      // forever - it cannot be reassembled without this chunk anyway.
+      Serial.printf("[BLE][FAIL] Giving up on chunk %u (seq=%lu) after %u retries\n",
+                    currentChunkIndex, sendSeq, retryCount);
+      while (!chunkQueue.empty()) chunkQueue.pop();
+      waitingForAck = false;
+      retryCount = 0;
+      currentChunkIndex = 0;
+    } else {
+      Serial.printf("[BLE][RETRY] Resending Chunk %u (seq=%lu), attempt #%u\n", currentChunkIndex, sendSeq, retryCount);
+      BLEProvision::sendChunk(chunkQueue.front());
+      lastSendTime = now;
+      retryCount++;
+    }
   }
 } else {
   // ACK received — send next chunk
