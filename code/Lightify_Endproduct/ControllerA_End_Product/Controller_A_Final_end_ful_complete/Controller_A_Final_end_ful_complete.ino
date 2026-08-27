@@ -545,7 +545,8 @@ void loop() {
 
 
 
-  if (automationScheduled && millis() > automationResumeTime) {
+  // Compare by subtraction so this still works after millis() wraps (~49 days uptime).
+  if (automationScheduled && (int32_t)(millis() - automationResumeTime) >= 0) {
     automationMode = 1;
     automationScheduled = false;
     Serial.println("Automation mode re-enabled.");
