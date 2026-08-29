@@ -17,21 +17,3 @@ namespace SerialComm {
   // Call in your main loop to drive TX and RX
   void loop();
 }
-
-// #ifndef SERIALCOMM_H
-// #define SERIALCOMM_H
-
-// #include <Arduino.h>
-// #include <functional>
-
-// namespace SerialComm {
-//   using JsonCallback = std::function<void(const String&)>;
-
-//   void begin(uint32_t baud = 115200); // ✅ Default only here
-//   void loop();
-//   void sendJson(const String& rawJson);
-//   void onJsonReceived(JsonCallback cb);
-// }
-
-// #endif
-

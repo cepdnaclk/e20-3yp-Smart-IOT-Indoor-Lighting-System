@@ -1,11 +1,3 @@
-// #pragma once
-// #include <Arduino.h>
-
-// namespace WebSocketManager {
-//   void begin(const String& validUser);
-//   void broadcast(const String& msg);
-// }
-
 #pragma once
 #include <Arduino.h>
 
@@ -17,11 +9,10 @@ namespace WebSocketManager {
   // Immediately broadcast a message (only if client is authenticated)
   void broadcast(const String& msg);
 
-  // 🆕 Queue a message to be sent when WebSocket is ready
+  // Queue a message to be sent once a client is connected and authenticated
   void enqueueMessage(const String& msg);
 
-  // 🆕 Flush any queued messages to client (used internally)
+  // Flush any queued messages to the client (used internally)
   void flushQueue();
-  
-}
 
+}

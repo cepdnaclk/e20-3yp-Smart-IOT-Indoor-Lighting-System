@@ -1,6 +1,8 @@
-// main.ino
-
-//final updated controller A fixed websocket correctly
+// Controller A — the board wired to the mains bulbs.
+//
+// It owns two links: MQTT over TLS to AWS IoT Core, and a UART2 cable to
+// Controller B. Commands can arrive from either side; both end up calling
+// LightManager::setTarget() to drive the four dimmer channels.
 #include <Arduino.h>
 #include <WiFi.h>
 #include <ArduinoJson.h>
@@ -22,8 +24,10 @@ const char* publishTop   = "Tharindu/94:54:C5:B7:E3:2C/esp_to_backend";
 
 StaticJsonDocument<8000> doc;
 
-//chala varibales 
-//varibales for schedules 
+// Brightness is tracked twice. b1-b4 hold what the user or a schedule asked
+// for; bb1-bb4 hold what the radar automation asked for. automationMode picks
+// which set is allowed to reach the bulbs, so a permanent schedule can hold
+// the automation off without losing its values.
 int b1 = 0;
 int b2 = 0;
 int b3 = 0;
@@ -32,12 +36,10 @@ int flag =-1;
 int automationMode=1;
 unsigned long automationResumeTime = 0;
 bool automationScheduled = false;
-//varibales for automation
 int bb1 = 0, bb2 = 0, bb3 = 0, bb4 = 0;
 
-
-
-// Paste your PEM strings here:
+// AWS IoT device identity. These are compiled into the firmware, so every
+// board flashed from this source connects to the broker as the same client.
 const char* root_ca_pem     = R"EOF(
 -----BEGIN CERTIFICATE-----
 MIIDQTCCAimgAwIBAgITBmyfz5m/jAo54vB4ikPmljZbyjANBgkqhkiG9w0BAQsF
@@ -174,7 +176,8 @@ void handleSerialJson(const String& json) {
     }
   }
 
-  // ✅ Detect wrapped format (new Format B) and unwrap it
+  // Controller B may wrap the short form in a "payload" object. Lift it out
+  // so the rest of this function sees one shape only.
   if (doc.containsKey("payload")) {
     JsonObject payload = doc["payload"];
     if (payload.containsKey("c") && payload.containsKey("p")) {
@@ -218,10 +221,6 @@ void handleSerialJson(const String& json) {
     }
   }
 
-  // if (isAutomation) {
-  //   automationMode = 1;
-  // }
-
   // Forward websocket_ip command to MQTT
   Serial.println(command);
   if (isWebSocketIp) {
@@ -230,13 +229,9 @@ void handleSerialJson(const String& json) {
   }
 }
 
-
-
-
 // ——— MQTT callback: incoming messages ———
 void handleMqtt(const String& topic, const String& payload) {
   Serial.println("<< MQTT ⟶ [" + topic + "] " + payload);
-   //SerialComm::sendJson(payload);
 
   DynamicJsonDocument doc(1024);
   auto err = deserializeJson(doc, payload);
@@ -256,7 +251,7 @@ void handleMqtt(const String& topic, const String& payload) {
 
   bool isScheduleOrDirect = (command == "schedule_set" || command == "direct_light_set");
 
-  // 👉 Step 1: Assign brightness values
+  // 1) Record the new brightness, then push it to the bulbs.
   for (JsonObject bulb : messageArr) {
     int id  = bulb["bulb_id"]    | -1;
     int bri = bulb["brightness"] |  0;
@@ -277,33 +272,30 @@ void handleMqtt(const String& topic, const String& payload) {
         break;
     }
 
-    // Apply brightness to local light (for direct/schedule only)
-    // if (isScheduleOrDirect && id >= 1 && id <= 4) {
-    //   LightManager::setTarget(id - 1, bri);
-    // }
+    // Both sets are applied here. isScheduleOrDirect only chooses which of
+    // the two the value is read back from, not whether the bulb moves.
+    if (id >= 1 && id <= 4) {
+      int valueToApply = 0;
 
-    // Apply brightness to local light (for direct/schedule only)
-  if (id >= 1 && id <= 4) {
-  int valueToApply = 0;
+      if (isScheduleOrDirect) {
+        if (id == 1) valueToApply = b1;
+        else if (id == 2) valueToApply = b2;
+        else if (id == 3) valueToApply = b3;
+        else if (id == 4) valueToApply = b4;
+      } else {
+        if (id == 1) valueToApply = bb1;
+        else if (id == 2) valueToApply = bb2;
+        else if (id == 3) valueToApply = bb3;
+        else if (id == 4) valueToApply = bb4;
+      }
 
-  if (isScheduleOrDirect) {
-    if (id == 1) valueToApply = b1;
-    else if (id == 2) valueToApply = b2;
-    else if (id == 3) valueToApply = b3;
-    else if (id == 4) valueToApply = b4;
-  } else {
-    if (id == 1) valueToApply = bb1;
-    else if (id == 2) valueToApply = bb2;
-    else if (id == 3) valueToApply = bb3;
-    else if (id == 4) valueToApply = bb4;
-  }
-
-  LightManager::setTarget(id - 1, valueToApply);
-}
+      LightManager::setTarget(id - 1, valueToApply);
+    }
 
   }
 
-  // 👉 Step 2: Handle automation mode logic
+  // 2) A schedule takes the room off automation. A non-permanent one also
+  //    sets the timer that hands control back later.
   if (command == "schedule_set") {
     automationMode = 0;
 
@@ -319,142 +311,137 @@ void handleMqtt(const String& topic, const String& payload) {
     }
   }
 
-  // 👉 Step 3: If command is "automation", set mode to ON
+  // 3) The app can hand control back to automation straight away.
   if (command == "automation") {
     automationMode = 1;
   }
-  
 
+  // The backend polls for the current brightness because publishes are QoS 0
+  // and a dropped command would otherwise leave the app showing stale values.
+  if (command == "room_state") {
+    StaticJsonDocument<512> doc;
 
-//condition for send room state for mqtt 
- if (command == "room_state") {
-  StaticJsonDocument<512> doc;
+    doc["command"] = "room_state";
+    JsonArray message = doc["payload"]["message"].to<JsonArray>();
+    Serial.println(message);
+    if (automationMode == 1) {
+      // Automation mode JSON using bb1-bb4
+      JsonObject bulb1 = message.createNestedObject();
+      bulb1["bulb_id"] = 1;
+      bulb1["brightness"] = bb1;
 
-  doc["command"] = "room_state";
-  JsonArray message = doc["payload"]["message"].to<JsonArray>();
-Serial.println(message);
-  if (automationMode == 1) {
-    // Automation mode JSON using bb1-bb4
-    JsonObject bulb1 = message.createNestedObject();
-    bulb1["bulb_id"] = 1;
-    bulb1["brightness"] = bb1;
+      JsonObject bulb2 = message.createNestedObject();
+      bulb2["bulb_id"] = 2;
+      bulb2["brightness"] = bb2;
 
-    JsonObject bulb2 = message.createNestedObject();
-    bulb2["bulb_id"] = 2;
-    bulb2["brightness"] = bb2;
+      JsonObject bulb3 = message.createNestedObject();
+      bulb3["bulb_id"] = 3;
+      bulb3["brightness"] = bb3;
 
-    JsonObject bulb3 = message.createNestedObject();
-    bulb3["bulb_id"] = 3;
-    bulb3["brightness"] = bb3;
+      JsonObject bulb4 = message.createNestedObject();
+      bulb4["bulb_id"] = 4;
+      bulb4["brightness"] = bb4;
+    } else {
+      // Manual mode JSON using b1-b4
+      JsonObject bulb1 = message.createNestedObject();
+      bulb1["bulb_id"] = 1;
+      bulb1["brightness"] = b1;
 
-    JsonObject bulb4 = message.createNestedObject();
-    bulb4["bulb_id"] = 4;
-    bulb4["brightness"] = bb4;
-  } else {
-    // Manual mode JSON using b1-b4
-    JsonObject bulb1 = message.createNestedObject();
-    bulb1["bulb_id"] = 1;
-    bulb1["brightness"] = b1;
+      JsonObject bulb2 = message.createNestedObject();
+      bulb2["bulb_id"] = 2;
+      bulb2["brightness"] = b2;
 
-    JsonObject bulb2 = message.createNestedObject();
-    bulb2["bulb_id"] = 2;
-    bulb2["brightness"] = b2;
+      JsonObject bulb3 = message.createNestedObject();
+      bulb3["bulb_id"] = 3;
+      bulb3["brightness"] = b3;
 
-    JsonObject bulb3 = message.createNestedObject();
-    bulb3["bulb_id"] = 3;
-    bulb3["brightness"] = b3;
+      JsonObject bulb4 = message.createNestedObject();
+      bulb4["bulb_id"] = 4;
+      bulb4["brightness"] = b4;
+    }
 
-    JsonObject bulb4 = message.createNestedObject();
-    bulb4["bulb_id"] = 4;
-    bulb4["brightness"] = b4;
+    // Serialize and publish
+    String output;
+    serializeJson(doc, output);
+    MQTTHandler::publish(publishTop, output.c_str());
+    Serial.println("✅ Sent schedule_set command: " + output);
   }
 
-  // Serialize and publish
-  String output;
-  serializeJson(doc, output);
-  MQTTHandler::publish(publishTop, output.c_str());
-  Serial.println("✅ Sent schedule_set command: " + output);
-}
+  if (command == "update_automation_mode") {
+    // Controller B needs the rules verbatim, so forward before parsing.
+    printStackLeft("before JSON");
 
+    Serial.println(F("---- MQTT Handler Start ----"));
+    Serial.print  (F("[DBG] Topic: "));
+    Serial.println(topic);
+    Serial.print  (F("[DBG] Payload: "));
+    Serial.println(payload);
 
+    // 1) Forward raw payload over UART to Controller B
+    Serial.println(F("[DBG] Forwarding raw JSON over UART..."));
+    SerialComm2::sendJson(payload);
+    Serial.println(F("[DBG] Forward complete."));
 
- if (command == "update_automation_mode") {
-    // 👉 Send the entire payload as-is to the other ESP32
-    // SerialComm::sendJson(payload);
-   printStackLeft("before JSON");
+    // 2) Parse JSON safely
+    doc.clear();
+    Serial.println(F("[DBG] Deserializing JSON..."));
+    DeserializationError err = deserializeJson(doc, payload);
+    printStackLeft("after JSON");
 
-  Serial.println(F("---- MQTT Handler Start ----"));
-  Serial.print  (F("[DBG] Topic: "));
-  Serial.println(topic);
-  Serial.print  (F("[DBG] Payload: "));
-  Serial.println(payload);
+    if (err) {
+      Serial.print(F("[ERR] JSON parse failed: "));
+      Serial.println(err.c_str());
+      Serial.println(F("---- MQTT Handler End (Error) ----"));
+      return;
+    }
+    Serial.println(F("[DBG] JSON parsed successfully."));
 
-  // 1) Forward raw payload over UART to Controller B
-  Serial.println(F("[DBG] Forwarding raw JSON over UART..."));
-  SerialComm2::sendJson(payload);
-  Serial.println(F("[DBG] Forward complete."));
+    JsonObject root = doc.as<JsonObject>();
 
-  // 2) Parse JSON safely
-  doc.clear();
-  Serial.println(F("[DBG] Deserializing JSON..."));
-  DeserializationError err = deserializeJson(doc, payload);
-  printStackLeft("after JSON");
+    // --- Handle "command" ---
+    if (root.containsKey("command")) {
+      const char* cmd = root["command"];
+      Serial.print(F("[CMD] "));
+      Serial.println(cmd);
+    } else {
+      Serial.println(F("[WARN] No 'command' key found"));
+    }
 
-  if (err) {
-    Serial.print(F("[ERR] JSON parse failed: "));
-    Serial.println(err.c_str());
-    Serial.println(F("---- MQTT Handler End (Error) ----"));
-    return;
-  }
-  Serial.println(F("[DBG] JSON parsed successfully."));
+    // --- Handle "payload" ---
+    if (!root.containsKey("payload")) {
+      Serial.println(F("[WARN] No 'payload' object"));
+      Serial.println(F("---- MQTT Handler End ----"));
+      return;
+    }
+    JsonObject pl = root["payload"].as<JsonObject>();
 
-  JsonObject root = doc.as<JsonObject>();
+    // --- Iterate Areas ---
+    if (pl.containsKey("Areas")) {
+      Serial.println(F("[DBG] Iterating 'Areas' array..."));
+      for (JsonObject area : pl["Areas"].as<JsonArray>()) {
+        const char* name = area["name"] | "";
+        const char* type = area["type"] | "";
+        Serial.print(F(" Area '")); Serial.print(name);
+        Serial.print(F("' (type='")); Serial.print(type);
+        Serial.println(F("')"));
+        // TODO: apply area logic (e.g., store or configure zones)
+      }
+    }
 
-  // --- Handle "command" ---
-  if (root.containsKey("command")) {
-    const char* cmd = root["command"];
-    Serial.print(F("[CMD] "));
-    Serial.println(cmd);
-  } else {
-    Serial.println(F("[WARN] No 'command' key found"));
-  }
+    // --- Iterate Rules ---
+    if (pl.containsKey("Rules")) {
+      Serial.println(F("[DBG] Iterating 'Rules' array..."));
+      for (JsonObject rule : pl["Rules"].as<JsonArray>()) {
+        const char* rName = rule["Rule_Name"] | "";
+        Serial.print(F(" Rule '")); Serial.print(rName);
+        Serial.println(F("'"));
+        // TODO: apply rule logic (e.g., schedule lighting changes)
+      }
+    }
 
-  // --- Handle "payload" ---
-  if (!root.containsKey("payload")) {
-    Serial.println(F("[WARN] No 'payload' object"));
+    printStackLeft("before return");
     Serial.println(F("---- MQTT Handler End ----"));
-    return;
   }
-  JsonObject pl = root["payload"].as<JsonObject>();
-
-  // --- Iterate Areas ---
-  if (pl.containsKey("Areas")) {
-    Serial.println(F("[DBG] Iterating 'Areas' array..."));
-    for (JsonObject area : pl["Areas"].as<JsonArray>()) {
-      const char* name = area["name"] | "";
-      const char* type = area["type"] | "";
-      Serial.print(F(" Area '")); Serial.print(name);
-      Serial.print(F("' (type='")); Serial.print(type);
-      Serial.println(F("')"));
-      // TODO: apply area logic (e.g., store or configure zones)
-    }
-  }
-
-  // --- Iterate Rules ---
-  if (pl.containsKey("Rules")) {
-    Serial.println(F("[DBG] Iterating 'Rules' array..."));
-    for (JsonObject rule : pl["Rules"].as<JsonArray>()) {
-      const char* rName = rule["Rule_Name"] | "";
-      Serial.print(F(" Rule '")); Serial.print(rName);
-      Serial.println(F("'"));
-      // TODO: apply rule logic (e.g., schedule lighting changes)
-    }
-  }
-
-  printStackLeft("before return");
-  Serial.println(F("---- MQTT Handler End ----"));
-}
-
 
 }
 
@@ -475,11 +462,10 @@ void setup() {
   );
 
   // —— SerialComm: framed JSON over UART ——
-  // SerialComm::begin(115200);
-  // SerialComm::onJsonReceived(handleSerialJson);
 
-
-  //chala trick commserial2 eke wede
+  // —— UART2 link to Controller B ——
+  // SerialComm2 replaced the older SerialComm here: it splits long payloads
+  // into 256-byte chunks and waits for an ACK on each one.
   SerialComm2::begin(115200);
   SerialComm2::onJsonReceived(handleSerialJson);
 
@@ -501,14 +487,6 @@ void setup() {
   }
   Serial.println("\n✅ Wi-Fi connected, IP=" + WiFi.localIP().toString());
 
-  // // —— MQTT over TLS ——
-  // MQTTHandler::begin(
-  //   mqttServer, mqttPort,
-  //   root_ca_pem, certificate_pem_crt, private_pem_key,
-  //   "ESP32_Client", subscribeTop
-  // );
-  // MQTTHandler::onMessage(handleMqtt);
-
   if (WiFi.status() == WL_CONNECTED) {
     // —— MQTT over TLS ——
     MQTTHandler::begin(
@@ -521,9 +499,6 @@ void setup() {
     Serial.println("⚠️ Wi-Fi never connected—skipping MQTT init");
   }
 
-
-//chalas ip send as json 
-  //  MQTTHandler::sendWebSocketIP(publishTop,WiFi.localIP().toString());
   // —— One-time metadata send ——
   DynamicJsonDocument md(256);
   md["mac"]      = WiFi.macAddress();
@@ -543,8 +518,6 @@ void loop() {
     WiFi.reconnect();
   }
 
-
-
   // Compare by subtraction so this still works after millis() wraps (~49 days uptime).
   if (automationScheduled && (int32_t)(millis() - automationResumeTime) >= 0) {
     automationMode = 1;
@@ -552,18 +525,12 @@ void loop() {
     Serial.println("Automation mode re-enabled.");
   }
 
-
-
   // —— Core tasks ——
-  //SerialComm::loop();
-
-//chala commserial2
   SerialComm2::loop();
 
   if (WiFi.status() == WL_CONNECTED){
     MQTTHandler::loop();
   }
-  // MQTTHandler::loop();
   LightManager::update();
 
   // future: priorityFunction() here

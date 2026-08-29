@@ -18,21 +18,16 @@ namespace SerialComm {
 
   void begin(uint32_t baud) {
     Serial2.begin(baud, SERIAL_8N1, /*RX=*/16, /*TX=*/17);
-    // Serial.println("[SerialComm] Serial2 started"); // debug
   }
 
   void onJsonReceived(JsonCallback cb) {
     userCb = cb;
-    // Serial.println("[SerialComm] onJsonReceived registered"); // debug
   }
 
-
-
   void sendJson(const String& rawJson) {
-  // Directly push the raw JSON to the queue without modifying it
-  txQ.push(rawJson);
-}
-
+    // Directly push the raw JSON to the queue without modifying it
+    txQ.push(rawJson);
+  }
 
   void loop() {
     // —— 1) Transmit queued frames ——
@@ -43,27 +38,20 @@ namespace SerialComm {
       uint8_t buf[300];
       size_t  len;
       if (packFrame(*msg, buf, len)) {
-        // Serial.printf("[SerialComm][Send] Sending seq payload=%s len=%u\n",
-        //               msg->c_str(), len);
         Serial2.write(buf, len);
       } else {
         Serial.println("[SerialComm][Error] packFrame failed");
       }
 
       txQ.pop();
-      // Serial.printf("[SerialComm][Send] Popped txQ, head=%u, tail=%u\n",
-      //               txQ.getHead(), txQ.getTail());
     }
 
     // —— 2) Read & parse incoming bytes ——
     while (Serial2.available()) {
       uint8_t b = Serial2.read();
-      // Serial.printf("[SerialComm][Debug] Read byte: 0x%02X\n", b);
 
       String payload;
       if (parser.parse(b, payload) && userCb) {
-        // Serial.printf("[SerialComm][Recv] Parsed payload: %s\n",
-        //               payload.c_str());
         userCb(payload);
       }
     }

@@ -16,7 +16,6 @@ static int mapPct(int p){
 static void step() {
   Serial.println("[LightManager][Debug] step(): updating brightness");  // debug
   bool again = false;
-  
 
   for (int i = 0; i < 4; i++) {
     if (currBri[i] < targBri[i]) {
@@ -50,36 +49,26 @@ namespace LightManager {
     }
   }
 
-  // void setTarget(uint8_t idx, uint8_t pct) {
-  //   if (idx < 4) {
-  //     targBri[idx] = mapPct(pct);
-  //     // Serial.printf("[LightManager][Debug] setTarget(): idx=%u pct=%u -> targBri=%d\n",
-  //     //               idx, pct, targBri[idx]);
-  //     ticker.once(0.02, step);
-  //   }
-  // }
   void setTarget(uint8_t idx, uint8_t pct) {
-  if (idx < 4) {
-    int targetMapped = mapPct(pct);
+    if (idx < 4) {
+      int targetMapped = mapPct(pct);
 
-    // ⏩ QUICKLY set full OFF (0%) or full ON (100%) without gradual transition
-    if (pct == 0 || pct == 100) {
+      // ⏩ QUICKLY set full OFF (0%) or full ON (100%) without gradual transition
+      if (pct == 0 || pct == 100) {
+        targBri[idx] = targetMapped;
+        currBri[idx] = targetMapped;
+        lights[idx]->setBrightness(targetMapped);
+        Serial.printf("[LightManager][QuickSet] Light %u -> instant set to %d (pct=%u)\n", idx, targetMapped, pct);
+        return;
+      }
+
+      // 👇 Default gradual transition logic
       targBri[idx] = targetMapped;
-      currBri[idx] = targetMapped;
-      lights[idx]->setBrightness(targetMapped);
-      Serial.printf("[LightManager][QuickSet] Light %u -> instant set to %d (pct=%u)\n", idx, targetMapped, pct);
-      return;
+      ticker.once(0.02, step);
     }
-
-    // 👇 Default gradual transition logic
-    targBri[idx] = targetMapped;
-    ticker.once(0.02, step);
   }
-}
-
 
   void update() {
     // nothing here—Ticker invokes step() asynchronously
-    // Serial.println("[LightManager][Debug] update()");  // debug if needed
   }
 }

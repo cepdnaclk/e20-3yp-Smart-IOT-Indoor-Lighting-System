@@ -12,13 +12,11 @@ namespace MQTTHandler {
 
   // Called by PubSubClient on each incoming message
   static void internalCb(char* topic, byte* payload, unsigned int len) {
-    // Serial.printf("[MQTT][Debug] Message arrived on topic %s, len=%u\n", topic, len);
     if (!userCb) return;
     String s;
     for (unsigned i = 0; i < len; i++) {
       s += (char)payload[i];
     }
-    // Serial.printf("[MQTT][Debug] Payload: %s\n", s.c_str());
     userCb(String(topic), s);
   }
 
@@ -62,7 +60,6 @@ namespace MQTTHandler {
 
   void onMessage(MqttCallback cb) {
     userCb = cb;
-    // Serial.println("[MQTT][Debug] User callback registered");
   }
 
   void loop() {
@@ -88,18 +85,17 @@ namespace MQTTHandler {
     Serial.printf("[MQTT][Debug] Publish %s\n", ok ? "succeeded" : "failed");
     return ok;
   }
-//chalas function to send ip as a json to iot core
+  // Wraps the IP in the same {"command","payload"} envelope the backend uses
+  // for every other message, so no special case is needed on that side.
   void sendWebSocketIP(const char* topic,const String& ipAddress) {
-  String json = "{";
-  json += "\"command\": \"websocket_ip\",";
-  json += "\"payload\": {";
-  json += "\"ipaddress\": \"" + ipAddress + "\"";
-  json += "}";
-  json += "}";
+    String json = "{";
+    json += "\"command\": \"websocket_ip\",";
+    json += "\"payload\": {";
+    json += "\"ipaddress\": \"" + ipAddress + "\"";
+    json += "}";
+    json += "}";
 
-  // MQTTHandler::publish(topic, json.c_str());
-   publish(topic, json.c_str()); // Call internal publish
-}
-
+     publish(topic, json.c_str()); // Call internal publish
+  }
 
 } // namespace MQTTHandler
