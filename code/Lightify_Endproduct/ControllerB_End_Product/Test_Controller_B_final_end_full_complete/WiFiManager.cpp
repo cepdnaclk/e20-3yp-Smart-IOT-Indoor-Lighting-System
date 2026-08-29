@@ -50,7 +50,3 @@ namespace WiFiManager {
     return WiFi.channel();
   }
 }
-
-
-
-

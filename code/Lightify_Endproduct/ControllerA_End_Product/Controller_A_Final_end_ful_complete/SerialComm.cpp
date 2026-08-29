@@ -24,13 +24,10 @@ namespace SerialComm {
     userCb = cb;
   }
 
-
-
   void sendJson(const String& rawJson) {
     // Directly push the raw JSON to the queue without modifying it
     txQ.push(rawJson);
   }
-
 
   void loop() {
     // —— 1) Transmit queued frames ——

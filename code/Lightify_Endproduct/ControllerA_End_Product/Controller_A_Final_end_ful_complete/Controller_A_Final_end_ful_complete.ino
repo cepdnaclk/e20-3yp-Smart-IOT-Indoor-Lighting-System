@@ -38,8 +38,6 @@ unsigned long automationResumeTime = 0;
 bool automationScheduled = false;
 int bb1 = 0, bb2 = 0, bb3 = 0, bb4 = 0;
 
-
-
 // AWS IoT device identity. These are compiled into the firmware, so every
 // board flashed from this source connects to the broker as the same client.
 const char* root_ca_pem     = R"EOF(
@@ -230,9 +228,6 @@ void handleSerialJson(const String& json) {
   }
 }
 
-
-
-
 // ——— MQTT callback: incoming messages ———
 void handleMqtt(const String& topic, const String& payload) {
   Serial.println("<< MQTT ⟶ [" + topic + "] " + payload);
@@ -318,8 +313,6 @@ void handleMqtt(const String& topic, const String& payload) {
     automationMode = 1;
   }
 
-
-
   // The backend polls for the current brightness because publishes are QoS 0
   // and a dropped command would otherwise leave the app showing stale values.
   if (command == "room_state") {
@@ -370,8 +363,6 @@ void handleMqtt(const String& topic, const String& payload) {
     MQTTHandler::publish(publishTop, output.c_str());
     Serial.println("✅ Sent schedule_set command: " + output);
   }
-
-
 
   if (command == "update_automation_mode") {
     // 👉 Send the entire payload as-is to the other ESP32
@@ -449,7 +440,6 @@ void handleMqtt(const String& topic, const String& payload) {
     Serial.println(F("---- MQTT Handler End ----"));
   }
 
-
 }
 
 // ——— Non-blocking reconnect state ———
@@ -506,7 +496,6 @@ void setup() {
     Serial.println("⚠️ Wi-Fi never connected—skipping MQTT init");
   }
 
-
   // —— One-time metadata send ——
   DynamicJsonDocument md(256);
   md["mac"]      = WiFi.macAddress();
@@ -526,16 +515,12 @@ void loop() {
     WiFi.reconnect();
   }
 
-
-
   // Compare by subtraction so this still works after millis() wraps (~49 days uptime).
   if (automationScheduled && (int32_t)(millis() - automationResumeTime) >= 0) {
     automationMode = 1;
     automationScheduled = false;
     Serial.println("Automation mode re-enabled.");
   }
-
-
 
   // —— Core tasks ——
   SerialComm2::loop();

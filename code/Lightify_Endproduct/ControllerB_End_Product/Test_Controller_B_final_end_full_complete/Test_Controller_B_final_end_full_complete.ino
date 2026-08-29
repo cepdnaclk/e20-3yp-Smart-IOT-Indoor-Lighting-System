@@ -19,13 +19,9 @@
 #include "ESPNowManager.h"
 #include "WebSocketManager.h"
 
-
 #include <queue>
 
 static const uint16_t MAX_RETRIES = 50;
-
-
-
 
 #include <queue>
 
@@ -37,7 +33,6 @@ uint32_t sendSeq = 0;
 uint16_t currentChunkIndex = 0;
 uint16_t retryCount = 0;
 unsigned long lastSendTime = 0;
-
 
 // ——— for UART2 framing ———
 HardwareSerial& comm = Serial2;
@@ -100,8 +95,6 @@ static bool isProvisionJson(const String& j){
 // reconnecting Wi-Fi, and against re-applying a payload we already handled.
 static bool provisioningInProgress  = false;
 static String lastProvisionJson     = "";
-
-
 
 // apply provisioning JSON at any time
 static void handleProvisioning(const String& j){
@@ -282,7 +275,6 @@ static void onChunk(const String& envelope) {
       return; // no reassembly for ACKs
     }
 
-
   }
 
   // 4) If we reach here it really is one of your data‐chunk envelopes
@@ -328,8 +320,6 @@ void clearConfig() {
   Serial.println("[Config] Cleared stored Wi-Fi credentials");
 }
 
-
-
 void setup(){
 
   Serial.begin(115200);
@@ -339,7 +329,6 @@ void setup(){
   comm.begin(BAUD, SERIAL_8N1, /*RX=*/16, /*TX=*/17);
   Serial.printf("[Setup] Serial2 @ %u baud, RX=16, TX=17\n", BAUD);
   SerialComm::begin(BAUD);
-
 
   // —— 2) Load any saved config; if empty, we'll block for JSON ——
   ConfigManager::begin();
@@ -364,7 +353,6 @@ void setup(){
     ConfigManager::getSensorMac().c_str()
   );
 
-
   WiFiManager::begin();
 
   // Tell Controller A which LAN IP the WebSocket server came up on. A
@@ -385,8 +373,6 @@ void setup(){
     Serial.println("[Debug] Sending JSON:");
     Serial.println(jsonToSend);
   }
-
-
 
   // ESP-NOW peer + callback
   {
@@ -419,7 +405,6 @@ void setup(){
     });
 
     ESPNowManager::begin();
-
 
   }
 
@@ -513,5 +498,3 @@ void loop() {
   }
 
 }
-
-

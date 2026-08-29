@@ -17,7 +17,6 @@ static bool           authOK[8] = {};
 static std::queue<String> pendingQueue;
 static const size_t MAX_QUEUE_SIZE = 30;
 
-
 // Send everything held while the client was away.
 static void flushQueueInternal() {
   if (wsClient >= 0 && authOK[wsClient]) {
@@ -76,7 +75,6 @@ static void onEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t len) {
       break;
   }
 }
-
 
 static void wsTask(void* param) {
   for (;;) {
@@ -147,7 +145,6 @@ namespace WebSocketManager {
     pendingQueue.push(msg);
     Serial.printf("📦 Queued message for later: %s\n", msg.c_str());
   }
-
 
   void flushQueue() {
     Serial.println("🔁 Flushing queued messages...");

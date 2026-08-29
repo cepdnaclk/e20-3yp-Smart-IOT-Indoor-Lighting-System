@@ -16,4 +16,3 @@ namespace WebSocketManager {
   void flushQueue();
 
 }
-

@@ -17,4 +17,3 @@ namespace SerialComm {
   // Call in your main loop to drive TX and RX
   void loop();
 }
-

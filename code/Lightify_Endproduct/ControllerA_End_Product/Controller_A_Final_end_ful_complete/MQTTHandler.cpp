@@ -98,5 +98,4 @@ namespace MQTTHandler {
      publish(topic, json.c_str()); // Call internal publish
   }
 
-
 } // namespace MQTTHandler

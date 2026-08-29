@@ -151,5 +151,4 @@ namespace BLEProvision {
     }
   }
 
-
 }

@@ -139,9 +139,6 @@ namespace SerialComm2 {
     }
   }
 
-
-
-
   void onJsonReceived(std::function<void(const String&)> cb) {
     rxCb = cb;
   }
