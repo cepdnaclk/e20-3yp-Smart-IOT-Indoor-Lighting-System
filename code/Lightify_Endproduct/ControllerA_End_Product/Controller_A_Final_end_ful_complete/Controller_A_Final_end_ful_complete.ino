@@ -277,23 +277,23 @@ void handleMqtt(const String& topic, const String& payload) {
     }
 
     // Apply brightness to local light (for direct/schedule only)
-  if (id >= 1 && id <= 4) {
-  int valueToApply = 0;
+    if (id >= 1 && id <= 4) {
+      int valueToApply = 0;
 
-  if (isScheduleOrDirect) {
-    if (id == 1) valueToApply = b1;
-    else if (id == 2) valueToApply = b2;
-    else if (id == 3) valueToApply = b3;
-    else if (id == 4) valueToApply = b4;
-  } else {
-    if (id == 1) valueToApply = bb1;
-    else if (id == 2) valueToApply = bb2;
-    else if (id == 3) valueToApply = bb3;
-    else if (id == 4) valueToApply = bb4;
-  }
+      if (isScheduleOrDirect) {
+        if (id == 1) valueToApply = b1;
+        else if (id == 2) valueToApply = b2;
+        else if (id == 3) valueToApply = b3;
+        else if (id == 4) valueToApply = b4;
+      } else {
+        if (id == 1) valueToApply = bb1;
+        else if (id == 2) valueToApply = bb2;
+        else if (id == 3) valueToApply = bb3;
+        else if (id == 4) valueToApply = bb4;
+      }
 
-  LightManager::setTarget(id - 1, valueToApply);
-}
+      LightManager::setTarget(id - 1, valueToApply);
+    }
 
   }
 
@@ -322,132 +322,132 @@ void handleMqtt(const String& topic, const String& payload) {
 
   // The backend polls for the current brightness because publishes are QoS 0
   // and a dropped command would otherwise leave the app showing stale values.
- if (command == "room_state") {
-  StaticJsonDocument<512> doc;
+  if (command == "room_state") {
+    StaticJsonDocument<512> doc;
 
-  doc["command"] = "room_state";
-  JsonArray message = doc["payload"]["message"].to<JsonArray>();
-Serial.println(message);
-  if (automationMode == 1) {
-    // Automation mode JSON using bb1-bb4
-    JsonObject bulb1 = message.createNestedObject();
-    bulb1["bulb_id"] = 1;
-    bulb1["brightness"] = bb1;
+    doc["command"] = "room_state";
+    JsonArray message = doc["payload"]["message"].to<JsonArray>();
+    Serial.println(message);
+    if (automationMode == 1) {
+      // Automation mode JSON using bb1-bb4
+      JsonObject bulb1 = message.createNestedObject();
+      bulb1["bulb_id"] = 1;
+      bulb1["brightness"] = bb1;
 
-    JsonObject bulb2 = message.createNestedObject();
-    bulb2["bulb_id"] = 2;
-    bulb2["brightness"] = bb2;
+      JsonObject bulb2 = message.createNestedObject();
+      bulb2["bulb_id"] = 2;
+      bulb2["brightness"] = bb2;
 
-    JsonObject bulb3 = message.createNestedObject();
-    bulb3["bulb_id"] = 3;
-    bulb3["brightness"] = bb3;
+      JsonObject bulb3 = message.createNestedObject();
+      bulb3["bulb_id"] = 3;
+      bulb3["brightness"] = bb3;
 
-    JsonObject bulb4 = message.createNestedObject();
-    bulb4["bulb_id"] = 4;
-    bulb4["brightness"] = bb4;
-  } else {
-    // Manual mode JSON using b1-b4
-    JsonObject bulb1 = message.createNestedObject();
-    bulb1["bulb_id"] = 1;
-    bulb1["brightness"] = b1;
+      JsonObject bulb4 = message.createNestedObject();
+      bulb4["bulb_id"] = 4;
+      bulb4["brightness"] = bb4;
+    } else {
+      // Manual mode JSON using b1-b4
+      JsonObject bulb1 = message.createNestedObject();
+      bulb1["bulb_id"] = 1;
+      bulb1["brightness"] = b1;
 
-    JsonObject bulb2 = message.createNestedObject();
-    bulb2["bulb_id"] = 2;
-    bulb2["brightness"] = b2;
+      JsonObject bulb2 = message.createNestedObject();
+      bulb2["bulb_id"] = 2;
+      bulb2["brightness"] = b2;
 
-    JsonObject bulb3 = message.createNestedObject();
-    bulb3["bulb_id"] = 3;
-    bulb3["brightness"] = b3;
+      JsonObject bulb3 = message.createNestedObject();
+      bulb3["bulb_id"] = 3;
+      bulb3["brightness"] = b3;
 
-    JsonObject bulb4 = message.createNestedObject();
-    bulb4["bulb_id"] = 4;
-    bulb4["brightness"] = b4;
+      JsonObject bulb4 = message.createNestedObject();
+      bulb4["bulb_id"] = 4;
+      bulb4["brightness"] = b4;
+    }
+
+    // Serialize and publish
+    String output;
+    serializeJson(doc, output);
+    MQTTHandler::publish(publishTop, output.c_str());
+    Serial.println("✅ Sent schedule_set command: " + output);
   }
 
-  // Serialize and publish
-  String output;
-  serializeJson(doc, output);
-  MQTTHandler::publish(publishTop, output.c_str());
-  Serial.println("✅ Sent schedule_set command: " + output);
-}
 
 
-
- if (command == "update_automation_mode") {
+  if (command == "update_automation_mode") {
     // 👉 Send the entire payload as-is to the other ESP32
-   printStackLeft("before JSON");
+    printStackLeft("before JSON");
 
-  Serial.println(F("---- MQTT Handler Start ----"));
-  Serial.print  (F("[DBG] Topic: "));
-  Serial.println(topic);
-  Serial.print  (F("[DBG] Payload: "));
-  Serial.println(payload);
+    Serial.println(F("---- MQTT Handler Start ----"));
+    Serial.print  (F("[DBG] Topic: "));
+    Serial.println(topic);
+    Serial.print  (F("[DBG] Payload: "));
+    Serial.println(payload);
 
-  // 1) Forward raw payload over UART to Controller B
-  Serial.println(F("[DBG] Forwarding raw JSON over UART..."));
-  SerialComm2::sendJson(payload);
-  Serial.println(F("[DBG] Forward complete."));
+    // 1) Forward raw payload over UART to Controller B
+    Serial.println(F("[DBG] Forwarding raw JSON over UART..."));
+    SerialComm2::sendJson(payload);
+    Serial.println(F("[DBG] Forward complete."));
 
-  // 2) Parse JSON safely
-  doc.clear();
-  Serial.println(F("[DBG] Deserializing JSON..."));
-  DeserializationError err = deserializeJson(doc, payload);
-  printStackLeft("after JSON");
+    // 2) Parse JSON safely
+    doc.clear();
+    Serial.println(F("[DBG] Deserializing JSON..."));
+    DeserializationError err = deserializeJson(doc, payload);
+    printStackLeft("after JSON");
 
-  if (err) {
-    Serial.print(F("[ERR] JSON parse failed: "));
-    Serial.println(err.c_str());
-    Serial.println(F("---- MQTT Handler End (Error) ----"));
-    return;
-  }
-  Serial.println(F("[DBG] JSON parsed successfully."));
+    if (err) {
+      Serial.print(F("[ERR] JSON parse failed: "));
+      Serial.println(err.c_str());
+      Serial.println(F("---- MQTT Handler End (Error) ----"));
+      return;
+    }
+    Serial.println(F("[DBG] JSON parsed successfully."));
 
-  JsonObject root = doc.as<JsonObject>();
+    JsonObject root = doc.as<JsonObject>();
 
-  // --- Handle "command" ---
-  if (root.containsKey("command")) {
-    const char* cmd = root["command"];
-    Serial.print(F("[CMD] "));
-    Serial.println(cmd);
-  } else {
-    Serial.println(F("[WARN] No 'command' key found"));
-  }
+    // --- Handle "command" ---
+    if (root.containsKey("command")) {
+      const char* cmd = root["command"];
+      Serial.print(F("[CMD] "));
+      Serial.println(cmd);
+    } else {
+      Serial.println(F("[WARN] No 'command' key found"));
+    }
 
-  // --- Handle "payload" ---
-  if (!root.containsKey("payload")) {
-    Serial.println(F("[WARN] No 'payload' object"));
+    // --- Handle "payload" ---
+    if (!root.containsKey("payload")) {
+      Serial.println(F("[WARN] No 'payload' object"));
+      Serial.println(F("---- MQTT Handler End ----"));
+      return;
+    }
+    JsonObject pl = root["payload"].as<JsonObject>();
+
+    // --- Iterate Areas ---
+    if (pl.containsKey("Areas")) {
+      Serial.println(F("[DBG] Iterating 'Areas' array..."));
+      for (JsonObject area : pl["Areas"].as<JsonArray>()) {
+        const char* name = area["name"] | "";
+        const char* type = area["type"] | "";
+        Serial.print(F(" Area '")); Serial.print(name);
+        Serial.print(F("' (type='")); Serial.print(type);
+        Serial.println(F("')"));
+        // TODO: apply area logic (e.g., store or configure zones)
+      }
+    }
+
+    // --- Iterate Rules ---
+    if (pl.containsKey("Rules")) {
+      Serial.println(F("[DBG] Iterating 'Rules' array..."));
+      for (JsonObject rule : pl["Rules"].as<JsonArray>()) {
+        const char* rName = rule["Rule_Name"] | "";
+        Serial.print(F(" Rule '")); Serial.print(rName);
+        Serial.println(F("'"));
+        // TODO: apply rule logic (e.g., schedule lighting changes)
+      }
+    }
+
+    printStackLeft("before return");
     Serial.println(F("---- MQTT Handler End ----"));
-    return;
   }
-  JsonObject pl = root["payload"].as<JsonObject>();
-
-  // --- Iterate Areas ---
-  if (pl.containsKey("Areas")) {
-    Serial.println(F("[DBG] Iterating 'Areas' array..."));
-    for (JsonObject area : pl["Areas"].as<JsonArray>()) {
-      const char* name = area["name"] | "";
-      const char* type = area["type"] | "";
-      Serial.print(F(" Area '")); Serial.print(name);
-      Serial.print(F("' (type='")); Serial.print(type);
-      Serial.println(F("')"));
-      // TODO: apply area logic (e.g., store or configure zones)
-    }
-  }
-
-  // --- Iterate Rules ---
-  if (pl.containsKey("Rules")) {
-    Serial.println(F("[DBG] Iterating 'Rules' array..."));
-    for (JsonObject rule : pl["Rules"].as<JsonArray>()) {
-      const char* rName = rule["Rule_Name"] | "";
-      Serial.print(F(" Rule '")); Serial.print(rName);
-      Serial.println(F("'"));
-      // TODO: apply rule logic (e.g., schedule lighting changes)
-    }
-  }
-
-  printStackLeft("before return");
-  Serial.println(F("---- MQTT Handler End ----"));
-}
 
 
 }

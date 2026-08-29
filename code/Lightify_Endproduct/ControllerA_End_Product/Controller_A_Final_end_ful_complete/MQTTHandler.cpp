@@ -88,15 +88,15 @@ namespace MQTTHandler {
   // Wraps the IP in the same {"command","payload"} envelope the backend uses
   // for every other message, so no special case is needed on that side.
   void sendWebSocketIP(const char* topic,const String& ipAddress) {
-  String json = "{";
-  json += "\"command\": \"websocket_ip\",";
-  json += "\"payload\": {";
-  json += "\"ipaddress\": \"" + ipAddress + "\"";
-  json += "}";
-  json += "}";
+    String json = "{";
+    json += "\"command\": \"websocket_ip\",";
+    json += "\"payload\": {";
+    json += "\"ipaddress\": \"" + ipAddress + "\"";
+    json += "}";
+    json += "}";
 
-   publish(topic, json.c_str()); // Call internal publish
-}
+     publish(topic, json.c_str()); // Call internal publish
+  }
 
 
 } // namespace MQTTHandler

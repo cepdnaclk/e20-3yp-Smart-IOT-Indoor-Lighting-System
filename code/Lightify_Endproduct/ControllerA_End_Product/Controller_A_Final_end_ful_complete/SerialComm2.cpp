@@ -96,48 +96,48 @@ namespace SerialComm2 {
       }
     }
   }
-void sendJson(const String& rawJson) {
-  const size_t CHUNK_SIZE = 256;
-  size_t totalLen = rawJson.length();
-  uint32_t seq    = nextSeq++;
-  uint16_t num    = (totalLen + CHUNK_SIZE - 1) / CHUNK_SIZE;
+  void sendJson(const String& rawJson) {
+    const size_t CHUNK_SIZE = 256;
+    size_t totalLen = rawJson.length();
+    uint32_t seq    = nextSeq++;
+    uint16_t num    = (totalLen + CHUNK_SIZE - 1) / CHUNK_SIZE;
 
-  Serial.printf("[SerialComm] sendJson seq=%u total=%u chunks=%u\n", seq, totalLen, num);
+    Serial.printf("[SerialComm] sendJson seq=%u total=%u chunks=%u\n", seq, totalLen, num);
 
-  // 🔧 Debug raw JSON
-  Serial.printf("[Debug] rawJson length = %u\n", totalLen);
-  Serial.println("[Debug] rawJson content:");
-  Serial.println(rawJson);
+    // 🔧 Debug raw JSON
+    Serial.printf("[Debug] rawJson length = %u\n", totalLen);
+    Serial.println("[Debug] rawJson content:");
+    Serial.println(rawJson);
 
-  // initialize outstanding set
-  auto &pending = outstanding[seq];
-  for (uint16_t i = 0; i < num; i++) {
-    pending.insert(i);
-    size_t offset = i * CHUNK_SIZE;
-    size_t len    = min(CHUNK_SIZE, totalLen - offset);
-    String slice  = rawJson.substring(offset, offset + len);
+    // initialize outstanding set
+    auto &pending = outstanding[seq];
+    for (uint16_t i = 0; i < num; i++) {
+      pending.insert(i);
+      size_t offset = i * CHUNK_SIZE;
+      size_t len    = min(CHUNK_SIZE, totalLen - offset);
+      String slice  = rawJson.substring(offset, offset + len);
 
-    // envelope
-    StaticJsonDocument<512> doc;
-    doc["type"]       = "data";
-    doc["seq"]        = seq;
-    doc["chunkIndex"] = i;
-    doc["numChunks"]  = num;
-    doc["data"]       = slice;
-    String out;
-    serializeJson(doc, out);
+      // envelope
+      StaticJsonDocument<512> doc;
+      doc["type"]       = "data";
+      doc["seq"]        = seq;
+      doc["chunkIndex"] = i;
+      doc["numChunks"]  = num;
+      doc["data"]       = slice;
+      String out;
+      serializeJson(doc, out);
 
-    // 🔧 Debug each built envelope
-    Serial.printf("[Debug] Built envelope %u: %s\n", i, out.c_str());
+      // 🔧 Debug each built envelope
+      Serial.printf("[Debug] Built envelope %u: %s\n", i, out.c_str());
 
-    // enqueue
-    ChunkEntry ce{ out, seq, i };
-    txQ.push(ce);
-    Serial.printf("[SerialComm] enq seq=%u idx=%u len=%u (head=%u tail=%u)\n",
-                  seq, i, out.length(),
-                  txQ.getHead(), txQ.getTail());
+      // enqueue
+      ChunkEntry ce{ out, seq, i };
+      txQ.push(ce);
+      Serial.printf("[SerialComm] enq seq=%u idx=%u len=%u (head=%u tail=%u)\n",
+                    seq, i, out.length(),
+                    txQ.getHead(), txQ.getTail());
+    }
   }
-}
 
 
 
