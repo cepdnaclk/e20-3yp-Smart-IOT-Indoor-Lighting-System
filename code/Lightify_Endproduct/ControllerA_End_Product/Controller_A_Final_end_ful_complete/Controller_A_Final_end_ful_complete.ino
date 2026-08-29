@@ -176,7 +176,8 @@ void handleSerialJson(const String& json) {
     }
   }
 
-  // ✅ Detect wrapped format (new Format B) and unwrap it
+  // Controller B may wrap the short form in a "payload" object. Lift it out
+  // so the rest of this function sees one shape only.
   if (doc.containsKey("payload")) {
     JsonObject payload = doc["payload"];
     if (payload.containsKey("c") && payload.containsKey("p")) {
@@ -250,7 +251,7 @@ void handleMqtt(const String& topic, const String& payload) {
 
   bool isScheduleOrDirect = (command == "schedule_set" || command == "direct_light_set");
 
-  // 👉 Step 1: Assign brightness values
+  // 1) Record the new brightness, then push it to the bulbs.
   for (JsonObject bulb : messageArr) {
     int id  = bulb["bulb_id"]    | -1;
     int bri = bulb["brightness"] |  0;
@@ -271,7 +272,8 @@ void handleMqtt(const String& topic, const String& payload) {
         break;
     }
 
-    // Apply brightness to local light (for direct/schedule only)
+    // Both sets are applied here. isScheduleOrDirect only chooses which of
+    // the two the value is read back from, not whether the bulb moves.
     if (id >= 1 && id <= 4) {
       int valueToApply = 0;
 
@@ -292,7 +294,8 @@ void handleMqtt(const String& topic, const String& payload) {
 
   }
 
-  // 👉 Step 2: Handle automation mode logic
+  // 2) A schedule takes the room off automation. A non-permanent one also
+  //    sets the timer that hands control back later.
   if (command == "schedule_set") {
     automationMode = 0;
 
@@ -308,7 +311,7 @@ void handleMqtt(const String& topic, const String& payload) {
     }
   }
 
-  // 👉 Step 3: If command is "automation", set mode to ON
+  // 3) The app can hand control back to automation straight away.
   if (command == "automation") {
     automationMode = 1;
   }
@@ -365,7 +368,7 @@ void handleMqtt(const String& topic, const String& payload) {
   }
 
   if (command == "update_automation_mode") {
-    // 👉 Send the entire payload as-is to the other ESP32
+    // Controller B needs the rules verbatim, so forward before parsing.
     printStackLeft("before JSON");
 
     Serial.println(F("---- MQTT Handler Start ----"));
