@@ -16,7 +16,7 @@ static int mapPct(int p){
 static void step() {
   Serial.println("[LightManager][Debug] step(): updating brightness");  // debug
   bool again = false;
-  
+
 
   for (int i = 0; i < 4; i++) {
     if (currBri[i] < targBri[i]) {

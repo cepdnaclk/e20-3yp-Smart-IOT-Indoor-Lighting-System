@@ -194,7 +194,7 @@ static void handleProvisioning(const String& j){
 
   WebSocketManager::begin(ConfigManager::getUserName());
   provisioningInProgress = false;
-  
+
 }
 
 // once we’ve re-assembled a full JSON, call this
@@ -331,23 +331,23 @@ void clearConfig() {
 
 
 void setup(){
-   
+
   Serial.begin(115200);
   while(!Serial) delay(10);
 
-  // —— 1) Serial2 + framed-UART init ——  
+  // —— 1) Serial2 + framed-UART init ——
   comm.begin(BAUD, SERIAL_8N1, /*RX=*/16, /*TX=*/17);
   Serial.printf("[Setup] Serial2 @ %u baud, RX=16, TX=17\n", BAUD);
   SerialComm::begin(BAUD);
 
 
-  // —— 2) Load any saved config; if empty, we'll block for JSON ——  
+  // —— 2) Load any saved config; if empty, we'll block for JSON ——
   ConfigManager::begin();
 
-  // —— 3) Catch all *chunk* envelopes from A ——  
+  // —— 3) Catch all *chunk* envelopes from A ——
   SerialComm::onJsonReceived(onChunk);
 
-    // —— 4) If no saved creds, wait right now ——  
+    // —— 4) If no saved creds, wait right now ——
   if (ConfigManager::getSSID().isEmpty()){
     Serial.println("[Setup] Waiting for provisioning JSON…");
     while(!gotInitial){
@@ -356,7 +356,7 @@ void setup(){
     handleProvisioning(initialJson);
   }
 
-  // —— 5) Full startup now that config is in RAM ——  
+  // —— 5) Full startup now that config is in RAM ——
   Serial.printf(
     "[Startup] SSID=%s  USER=%s  SENSOR_MAC=%s\n",
     ConfigManager::getSSID().c_str(),
@@ -366,7 +366,7 @@ void setup(){
 
 
   WiFiManager::begin();
- 
+
   // Tell Controller A which LAN IP the WebSocket server came up on. A
   // forwards it to the backend, which is how the phone app learns the address.
   {
@@ -409,7 +409,7 @@ void setup(){
         // Directly queue the original string without any changes
         outQ.push({ nextOutSeq++, s });
         Serial.printf("[ESP-NOW] queued raw JSON for serial: %s\n", s.c_str());
-  
+
       } else {
         Serial.println("hi i send to ur sensor data to websocket");
         Serial.println(s);
@@ -419,10 +419,10 @@ void setup(){
     });
 
     ESPNowManager::begin();
-    
+
 
   }
-  
+
   BLEProvision::begin("ControllerB");
   BLEProvision::update();
   Serial.println("[Debug] BLEProvision after ESPNowManager initialized");
@@ -515,4 +515,3 @@ void loop() {
 }
 
 
-  

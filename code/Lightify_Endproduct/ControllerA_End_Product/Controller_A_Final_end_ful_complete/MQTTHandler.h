@@ -13,7 +13,7 @@ namespace MQTTHandler {
   bool publish(const char* topic, const char* msg);
 
   // Publishes Controller B's LAN IP so the phone app can find its WebSocket.
-  void sendWebSocketIP(const char* topic,const String& ipAddress); 
+  void sendWebSocketIP(const char* topic,const String& ipAddress);
 
 
 }

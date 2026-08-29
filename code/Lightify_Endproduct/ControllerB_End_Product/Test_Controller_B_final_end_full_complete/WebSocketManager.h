@@ -14,6 +14,6 @@ namespace WebSocketManager {
 
   // Flush any queued messages to the client (used internally)
   void flushQueue();
-  
+
 }
 

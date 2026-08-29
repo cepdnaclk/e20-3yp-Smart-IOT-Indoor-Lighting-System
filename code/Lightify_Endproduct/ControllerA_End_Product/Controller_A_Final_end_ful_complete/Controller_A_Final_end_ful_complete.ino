@@ -317,7 +317,7 @@ void handleMqtt(const String& topic, const String& payload) {
   if (command == "automation") {
     automationMode = 1;
   }
-  
+
 
 
   // The backend polls for the current brightness because publishes are QoS 0
