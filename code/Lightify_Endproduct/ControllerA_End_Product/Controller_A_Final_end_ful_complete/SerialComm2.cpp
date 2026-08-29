@@ -5,7 +5,9 @@
 #include <map>
 #include <set>
 
-//final updated controller A fixed the issue of empty json from A
+// Chunked, ACK'd transport over UART2. Controller A's payloads outgrew a
+// single frame, so each message is split, numbered, and re-sent until the
+// far side acknowledges that chunk.
 static HardwareSerial& uart = Serial2;
 static FrameParser        parser;
 

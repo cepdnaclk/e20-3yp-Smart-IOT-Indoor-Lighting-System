@@ -85,7 +85,8 @@ namespace MQTTHandler {
     Serial.printf("[MQTT][Debug] Publish %s\n", ok ? "succeeded" : "failed");
     return ok;
   }
-//chalas function to send ip as a json to iot core
+  // Wraps the IP in the same {"command","payload"} envelope the backend uses
+  // for every other message, so no special case is needed on that side.
   void sendWebSocketIP(const char* topic,const String& ipAddress) {
   String json = "{";
   json += "\"command\": \"websocket_ip\",";

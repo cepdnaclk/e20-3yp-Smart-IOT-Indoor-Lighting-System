@@ -1,6 +1,8 @@
-// main.ino
-
-//final updated controller A fixed websocket correctly
+// Controller A — the board wired to the mains bulbs.
+//
+// It owns two links: MQTT over TLS to AWS IoT Core, and a UART2 cable to
+// Controller B. Commands can arrive from either side; both end up calling
+// LightManager::setTarget() to drive the four dimmer channels.
 #include <Arduino.h>
 #include <WiFi.h>
 #include <ArduinoJson.h>
@@ -22,8 +24,10 @@ const char* publishTop   = "Tharindu/94:54:C5:B7:E3:2C/esp_to_backend";
 
 StaticJsonDocument<8000> doc;
 
-//chala varibales 
-//varibales for schedules 
+// Brightness is tracked twice. b1-b4 hold what the user or a schedule asked
+// for; bb1-bb4 hold what the radar automation asked for. automationMode picks
+// which set is allowed to reach the bulbs, so a permanent schedule can hold
+// the automation off without losing its values.
 int b1 = 0;
 int b2 = 0;
 int b3 = 0;
@@ -32,12 +36,12 @@ int flag =-1;
 int automationMode=1;
 unsigned long automationResumeTime = 0;
 bool automationScheduled = false;
-//varibales for automation
 int bb1 = 0, bb2 = 0, bb3 = 0, bb4 = 0;
 
 
 
-// Paste your PEM strings here:
+// AWS IoT device identity. These are compiled into the firmware, so every
+// board flashed from this source connects to the broker as the same client.
 const char* root_ca_pem     = R"EOF(
 -----BEGIN CERTIFICATE-----
 MIIDQTCCAimgAwIBAgITBmyfz5m/jAo54vB4ikPmljZbyjANBgkqhkiG9w0BAQsF
@@ -316,7 +320,8 @@ void handleMqtt(const String& topic, const String& payload) {
   
 
 
-//condition for send room state for mqtt 
+  // The backend polls for the current brightness because publishes are QoS 0
+  // and a dropped command would otherwise leave the app showing stale values.
  if (command == "room_state") {
   StaticJsonDocument<512> doc;
 
@@ -465,7 +470,9 @@ void setup() {
 
   // —— SerialComm: framed JSON over UART ——
 
-  //chala trick commserial2 eke wede
+  // —— UART2 link to Controller B ——
+  // SerialComm2 replaced the older SerialComm here: it splits long payloads
+  // into 256-byte chunks and waits for an ACK on each one.
   SerialComm2::begin(115200);
   SerialComm2::onJsonReceived(handleSerialJson);
 
@@ -500,7 +507,6 @@ void setup() {
   }
 
 
-//chalas ip send as json 
   // —— One-time metadata send ——
   DynamicJsonDocument md(256);
   md["mac"]      = WiFi.macAddress();
@@ -532,8 +538,6 @@ void loop() {
 
 
   // —— Core tasks ——
-
-//chala commserial2
   SerialComm2::loop();
 
   if (WiFi.status() == WL_CONNECTED){
