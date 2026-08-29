@@ -43,19 +43,19 @@ class AckCallback : public BLECharacteristicCallbacks {
       StaticJsonDocument<128> doc;
       DeserializationError err = deserializeJson(doc, value);
       if (!err) {
-  uint32_t ackSeq = doc["ack"];
-  uint16_t ackIdx = doc["chunkIndex"];
-  Serial.printf("[BLE ACK] 🔄 Received: seq=%lu, chunkIndex=%u\n", ackSeq, ackIdx);
+        uint32_t ackSeq = doc["ack"];
+        uint16_t ackIdx = doc["chunkIndex"];
+        Serial.printf("[BLE ACK] 🔄 Received: seq=%lu, chunkIndex=%u\n", ackSeq, ackIdx);
 
-  if (ackSeq == sendSeq && ackIdx == currentChunkIndex) {
-    Serial.println("[BLE ACK] ✅ Valid ACK received!");
-    waitingForAck = false;  // ACK received — ready for next chunk
-  } else {
-    Serial.printf("[BLE ACK] ❌ Mismatched ACK: Expected seq=%lu, chunkIndex=%u\n", sendSeq, currentChunkIndex);
-  }
-} else {
-  Serial.printf("[BLE ACK] ❌ Failed to parse ACK: %s\n", err.c_str());
-}
+        if (ackSeq == sendSeq && ackIdx == currentChunkIndex) {
+          Serial.println("[BLE ACK] ✅ Valid ACK received!");
+          waitingForAck = false;  // ACK received — ready for next chunk
+        } else {
+          Serial.printf("[BLE ACK] ❌ Mismatched ACK: Expected seq=%lu, chunkIndex=%u\n", sendSeq, currentChunkIndex);
+        }
+      } else {
+        Serial.printf("[BLE ACK] ❌ Failed to parse ACK: %s\n", err.c_str());
+      }
 
     }
   }
@@ -138,18 +138,18 @@ namespace BLEProvision {
   }
 
   void sendChunk(const String& chunk) {
-  if (chunk.length() == 0) {
-    Serial.println("[BLEProvision] ❌ Empty chunk, not sending");
-    return;
+    if (chunk.length() == 0) {
+      Serial.println("[BLEProvision] ❌ Empty chunk, not sending");
+      return;
+    }
+    if (dataChar) {
+      dataChar->setValue(chunk.c_str());
+      dataChar->notify();
+      Serial.printf("[BLEProvision] Sent chunk over BLE (%u bytes)\n", chunk.length());
+    } else {
+      Serial.println("[BLEProvision] ERROR: dataChar is null");
+    }
   }
-  if (dataChar) {
-    dataChar->setValue(chunk.c_str());
-    dataChar->notify();
-    Serial.printf("[BLEProvision] Sent chunk over BLE (%u bytes)\n", chunk.length());
-  } else {
-    Serial.println("[BLEProvision] ERROR: dataChar is null");
-  }
-}
 
 
 }

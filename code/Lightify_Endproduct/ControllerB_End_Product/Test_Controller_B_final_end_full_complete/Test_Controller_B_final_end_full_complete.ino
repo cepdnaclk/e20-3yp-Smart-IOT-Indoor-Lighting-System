@@ -175,22 +175,22 @@ static void handleProvisioning(const String& j){
 
   // Wi-Fi may have come up on a different IP, so tell Controller A the new one.
   {
-  DynamicJsonDocument doc(256);
+    DynamicJsonDocument doc(256);
 
-  doc["command"] = "websocket_ip";
+    doc["command"] = "websocket_ip";
 
-  JsonObject payload = doc.createNestedObject("payload");
-  payload["ipaddress"] = WiFiManager::getIP().toString();
+    JsonObject payload = doc.createNestedObject("payload");
+    payload["ipaddress"] = WiFiManager::getIP().toString();
 
-  String jsonToSend;
-  serializeJson(doc, jsonToSend);
+    String jsonToSend;
+    serializeJson(doc, jsonToSend);
 
-  SerialComm::sendJson(jsonToSend);
+    SerialComm::sendJson(jsonToSend);
 
-  Serial.println("[Debug] Sending JSON:");
-  Serial.println(jsonToSend);
+    Serial.println("[Debug] Sending JSON:");
+    Serial.println(jsonToSend);
 
-}
+  }
 
   WebSocketManager::begin(ConfigManager::getUserName());
   provisioningInProgress = false;
@@ -259,28 +259,28 @@ static void onChunk(const String& envelope) {
       // fall through to reassembly…
     }
     else if (strcmp(t, "ack") == 0) {
-  Serial.println(F("[ACK] Received, skipping reassembly"));
+      Serial.println(F("[ACK] Received, skipping reassembly"));
 
-  // Extract ACK info:
-  uint32_t ackSeq = doc["seq"];
-  uint16_t ackIdx = doc["chunkIndex"];
+      // Extract ACK info:
+      uint32_t ackSeq = doc["seq"];
+      uint16_t ackIdx = doc["chunkIndex"];
 
-  // Only clear waitingForAck if ACK matches current sent chunk:
-  if (waitingForAck && ackSeq == sendSeq && ackIdx == currentChunkIndex) {
-    Serial.printf("[ACK] ACK matches current chunk seq=%u idx=%u\n", ackSeq, ackIdx);
-    waitingForAck = false;
-    retryCount = 0;
-    currentChunkIndex++;
-    if (!chunkQueue.empty()) {
-      chunkQueue.pop();
+      // Only clear waitingForAck if ACK matches current sent chunk:
+      if (waitingForAck && ackSeq == sendSeq && ackIdx == currentChunkIndex) {
+        Serial.printf("[ACK] ACK matches current chunk seq=%u idx=%u\n", ackSeq, ackIdx);
+        waitingForAck = false;
+        retryCount = 0;
+        currentChunkIndex++;
+        if (!chunkQueue.empty()) {
+          chunkQueue.pop();
+        }
+      } else {
+        Serial.printf("[ACK] Received ACK for seq=%u idx=%u but not current chunk seq=%u idx=%u\n",
+                      ackSeq, ackIdx, sendSeq, currentChunkIndex);
+      }
+
+      return; // no reassembly for ACKs
     }
-  } else {
-    Serial.printf("[ACK] Received ACK for seq=%u idx=%u but not current chunk seq=%u idx=%u\n",
-                  ackSeq, ackIdx, sendSeq, currentChunkIndex);
-  }
-
-  return; // no reassembly for ACKs
-}
 
 
   }
@@ -307,17 +307,17 @@ static void onChunk(const String& envelope) {
     buf.received++;
   }
 
-// 6) If we've now got all the pieces, stitch them back together
-if (buf.received == buf.total) {
-  String full;
-  for (auto &p : buf.parts) full += p;
-  processFullJson(full);
-  recvBuffers.erase(seq);
+  // 6) If we've now got all the pieces, stitch them back together
+  if (buf.received == buf.total) {
+    String full;
+    for (auto &p : buf.parts) full += p;
+    processFullJson(full);
+    recvBuffers.erase(seq);
 
-  Serial.println("[INFO] Full JSON received and processed. Restarting ESP32...");
-  delay(100); // Short delay before restart for logging
-  ESP.restart();  // Restart ESP32 instead of sending over BLE
-}
+    Serial.println("[INFO] Full JSON received and processed. Restarting ESP32...");
+    delay(100); // Short delay before restart for logging
+    ESP.restart();  // Restart ESP32 instead of sending over BLE
+  }
 
 }
 void clearConfig() {
@@ -369,22 +369,22 @@ void setup(){
  
   // Tell Controller A which LAN IP the WebSocket server came up on. A
   // forwards it to the backend, which is how the phone app learns the address.
-{
-  DynamicJsonDocument doc(256);
+  {
+    DynamicJsonDocument doc(256);
 
-  doc["command"] = "websocket_ip";
+    doc["command"] = "websocket_ip";
 
-  JsonObject payload = doc.createNestedObject("payload");
-  payload["ipaddress"] = WiFiManager::getIP().toString();
+    JsonObject payload = doc.createNestedObject("payload");
+    payload["ipaddress"] = WiFiManager::getIP().toString();
 
-  String jsonToSend;
-  serializeJson(doc, jsonToSend);
+    String jsonToSend;
+    serializeJson(doc, jsonToSend);
 
-  SerialComm::sendJson(jsonToSend);
+    SerialComm::sendJson(jsonToSend);
 
-  Serial.println("[Debug] Sending JSON:");
-  Serial.println(jsonToSend);
-}
+    Serial.println("[Debug] Sending JSON:");
+    Serial.println(jsonToSend);
+  }
 
 
 
@@ -395,26 +395,26 @@ void setup(){
     ESPNowManager::setPeer(mac);
 
     ESPNowManager::onReceive([](const String& s) {
-  // parse the incoming ESP-NOW JSON
-  StaticJsonDocument<1024> doc;
-  DeserializationError err = deserializeJson(doc, s);
-  if (err) {
-    Serial.printf("[ESP-NOW] bad JSON, skipping: %s\n", err.c_str());
-    return;
-  }
+      // parse the incoming ESP-NOW JSON
+      StaticJsonDocument<1024> doc;
+      DeserializationError err = deserializeJson(doc, s);
+      if (err) {
+        Serial.printf("[ESP-NOW] bad JSON, skipping: %s\n", err.c_str());
+        return;
+      }
 
-  // check for short command type "c":"a"
-  const char *cmd = doc["c"] | "";
-  if (strcmp(cmd, "a") == 0) {
-    // Directly queue the original string without any changes
-    outQ.push({ nextOutSeq++, s });
-    Serial.printf("[ESP-NOW] queued raw JSON for serial: %s\n", s.c_str());
+      // check for short command type "c":"a"
+      const char *cmd = doc["c"] | "";
+      if (strcmp(cmd, "a") == 0) {
+        // Directly queue the original string without any changes
+        outQ.push({ nextOutSeq++, s });
+        Serial.printf("[ESP-NOW] queued raw JSON for serial: %s\n", s.c_str());
   
-  } else {
-  Serial.println("hi i send to ur sensor data to websocket");
-  Serial.println(s);
-  WebSocketManager::enqueueMessage(s);  // ✅ Queue instead of direct send
-}
+      } else {
+        Serial.println("hi i send to ur sensor data to websocket");
+        Serial.println(s);
+        WebSocketManager::enqueueMessage(s);  // ✅ Queue instead of direct send
+      }
 
     });
 
@@ -455,62 +455,62 @@ void loop() {
   }
 
   // —— 3) Process any Serial JSON cmds: forward selected ones to sensor ——
-while (!cmdQ.empty()) {
-  String* p = cmdQ.front();
-  if (p) {
-    StaticJsonDocument<512> doc;
-    auto err = deserializeJson(doc, *p);
-    if (err) {
-      Serial.print(F("[Error] invalid JSON on cmdQ: "));
-      Serial.println(err.c_str());
-    } else if (doc.containsKey("command")) {
-      const char *cmd = doc["command"];
-      if (serialDataShouldForwardViaESPNow(cmd)) {
-        Serial.printf("[BLE] Forwarding command \"%s\"\n", cmd);
-        BLEProvision::sendChunk(*p);  // ✅ Forward via BLE
+  while (!cmdQ.empty()) {
+    String* p = cmdQ.front();
+    if (p) {
+      StaticJsonDocument<512> doc;
+      auto err = deserializeJson(doc, *p);
+      if (err) {
+        Serial.print(F("[Error] invalid JSON on cmdQ: "));
+        Serial.println(err.c_str());
+      } else if (doc.containsKey("command")) {
+        const char *cmd = doc["command"];
+        if (serialDataShouldForwardViaESPNow(cmd)) {
+          Serial.printf("[BLE] Forwarding command \"%s\"\n", cmd);
+          BLEProvision::sendChunk(*p);  // ✅ Forward via BLE
+        } else {
+          Serial.printf("[Info] skipping command \"%s\"\n", cmd);
+        }
       } else {
-        Serial.printf("[Info] skipping command \"%s\"\n", cmd);
+        Serial.println(F("[Warn] no \"command\" field, skipping"));
+      }
+    }
+    cmdQ.pop();
+  }
+
+  // —— 4) Reliable Chunk Queue Retry Logic ——
+  unsigned long now = millis();
+
+  if (!chunkQueue.empty()) {
+    if (waitingForAck) {
+      if (now - lastSendTime > 1000) {  // 1 second retry interval
+        if (retryCount >= MAX_RETRIES) {
+          // Sensor has stopped answering. Drop the whole message rather than retry
+          // forever - it cannot be reassembled without this chunk anyway.
+          Serial.printf("[BLE][FAIL] Giving up on chunk %u (seq=%lu) after %u retries\n",
+                        currentChunkIndex, sendSeq, retryCount);
+          while (!chunkQueue.empty()) chunkQueue.pop();
+          waitingForAck = false;
+          retryCount = 0;
+          currentChunkIndex = 0;
+        } else {
+          Serial.printf("[BLE][RETRY] Resending Chunk %u (seq=%lu), attempt #%u\n", currentChunkIndex, sendSeq, retryCount);
+          BLEProvision::sendChunk(chunkQueue.front());
+          lastSendTime = now;
+          retryCount++;
+        }
       }
     } else {
-      Serial.println(F("[Warn] no \"command\" field, skipping"));
-    }
-  }
-  cmdQ.pop();
-}
-
-// —— 4) Reliable Chunk Queue Retry Logic ——
-unsigned long now = millis();
-
-if (!chunkQueue.empty()) {
-  if (waitingForAck) {
-  if (now - lastSendTime > 1000) {  // 1 second retry interval
-    if (retryCount >= MAX_RETRIES) {
-      // Sensor has stopped answering. Drop the whole message rather than retry
-      // forever - it cannot be reassembled without this chunk anyway.
-      Serial.printf("[BLE][FAIL] Giving up on chunk %u (seq=%lu) after %u retries\n",
-                    currentChunkIndex, sendSeq, retryCount);
-      while (!chunkQueue.empty()) chunkQueue.pop();
-      waitingForAck = false;
-      retryCount = 0;
-      currentChunkIndex = 0;
-    } else {
-      Serial.printf("[BLE][RETRY] Resending Chunk %u (seq=%lu), attempt #%u\n", currentChunkIndex, sendSeq, retryCount);
-      BLEProvision::sendChunk(chunkQueue.front());
+      // ACK received — send next chunk
+      String currentPayload = chunkQueue.front();
+      Serial.printf("[BLE][SEND] Chunk %u attempt #%u\n", currentChunkIndex, retryCount);
+      BLEProvision::sendChunk(currentPayload);
       lastSendTime = now;
+      waitingForAck = true;
       retryCount++;
     }
-  }
-} else {
-  // ACK received — send next chunk
-  String currentPayload = chunkQueue.front();
-  Serial.printf("[BLE][SEND] Chunk %u attempt #%u\n", currentChunkIndex, retryCount);
-  BLEProvision::sendChunk(currentPayload);
-  lastSendTime = now;
-  waitingForAck = true;
-  retryCount++;
-}
 
-}
+  }
 
 }
 

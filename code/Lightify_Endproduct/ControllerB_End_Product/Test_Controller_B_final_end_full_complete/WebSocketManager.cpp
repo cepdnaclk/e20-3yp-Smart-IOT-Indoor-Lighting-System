@@ -135,18 +135,18 @@ namespace WebSocketManager {
   }
 
   void enqueueMessage(const String& msg) {
-  if (pendingQueue.size() >= MAX_QUEUE_SIZE) {
-    Serial.println("⚠️ Queue full! Dropping all existing messages and adding new one...");
+    if (pendingQueue.size() >= MAX_QUEUE_SIZE) {
+      Serial.println("⚠️ Queue full! Dropping all existing messages and adding new one...");
 
-    // Drop all messages
-    while (!pendingQueue.empty()) {
-      pendingQueue.pop();
+      // Drop all messages
+      while (!pendingQueue.empty()) {
+        pendingQueue.pop();
+      }
     }
-  }
 
-  pendingQueue.push(msg);
-  Serial.printf("📦 Queued message for later: %s\n", msg.c_str());
-}
+    pendingQueue.push(msg);
+    Serial.printf("📦 Queued message for later: %s\n", msg.c_str());
+  }
 
 
   void flushQueue() {

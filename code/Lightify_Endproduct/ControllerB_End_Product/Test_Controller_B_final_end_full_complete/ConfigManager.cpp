@@ -8,7 +8,7 @@ static uint8_t sensorBytes[6];
 namespace ConfigManager {
 
   void initFromJson(const String& json) {
- DynamicJsonDocument doc(1024);
+    DynamicJsonDocument doc(1024);
     auto err = deserializeJson(doc, json);
     if (err) {
       Serial.printf("[Config] JSON parse failed: %s\n", err.c_str());
