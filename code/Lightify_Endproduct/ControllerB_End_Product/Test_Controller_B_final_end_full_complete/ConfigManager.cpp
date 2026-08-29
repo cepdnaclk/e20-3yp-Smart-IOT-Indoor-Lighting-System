@@ -46,7 +46,6 @@ namespace ConfigManager {
     pref.putString("mac",  sensorMac);
     pref.end();
 
-    // debug
     Serial.printf("[Config] Saved SSID=%s, USER=%s, MAC=%s\n",
                   ssid.c_str(), user.c_str(), sensorMac.c_str());
   }

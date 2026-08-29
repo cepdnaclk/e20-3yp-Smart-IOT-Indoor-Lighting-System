@@ -1,4 +1,6 @@
-//added println debug lines
+// BLE GATT server. Four characteristics publish the board's identity and
+// Wi-Fi settings to the phone; a fifth carries chunked data out, and the app
+// writes an ACK back on the sixth so sendChunk() knows a chunk landed.
 #include <BLEDevice.h>
 #include <BLEServer.h>
 #include <BLE2902.h>

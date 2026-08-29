@@ -4,11 +4,11 @@
 #include <vector>
 #include <Preferences.h>
 
-//final updated controller B fixed websocket correctly
-//final updated controller B fixed the issue of empty json from A
-
-//chalas code respect him
-
+// Controller B — the board that owns the short-range radios.
+//
+// It never touches a bulb. It listens to the sensor over ESP-NOW, serves the
+// phone app over WebSocket on port 81, advertises over BLE, and passes
+// everything to Controller A across the UART2 cable.
 #include "ring_buffer.h"
 #include "frame_protocol.h"
 
@@ -29,7 +29,8 @@ static const uint16_t MAX_RETRIES = 50;
 
 #include <queue>
 
-// Global/static variables (define here)
+// Shared with BLEProvision.cpp, which declares these extern. They track the
+// one chunk currently in flight over BLE and whether its ACK has come back.
 std::queue<String> chunkQueue;
 bool waitingForAck = false;
 uint32_t sendSeq = 0;
@@ -65,9 +66,11 @@ static std::map<uint32_t,ChunkBuffer> recvBuffers;
 
 static const char * serialForwardableCommandsToSensor[] = {
   "update_automation_mode",
-  // add future commands here, e.g.:   // "reboot_sensor", // "set_sensor_params",
+  // add future commands here, e.g. "reboot_sensor" or "set_sensor_params"
 };
 
+// NOTE: the name is wrong. loop() forwards these commands over BLE, not
+// ESP-NOW — the transport changed and the name was never updated.
 static bool serialDataShouldForwardViaESPNow(const char *cmd) {
   for (auto c : serialForwardableCommandsToSensor) {
     if (strcmp(c, cmd) == 0) return true;
@@ -93,7 +96,8 @@ static bool isProvisionJson(const String& j){
       && obj.containsKey("mac");
 }
 
-// at top of your .ino (or shared header)
+// Guards against a second provisioning run starting while the first is still
+// reconnecting Wi-Fi, and against re-applying a payload we already handled.
 static bool provisioningInProgress  = false;
 static String lastProvisionJson     = "";
 
@@ -101,7 +105,6 @@ static String lastProvisionJson     = "";
 
 // apply provisioning JSON at any time
 static void handleProvisioning(const String& j){
-// --- ENTRY TRACE ---
   Serial.println("[DBG] ▶ handleProvisioning() called");
 
   // 1) Bail if we’re already running
@@ -170,23 +173,20 @@ static void handleProvisioning(const String& j){
   BLEProvision::update();
   Serial.println("[Debug] BLEProvision updated with new creds");
 
+  // Wi-Fi may have come up on a different IP, so tell Controller A the new one.
   {
-  DynamicJsonDocument doc(256);  // Create the main document
+  DynamicJsonDocument doc(256);
 
-  doc["command"] = "websocket_ip";  // Add the command field
+  doc["command"] = "websocket_ip";
 
-  // Create nested payload
   JsonObject payload = doc.createNestedObject("payload");
-  payload["ipaddress"] = WiFiManager::getIP().toString();  // Get current IP
+  payload["ipaddress"] = WiFiManager::getIP().toString();
 
-  // Serialize to string
   String jsonToSend;
   serializeJson(doc, jsonToSend);
 
-  // Send JSON via your serial communication handler
   SerialComm::sendJson(jsonToSend);
 
-  // Print the JSON to Serial Monitor for debugging
   Serial.println("[Debug] Sending JSON:");
   Serial.println(jsonToSend);
 
@@ -200,26 +200,29 @@ static void handleProvisioning(const String& j){
 // once we’ve re-assembled a full JSON, call this
 static void processFullJson(const String& json) {
 
-  // **PRINT THE FULL JSON** immediately
   Serial.println(F("\n=== Full JSON received ==="));
   Serial.println(json);
   Serial.println(F("=========================="));
 
-  // First-boot provisioning? && ConfigManager::getSSID().isEmpty()
+  // First boot with nothing in NVM: hold the JSON so setup() can apply it
+  // once, instead of provisioning from inside this callback.
   if (!gotInitial && ConfigManager::getSSID().isEmpty()) {
     initialJson = json;
     gotInitial  = true;
     return;
   }
 
-  // Runtime provisioning & queue for ESP-NOW
+  // Already provisioned, so this is a live config change. Apply it and queue
+  // the JSON for loop(), which decides whether the sensor needs to see it.
   handleProvisioning(json);
   cmdQ.push(json);
 }
 
-// Called for each 256 B chunk envelope
-// Called for each incoming framed payload
-//chala modify function get the chunks create the full json and again chunk into small peices to send via esp now
+// Called for every framed payload arriving from Controller A.
+//
+// Controller A sends long JSON in 256-byte chunks. This ACKs each chunk,
+// collects them in recvBuffers until the set is complete, then hands the
+// stitched JSON to processFullJson().
 static void onChunk(const String& envelope) {
 
   Serial.println("Received chunk envelope:");
@@ -364,24 +367,21 @@ void setup(){
 
   WiFiManager::begin();
  
- //websocketip sending by controller B to A
+  // Tell Controller A which LAN IP the WebSocket server came up on. A
+  // forwards it to the backend, which is how the phone app learns the address.
 {
-  DynamicJsonDocument doc(256);  // Create the main document
+  DynamicJsonDocument doc(256);
 
-  doc["command"] = "websocket_ip";  // Add the command field
+  doc["command"] = "websocket_ip";
 
-  // Create nested payload
   JsonObject payload = doc.createNestedObject("payload");
-  payload["ipaddress"] = WiFiManager::getIP().toString();  // Get current IP
+  payload["ipaddress"] = WiFiManager::getIP().toString();
 
-  // Serialize to string
   String jsonToSend;
   serializeJson(doc, jsonToSend);
 
-  // Send JSON via your serial communication handler
   SerialComm::sendJson(jsonToSend);
 
-  // Print the JSON to Serial Monitor for debugging
   Serial.println("[Debug] Sending JSON:");
   Serial.println(jsonToSend);
 }

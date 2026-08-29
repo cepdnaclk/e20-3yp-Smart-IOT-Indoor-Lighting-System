@@ -11,11 +11,14 @@ static WebSocketsServer ws(81);
 static String         validUser;
 static int            wsClient = -1;
 static bool           authOK[8] = {};
-static std::queue<String> pendingQueue;  // 🆕 buffer queue
-static const size_t MAX_QUEUE_SIZE = 30;  // Set to your desired max queue length
+// Sensor updates arrive before the app connects and authenticates, so they
+// are held here rather than dropped. The cap stops an absent app from
+// growing this queue without limit.
+static std::queue<String> pendingQueue;
+static const size_t MAX_QUEUE_SIZE = 30;
 
 
-// 🆕 Flush pending messages to WebSocket
+// Send everything held while the client was away.
 static void flushQueueInternal() {
   if (wsClient >= 0 && authOK[wsClient]) {
     while (!pendingQueue.empty()) {
