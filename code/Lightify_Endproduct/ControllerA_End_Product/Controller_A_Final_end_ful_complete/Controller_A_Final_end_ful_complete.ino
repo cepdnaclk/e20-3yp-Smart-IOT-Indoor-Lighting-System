@@ -218,10 +218,6 @@ void handleSerialJson(const String& json) {
     }
   }
 
-  // if (isAutomation) {
-  //   automationMode = 1;
-  // }
-
   // Forward websocket_ip command to MQTT
   Serial.println(command);
   if (isWebSocketIp) {
@@ -236,7 +232,6 @@ void handleSerialJson(const String& json) {
 // ——— MQTT callback: incoming messages ———
 void handleMqtt(const String& topic, const String& payload) {
   Serial.println("<< MQTT ⟶ [" + topic + "] " + payload);
-   //SerialComm::sendJson(payload);
 
   DynamicJsonDocument doc(1024);
   auto err = deserializeJson(doc, payload);
@@ -276,11 +271,6 @@ void handleMqtt(const String& topic, const String& payload) {
         isScheduleOrDirect ? b4 = bri : bb4 = bri;
         break;
     }
-
-    // Apply brightness to local light (for direct/schedule only)
-    // if (isScheduleOrDirect && id >= 1 && id <= 4) {
-    //   LightManager::setTarget(id - 1, bri);
-    // }
 
     // Apply brightness to local light (for direct/schedule only)
   if (id >= 1 && id <= 4) {
@@ -380,7 +370,6 @@ Serial.println(message);
 
  if (command == "update_automation_mode") {
     // 👉 Send the entire payload as-is to the other ESP32
-    // SerialComm::sendJson(payload);
    printStackLeft("before JSON");
 
   Serial.println(F("---- MQTT Handler Start ----"));
@@ -475,9 +464,6 @@ void setup() {
   );
 
   // —— SerialComm: framed JSON over UART ——
-  // SerialComm::begin(115200);
-  // SerialComm::onJsonReceived(handleSerialJson);
-
 
   //chala trick commserial2 eke wede
   SerialComm2::begin(115200);
@@ -501,14 +487,6 @@ void setup() {
   }
   Serial.println("\n✅ Wi-Fi connected, IP=" + WiFi.localIP().toString());
 
-  // // —— MQTT over TLS ——
-  // MQTTHandler::begin(
-  //   mqttServer, mqttPort,
-  //   root_ca_pem, certificate_pem_crt, private_pem_key,
-  //   "ESP32_Client", subscribeTop
-  // );
-  // MQTTHandler::onMessage(handleMqtt);
-
   if (WiFi.status() == WL_CONNECTED) {
     // —— MQTT over TLS ——
     MQTTHandler::begin(
@@ -523,7 +501,6 @@ void setup() {
 
 
 //chalas ip send as json 
-  //  MQTTHandler::sendWebSocketIP(publishTop,WiFi.localIP().toString());
   // —— One-time metadata send ——
   DynamicJsonDocument md(256);
   md["mac"]      = WiFi.macAddress();
@@ -555,7 +532,6 @@ void loop() {
 
 
   // —— Core tasks ——
-  //SerialComm::loop();
 
 //chala commserial2
   SerialComm2::loop();
@@ -563,7 +539,6 @@ void loop() {
   if (WiFi.status() == WL_CONNECTED){
     MQTTHandler::loop();
   }
-  // MQTTHandler::loop();
   LightManager::update();
 
   // future: priorityFunction() here

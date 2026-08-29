@@ -12,13 +12,11 @@ namespace MQTTHandler {
 
   // Called by PubSubClient on each incoming message
   static void internalCb(char* topic, byte* payload, unsigned int len) {
-    // Serial.printf("[MQTT][Debug] Message arrived on topic %s, len=%u\n", topic, len);
     if (!userCb) return;
     String s;
     for (unsigned i = 0; i < len; i++) {
       s += (char)payload[i];
     }
-    // Serial.printf("[MQTT][Debug] Payload: %s\n", s.c_str());
     userCb(String(topic), s);
   }
 
@@ -62,7 +60,6 @@ namespace MQTTHandler {
 
   void onMessage(MqttCallback cb) {
     userCb = cb;
-    // Serial.println("[MQTT][Debug] User callback registered");
   }
 
   void loop() {
@@ -97,7 +94,6 @@ namespace MQTTHandler {
   json += "}";
   json += "}";
 
-  // MQTTHandler::publish(topic, json.c_str());
    publish(topic, json.c_str()); // Call internal publish
 }
 

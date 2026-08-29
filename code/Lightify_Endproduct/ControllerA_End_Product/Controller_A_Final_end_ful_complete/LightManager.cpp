@@ -50,14 +50,6 @@ namespace LightManager {
     }
   }
 
-  // void setTarget(uint8_t idx, uint8_t pct) {
-  //   if (idx < 4) {
-  //     targBri[idx] = mapPct(pct);
-  //     // Serial.printf("[LightManager][Debug] setTarget(): idx=%u pct=%u -> targBri=%d\n",
-  //     //               idx, pct, targBri[idx]);
-  //     ticker.once(0.02, step);
-  //   }
-  // }
   void setTarget(uint8_t idx, uint8_t pct) {
   if (idx < 4) {
     int targetMapped = mapPct(pct);
@@ -80,6 +72,5 @@ namespace LightManager {
 
   void update() {
     // nothing here—Ticker invokes step() asynchronously
-    // Serial.println("[LightManager][Debug] update()");  // debug if needed
   }
 }
