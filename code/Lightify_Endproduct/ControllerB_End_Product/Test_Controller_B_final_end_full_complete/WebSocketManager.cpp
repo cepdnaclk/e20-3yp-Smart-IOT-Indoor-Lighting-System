@@ -1,97 +1,3 @@
-// #include "WebSocketManager.h"
-// #include <WebSocketsServer.h>
-// #include <Arduino.h>
-// #include <ArduinoJson.h>
-// #include <freertos/FreeRTOS.h>
-// #include <freertos/task.h>
-
-// // — static state only visible in this translation unit —
-// static WebSocketsServer ws(81);
-// static String         validUser;
-// static int            wsClient = -1;
-// static bool           authOK[8] = {};
-
-// // — WebSocket event handler —
-// static void onEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t len) {
-//   switch (type) {
-//     case WStype_CONNECTED:
-//       wsClient = num;
-//       authOK[num] = false;
-//       Serial.printf("🌐 WS client %u connected\n", num);
-//       break;
-
-//     case WStype_DISCONNECTED:
-//       Serial.printf("🌐 WS client %u disconnected\n", num);
-//       authOK[num] = false;
-//       if (wsClient == num) wsClient = -1;
-//       break;
-
-//     case WStype_TEXT: {
-//       StaticJsonDocument<200> d;
-//       DeserializationError err = deserializeJson(d, payload, len);
-//       if (err) {
-//         Serial.printf("[WS] JSON parse error: %s\n", err.c_str());
-//         break;
-//       }
-//       const char* u = d["username"];
-//       if (u && validUser == String(u)) {
-//         authOK[num] = true;
-//         ws.sendTXT(num, "{\"status\":\"ok\"}");
-//         Serial.printf("✅ WS client %u authenticated\n", num);
-//       } else {
-//         ws.sendTXT(num, "{\"error\":\"bad user\"}");
-//       }
-//       break;
-//     }
-
-//     default:
-//       break;
-//   }
-// }
-
-// // — Task to run the WebSocket loop —
-// static void wsTask(void* param) {
-//   for (;;) {
-//     ws.loop();
-//     vTaskDelay(pdMS_TO_TICKS(10));
-//   }
-// }
-
-// namespace WebSocketManager {
-
-//   void begin(const String& user) {
-//     validUser = user;
-//     ws.begin();
-//     ws.onEvent(onEvent);
-//     // Create a FreeRTOS task pinned to core 0
-//     xTaskCreatePinnedToCore(
-//       wsTask,
-//       "wsTask",
-//       4096,
-//       nullptr,
-//       2,
-//       nullptr,
-//       0
-//     );
-//     Serial.println("🚀 WebSocket server started on port 81");
-//   }
-
-//   void updateUser(const String& user) {
-//     // Update the allowed username at runtime
-//     validUser = user;
-//   }
-
-//   void broadcast(const String& msg) {
-//     Serial.printf("[DBG] broadcast → client=%d authOK=%d\n", wsClient, authOK[wsClient]);
-//     if (wsClient >= 0 && authOK[wsClient]) {
-//       String temp = msg;  // Make it non-const for sendTXT
-//       ws.sendTXT(wsClient, temp);
-//     }
-//   }
-
-// } // namespace WebSocketManager
-
-
 #include "WebSocketManager.h"
 #include <WebSocketsServer.h>
 #include <Arduino.h>
@@ -216,7 +122,6 @@ namespace WebSocketManager {
   void broadcast(const String& msg) {
     Serial.printf("[DBG] Attempting broadcast → client=%d authOK=%d\n", wsClient, (wsClient >= 0 ? authOK[wsClient] : 0));
     if (wsClient >= 0 && authOK[wsClient]) {
-      // ws.sendTXT(wsClient, msg);
       String temp = msg;
       ws.sendTXT(wsClient, temp);
 
@@ -226,10 +131,6 @@ namespace WebSocketManager {
     }
   }
 
-  // void enqueueMessage(const String& msg) {
-  //   Serial.printf("📦 Queued message for later: %s\n", msg.c_str());
-  //   pendingQueue.push(msg);
-  // }
   void enqueueMessage(const String& msg) {
   if (pendingQueue.size() >= MAX_QUEUE_SIZE) {
     Serial.println("⚠️ Queue full! Dropping all existing messages and adding new one...");

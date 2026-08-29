@@ -27,7 +27,6 @@ namespace SerialComm {
     // — Receive bytes with debug —
     while (uart.available()) {
       uint8_t b = uart.read();
-      // Serial.printf("[RX] 0x%02X\n", b);
 
       String payload;
       if (parser.parse(b, payload)) {
